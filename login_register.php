@@ -24,6 +24,7 @@ if(isset($_POST['register'])) { // check if register button clicked
     }
     header(("Location: index.php")); //redirect to index.php(main page)
     exit();
+    
 }
 
 ?>
