@@ -73,6 +73,20 @@ button:hover {
     background: lightgreen;
 }
 
+
+.form-box .error-message {
+    padding: 12px;
+    background: whitesmoke;
+    border-radius: 6px;
+    font-size: 16px;
+    color: darkred;
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+
+
 p {
     font-size: 14px;
     text-align: center;
@@ -89,12 +103,23 @@ p a:hover {
 }
 
 
-.error-message {
-    padding: 12px;
-    background: whitesmoke;
-    border-radius: 6px;
-    font-size: 16px;
-    color: darkred;
+h1 {
+    font-size: 30px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 20px; /* under login */
+    background: white;
+}
+
+span {
+    color: white;
+}
+
+.box p {
+    font-size: 20px;
+}
+
+.box button {
+    display: block;
+    margin: 0 auto; 
+    width: 300px;
 }

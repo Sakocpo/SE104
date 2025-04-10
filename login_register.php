@@ -34,4 +34,36 @@ if (isset($_POST['register'])) { // check if register button clicked
     exit();
 }
 
+if (isset($_POST['login'])) { // check if login button clicked
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+
+    $result = $connection->query("SELECT * FROM users WHERE email = '$email'");
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['name'] = $user['name'];
+            $_SESSION['email'] = $user['email'];
+
+
+            if ($user['role'] === 'admin') {
+                header("Location: admin.php"); 
+            } else {
+                header("Location: waiter.php"); 
+            }
+            exit(); 
+        } else {
+            $_SESSION['login_error'] = "Invalid password";
+            $_SESSION['active_form'] = 'login';
+            header("Location: index.php");
+            exit(); 
+        }
+    } else {
+        $_SESSION['login_error'] = "Email not registered";
+        $_SESSION['active_form'] = 'login';
+        header("Location: index.php");
+        exit(); 
+    }
+}
+
 ?>
