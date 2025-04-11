@@ -98,3 +98,63 @@ p a:hover {
     text-align: center;
     margin-bottom: 20px;
 }
+
+/* Sidebar styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px; /* Hidden by default */
+    width: 250px;
+    height: 100%;
+    background-color: #333;
+    color: white;
+    transition: left 0.3s ease;
+    padding-top: 20px;
+}
+
+.sidebar.active {
+    left: 0; /* Show sidebar when active */
+}
+
+.sidebar .toggle-btn {
+    position: absolute;
+    top: 0px;
+    right: -40px;
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 10px 0;
+}
+
+.sidebar ul li {
+    padding: 15px 20px;
+    overflow: hidden; /* Ensure content is not covered */
+    white-space: nowrap; /* Prevent text wrapping */
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+.sidebar ul li a:hover {
+    text-decoration: underline;
+}
+
+/* Content styles */
+.content {
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+}
+
+.sidebar.active ~ .content {
+    margin-left: 250px; /* Adjust content when sidebar is active */
+    margin-top: 250px;
+}

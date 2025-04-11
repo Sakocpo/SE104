@@ -6,3 +6,10 @@ function showForm(formID){
     /* Add active to the class of the form passed */
     /* In short, remove all active class, then add active to the one passed only */
 }
+
+
+// Toggle sidebar visibility
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+}
