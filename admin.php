@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit();
+}
 ?>
 
 
@@ -18,8 +22,8 @@ session_start();
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
         <ul>
             <li><a href="product_management.php">Product Management</a></li>
-            <li><a href="#">Inventory Management</a></li>
-            <li><a href="#">Users Management</a></li>
+            <li><a href="inventory_management.php">Inventory Management</a></li>
+            <li><a href="user_management.php">Users Management</a></li>
         </ul>
     </div>
 

@@ -17,8 +17,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['add_product'])) {
         $product_name = $_POST['product_name'];
         $category_id = $_POST['category_id'];
-        $price = $_POST['price'];
-        $connection->query("INSERT INTO products (name, category_id, price) VALUES ('$product_name', $category_id, $price)");
+        $price = $_POST['product_price'];
+
+        // Initialize options based on category
+        $options = '';
+        if ($category_id === 'temp' && isset($_POST['temp_options'])) {
+            $options = implode(',', $_POST['temp_options']);
+        } elseif ($category_id === 'sugar' && isset($_POST['sugar_options'])) {
+            $options = implode(',', $_POST['sugar_options']);
+        }
+
+        // Insert product into the database
+        $stmt = $connection->prepare("INSERT INTO products (name, category, price, options) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssis", $product_name, $category_id, $price, $options);
+        $stmt->execute();
+        $stmt->close();
     }
 }
 ?>
@@ -32,41 +45,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="content">
-        <h1>Product Management</h1>
-        <form method="POST">
-            <h2>Add Category</h2>
-            <input type="text" name="category_name" placeholder="Category Name" required>
-            <button type="submit" name="add_category">Add Category</button>
-        </form>
+    
+    <div class="forms-container">
 
-        <form method="POST">
-            <h2>Delete Category</h2>
-            <select name="category_id" required>
-                <?php
-                $categories = $connection->query("SELECT * FROM categories");
-                while ($category = $categories->fetch_assoc()) {
-                    echo "<option value='{$category['id']}'>{$category['name']}</option>";
-                }
-                ?>
-            </select>
-            <button type="submit" name="delete_category">Delete Category</button>
-        </form>
+        <form id="add-product-form" method="POST">
+            <h3>Add Product</h3>
+            <label for="product_name">Product Name:</label>
+            <input type="text" name="product_name" required>
 
-        <form method="POST">
-            <h2>Add Product</h2>
-            <input type="text" name="product_name" placeholder="Product Name" required>
-            <select name="category_id" required>
-                <?php
-                $categories = $connection->query("SELECT * FROM categories");
-                while ($category = $categories->fetch_assoc()) {
-                    echo "<option value='{$category['id']}'>{$category['name']}</option>";
-                }
-                ?>
+            <label for="product_price">Price:</label>
+            <input type="number" name="product_price" required>
+
+            <label for="category_id">Category:</label>
+            <select id="category_id" name="category_id" required onchange="handleCategoryChange()">
+                <option value="temp">Nhiệt Độ</option>
+                <option value="sugar">Đường</option>
             </select>
-            <input type="number" name="price" placeholder="Price" required>
+
+            <div id="temp-options" style="display:none;">
+                <label><input type="checkbox" name="temp_options[]" value="cold"> Đá</label>
+                <label><input type="checkbox" name="temp_options[]" value="hot"> Nóng</label>
+            </div>
+
+            <div id="sugar-options" style="display:none;">
+                <label><input type="checkbox" name="sugar_options[]" value="sugar1"> Đắng</label>
+                <label><input type="checkbox" name="sugar_options[]" value="sugar2"> Bình Thường </label>
+                <label><input type="checkbox" name="sugar_options[]" value="sugar3"> Ngọt</label>
+                <!-- <label><input type="checkbox" name="sugar_options[]" value="sugar4"> Sugar Option 4</label>
+                <label><input type="checkbox" name="sugar_options[]" value="sugar5"> Sugar Option 5</label> -->
+            </div>
+
+            <label for="product_desc">Product Description:</label>
+            <textarea name="product_desc"></textarea>
+
             <button type="submit" name="add_product">Add Product</button>
+            <button type="back" onclick="document.getElementById('add-product-form').style.display='none'">Cancel</button>
+
+
+
         </form>
+
     </div>
+
+    <script>
+    function handleCategoryChange() {
+        const category = document.getElementById('category_id').value;
+        document.getElementById('temp-options').style.display = category === 'temp' ? 'block' : 'none';
+        document.getElementById('sugar-options').style.display = category === 'sugar' ? 'block' : 'none';
+    }
+    </script>
+
+    <div id="sidebar" class="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <ul>
+            <li><a href="product_management.php">Product Management</a></li>
+            <li><a href="inventory_management.php">Inventory Management</a></li>
+            <li><a href="user_management.php">Users Management</a></li>
+        </ul>
+    </div>
+
+    <div class="add-button">
+
+        <button onclick="document.getElementById('add-category-form').style.display='block'">Add Category</button>
+        <button onclick="document.getElementById('delete-category-form').style.display='block'">Delete Category</button>
+        <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button>
+
+    </div>
+
 </body>
 </html>
