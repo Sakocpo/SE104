@@ -2,6 +2,8 @@
 session_start();
 require_once 'config.php';
 
+
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: index.php");
     exit();
@@ -45,7 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+    <a href="add_category.php" class="category-add-button">+</a>
+
     <div class="forms-container">
 
         <form id="add-product-form" method="POST">
