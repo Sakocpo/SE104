@@ -103,7 +103,7 @@ p a:hover {
 /* Sidebar styles */
 .sidebar {
     position: fixed;
-    top: 0;
+    top: 10px;
     left: -250px; /* Hidden by default */
     width: 250px;
     height: 100%;
@@ -119,18 +119,31 @@ p a:hover {
 
 .sidebar .toggle-btn {
     position: absolute;
-    top: 0px;
-    right: -40px;
+    top: 0;
+    left: 100%;
+    width: 40px;
+    height: 40px;
     background-color: #333;
     color: white;
     border: none;
-    padding: 10px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 22px;
+    z-index: 1001;
+    transition: left 0.3s ease;
+}
+
+.sidebar.active .toggle-btn {
+    left: 250px; /* Moves with the sidebar */
 }
 
 .sidebar ul {
     list-style: none;
     padding: 10px 0;
+    margin: 0;
 }
 
 .sidebar ul li {
@@ -155,17 +168,22 @@ p a:hover {
     transition: margin-left 0.3s ease;
 }
 
+.form-containers {
+    margin-top: 70px;
+}
+
 .sidebar.active ~ .content {
     margin-left: 250px; /* Adjust content when sidebar is active */
-    margin-top: 250px;
+    margin-top: 300px;
 }
 
 .category-bar {
     display: flex;
+    top: 10px;
+    left: 500px;
     align-items: center;
     background: #f1f1f1;
     padding: 10px;
-    overflow-x: auto;
 }
 .category-item {
     margin-right: 10px;
@@ -187,3 +205,27 @@ p a:hover {
     border-radius: 50%;
     font-weight: bold;
 }
+
+
+.options-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    margin-bottom: 1rem;
+}
+
+.option-item {
+    flex: 1 1 30%;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    width: 500px;
+}
+.checkbox-grid label {
+    display: flex;
+    align-items: center;
+}
+

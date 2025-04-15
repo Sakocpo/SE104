@@ -60,21 +60,28 @@ $categories = $connection->query("SELECT * FROM categories")->fetch_all(MYSQLI_A
     </style>
 </head>
 <body>
+    <div id="sidebar" class="sidebar">
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+            <ul>
+                <li><a href="product_management.php">Product Management</a></li>
+                <li><a href="inventory_management.php">Inventory Management</a></li>
+                <li><a href="user_management.php">Users Management</a></li>
+            </ul>
+        </div>
+    <div class="container">
+        <h2>Manage Categories</h2>
 
-<div class="container">
-    <h2>Manage Categories</h2>
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <script>
+                alert("<?= $_SESSION['success_message'] ?>");
+            </script>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
 
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <script>
-            alert("<?= $_SESSION['success_message'] ?>");
-        </script>
-        <?php unset($_SESSION['success_message']); ?>
-    <?php endif; ?>
-
-    <form method="POST" onsubmit="return confirm('Are you sure you want to add this category?')">
-        <input type="text" name="category_name" placeholder="New category name" required>
-        <button type="submit" name="add_category" class="btn-primary">Add Category</button>
-    </form>
+        <form method="POST" onsubmit="return confirm('Are you sure you want to add this category?')">
+            <input type="text" name="category_name" placeholder="New category name" required>
+            <button type="submit" name="add_category" class="btn-primary">Add Category</button>
+        </form>
 
     <div class="category-list">
         <?php foreach ($categories as $cat): ?>

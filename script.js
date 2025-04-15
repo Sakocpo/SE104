@@ -27,3 +27,53 @@ function handleCategoryChange() {
         sugarOptions.style.display = 'block';
     }
 }
+
+function confirmDeleteCategory(id) {
+    if (confirm("Are you sure you want to delete this category?")) {
+        window.location.href = 'add_category.php?delete=' + id;
+    }
+}
+
+function confirmAndShowForm() {
+    // if (confirm("Do you want to add a new product?")) {
+        document.getElementById('add-product-form').style.display = 'block';
+        document.getElementById('add-product-form').scrollIntoView({ behavior: 'smooth' });
+    // }
+}
+
+function loadProduct(product) {
+    const form = document.getElementById('product-info-form');
+    form.style.display = 'block';
+
+    document.getElementById('edit_product_id').value = product.id;
+    document.getElementById('edit_product_name').value = product.name;
+    document.getElementById('edit_product_price').value = product.price;
+    document.getElementById('edit_category_id').value = product.category;
+    document.getElementById('edit_product_desc').value = product.description || '';
+
+    handleEditCategoryChange(); // update checkbox visibility
+
+    // Pre-check the correct options
+    const options = (product.options || '').split(',');
+    document.querySelectorAll('#edit-temp-options input[type=checkbox]').forEach(cb => {
+        cb.checked = options.includes(cb.value);
+    });
+    document.querySelectorAll('#edit-sugar-options input[type=checkbox]').forEach(cb => {
+        cb.checked = options.includes(cb.value);
+    });
+}
+
+function handleEditCategoryChange() {
+    const selected = document.getElementById('edit_category_id').value;
+
+    // Hide all groups first
+    document.querySelectorAll('.checkbox-wrapper').forEach(div => div.style.display = 'none');
+
+    // Show selected group
+    if (selected) {
+        const target = document.getElementById('checkbox_' + selected);
+        if (target) target.style.display = 'block';
+    }
+}
+
+

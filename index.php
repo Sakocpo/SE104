@@ -37,7 +37,7 @@ function isActive($formName, $active_form){ // check if the form is active
     <div class="container">
         <div class="form-box <?= isActive('login',$active_form); ?>" id="login-form">
             <form action="login_register.php" method="post">
-                <h2>Login</h2>
+                <h2>Login!!!</h2>
                 <?= showError($error['login']); ?>
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
