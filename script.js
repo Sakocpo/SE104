@@ -77,3 +77,35 @@ function handleEditCategoryChange() {
 }
 
 
+function loadProduct(product) {
+    const form = document.getElementById('add-product-form');
+    form.style.display = 'block';
+
+    document.getElementById('product_id').value = product.id;
+    form.product_name.value = product.name;
+    form.product_price.value = product.price;
+    form.product_desc.value = product.description || '';
+
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('delete-btn').style.display = 'inline-block';
+
+    // Handle options if needed
+    handleCategoryChange();
+}
+
+function toggleCheckboxes(type) {
+    // First, hide all checkbox groups.
+    document.querySelectorAll('.checkbox-wrapper').forEach(function(el) {
+        if (el.id !== 'checkboxes_' + type) {
+            el.style.display = 'none';
+        }
+    });
+    
+    // Now, toggle the selected checkbox group.
+    const box = document.getElementById('checkboxes_' + type);
+    if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'block';
+    } else {
+        box.style.display = 'none';
+    }
+}

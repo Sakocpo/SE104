@@ -218,14 +218,26 @@ p a:hover {
     flex: 1 1 30%;
 }
 
+.option-block {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 5px;
+    background: #e0e0e0;
+    border-radius: 5px;
+    cursor: pointer;
+    color: red;
+}
+
+
+
 .checkbox-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    width: 500px;
+    grid-template-columns: repeat(5, 1fr);
 }
 .checkbox-grid label {
     display: flex;
     align-items: center;
+    color: orange;
 }
+
 

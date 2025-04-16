@@ -29,33 +29,38 @@ if ($current_category_id !== null) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_product'])) {
         $product_name = $_POST['product_name'];
-        $category_id = $_POST['category_id'];
+        $category_id = $_POST['category_id']; // still assumed to be coming from your form if needed
         $price = $_POST['product_price'];
+        $description = isset($_POST['product_desc']) ? $_POST['product_desc'] : '';
 
-        $options = '';
-        if ($category_id === 'temp' && isset($_POST['temp_options'])) {
-            $options = implode(',', $_POST['temp_options']);
-        } elseif ($category_id === 'sugar' && isset($_POST['sugar_options'])) {
-            $options = implode(',', $_POST['sugar_options']);
+        // Instead of using fixed value checks, we'll collect selected options from each group.
+        $selected_options = array();
+        if (isset($_POST['temp_options'])) {
+            $selected_options = array_merge($selected_options, $_POST['temp_options']);
         }
+        if (isset($_POST['sugar_options'])) {
+            $selected_options = array_merge($selected_options, $_POST['sugar_options']);
+        }
+        // If you add more option groups in the future, process them similarly.
 
-        $stmt = $connection->prepare("INSERT INTO products (name, category, price, options) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssis", $product_name, $category_id, $price, $options);
+        $options = implode(',', $selected_options);
+
+        $stmt = $connection->prepare("INSERT INTO products (name, category, price, options, description) VALUES (?, ?, ?, ?, ?)");
+        // Adjusted bind_param:
+        // "s" for product_name, "s" for category_id (if it's a string; change to "i" if it's int),
+        // "i" for price, "s" for options, and "s" for description.
+        $stmt->bind_param("ssiss", $product_name, $category_id, $price, $options, $description);
         $stmt->execute();
         $stmt->close();
     }
 }
 
-$type_query = "SELECT DISTINCT type FROM product_options";
-$type_result = mysqli_query($connection, $type_query);
 
-// Get all options grouped by type
-$options_query = "SELECT * FROM product_options";
+$options_query = "SELECT * FROM options";
 $options_result = mysqli_query($connection, $options_query);
 $options_by_type = [];
-
 while ($row = mysqli_fetch_assoc($options_result)) {
-    $options_by_type[$row['type']][] = $row['label'];
+    $options_by_type[$row['type']][] = $row;
 }
 ?>
 
@@ -114,84 +119,6 @@ while ($row = mysqli_fetch_assoc($options_result)) {
             <?php endforeach; ?>
         </div>
 
-
-    <div class="forms-container">
-
-
-        <?php if($current_category_id): ?>
-        <form id="add-product-form" method="POST" style="display: none;">
-            <h3>Add Product</h3>
-            <label for="product_name">Product Name:</label>
-            <input type="text" name="product_name" required>
-
-            <label for="product_price">Price:</label>
-            <input type="number" name="product_price" required>
-
-            <!-- Select option type -->
-            <label for="edit_category_id">Chọn Loại Tùy Chọn:</label>
-            <select id="edit_category_id" name="category_id" required onchange="handleEditCategoryChange()">
-                <option value="">-- Chọn loại --</option>
-                <?php while ($row = mysqli_fetch_assoc($type_result)): ?>
-                    <option value="<?= htmlspecialchars($row['type']) ?>">
-                        <?= ucfirst($row['type']) ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
-
-            <!-- Options will be shown here -->
-            <?php foreach ($options_by_type as $type => $labels): ?>
-                <div class="checkbox-wrapper" id="checkbox_<?= $type ?>" style="display:none; margin-top:10px;">
-                    <label><strong><?= ucfirst($type) ?> Options:</strong></label>
-                    <div class="checkbox-grid">
-                        <?php foreach ($labels as $label): ?>
-                            <label><input type="checkbox" name="<?= $type ?>_options[]" value="<?= $label ?>"> <?= $label ?></label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-
-
-            <label for="product_desc">Product Description:</label>
-            <textarea name="product_desc"></textarea>
-
-            <button type="submit" name="add_product">Add Product</button>
-            <button type="back" onclick="document.getElementById('add-product-form').style.display='none'">Cancel</button>
-
-        </form>
-        <?php endif; ?>
-
-
-
-
-        <!-- Product Info Form (for editing/deleting a selected product) -->
-        <form id="product-info-form" method="POST" style="display: none; margin-top: 20px;">
-            <h3>Edit Product</h3>
-            <input type="hidden" name="product_id" id="edit_product_id">
-
-            <label for="edit_product_name">Product Name:</label>
-            <input type="text" name="product_name" id="edit_product_name" required>
-
-            <label for="edit_product_price">Price:</label>
-            <input type="number" name="product_price" id="edit_product_price" required>
-
-            <label for="edit_category_id">Category:</label>
-            <select id="edit_category_id" name="category_id" required onchange="handleEditCategoryChange()">
-                <option value="temp">Nhiệt Độ</option>
-                <option value="sugar">Đường</option>
-            </select>
-
-            <label for="edit_product_desc">Description:</label>
-            <textarea name="product_desc" id="edit_product_desc"></textarea>
-
-            <button type="submit" name="update_product">Update</button>
-            <button type="submit" name="delete_product" style="background-color: red; color: white;">Delete</button>
-            <button type="button" onclick="document.getElementById('product-info-form').style.display='none'">Cancel</button>
-        </form>
-
-
-
-    </div>
-
     <div id="sidebar" class="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
         <ul>
@@ -206,11 +133,15 @@ while ($row = mysqli_fetch_assoc($options_result)) {
         <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
         <?php if($current_category_id): ?>
         <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-            <button onclick="confirmAndShowForm()" style="font-size: 28px; padding: 10px 18px; border-radius: 50%; background: #007bff; color: white; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">+</button>
+            <a href="add_product.php?category=<?= $current_category_id ?>">
+            <button style="font-size: 28px; padding: 10px 18px; border-radius: 50%; background: #007bff; color: white; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">+</button>
         </div>
     <?php endif; ?>
 
+
     </div>
+
+
 
     <script src="script.js"></script>
 
