@@ -21,6 +21,7 @@ if (!isset($_SESSION['user'])) {
     <div id="sidebar" class="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
         <ul>
+            <li><a href="admin.php">Admin Page</a></li>
             <li><a href="product_management.php">Product Management</a></li>
             <li><a href="inventory_management.php">Inventory Management</a></li>
             <li><a href="user_management.php">Users Management</a></li>

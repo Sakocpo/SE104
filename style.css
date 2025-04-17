@@ -111,6 +111,7 @@ p a:hover {
     color: white;
     transition: left 0.3s ease;
     padding-top: 20px;
+    z-index: 1001;
 }
 
 .sidebar.active {

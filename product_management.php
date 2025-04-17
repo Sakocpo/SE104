@@ -75,6 +75,16 @@ while ($row = mysqli_fetch_assoc($options_result)) {
 
 </head>
 <body>
+    <div id="sidebar" class="sidebar">
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+            <ul>
+                <li><a href="admin.php">Admin Page</a></li>
+                <li><a href="product_management.php">Product Management</a></li>
+                <li><a href="inventory_management.php">Inventory Management</a></li>
+                <li><a href="user_management.php">Users Management</a></li>
+            </ul>
+    </div>
+
 
     <?php if (isset($success) && $success): ?>
     <script>
@@ -82,10 +92,11 @@ while ($row = mysqli_fetch_assoc($options_result)) {
         window.location.href = "product_management.php?category=<?= $current_category_id ?>";
     </script>
     <?php endif; ?>
-
         <!-- Horizontal category bar -->
-        <div class="top-category-bar" style="position: fixed; top: 0; left: 0; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; gap: 12px; overflow-x: auto; z-index: 1000; border-bottom: 1px solid #ccc;">
-            <a href="add_category.php" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+        <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
+
+        <!-- Category list container -->
+        <div style="display: flex; gap: 12px; overflow-x: auto;">
             <?php foreach ($categories as $cat): ?>
                 <a href="product_management.php?category=<?= $cat['id'] ?>"
                     style="
@@ -101,11 +112,18 @@ while ($row = mysqli_fetch_assoc($options_result)) {
                 </a>
             <?php endforeach; ?>
         </div>
-        
+
+        <!-- Add button container -->
+        <div>
+            <a href="add_category.php" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+        </div>
+
+</div>
+
         <div class="product-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
             <?php foreach ($products as $product): ?>
                 <div class="product-card"
-                    onclick='loadProduct(<?= json_encode($product) ?>)'
+                    onclick="window.location.href='product_info.php?id=<?= $product['id'] ?>'"
                     style="width: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff;">
                     <div style="height: 120px; background: #eee; display: flex; align-items: center; justify-content: center;">
                         <img src="<?= htmlspecialchars($product['image_url'] ?? 'placeholder.png') ?>" alt=""
@@ -118,15 +136,8 @@ while ($row = mysqli_fetch_assoc($options_result)) {
                 </div>
             <?php endforeach; ?>
         </div>
+            
 
-    <div id="sidebar" class="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <ul>
-            <li><a href="product_management.php">Product Management</a></li>
-            <li><a href="inventory_management.php">Inventory Management</a></li>
-            <li><a href="user_management.php">Users Management</a></li>
-        </ul>
-    </div>
 
     <div class="add-button">
 
@@ -140,7 +151,6 @@ while ($row = mysqli_fetch_assoc($options_result)) {
 
 
     </div>
-
 
 
     <script src="script.js"></script>
