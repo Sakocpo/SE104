@@ -242,3 +242,48 @@ p a:hover {
 }
 
 
+
+
+.forms-container h3 {
+    margin-top: 0;
+}
+
+.forms-container input[type="text"],
+.forms-container textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.forms-container label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.forms-container input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.product-card {
+    width: 180px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background:#fff;
+}
+
+.product-card:hover {
+    background: orange;
+}
+
+.product-block {
+    height: 120px; 
+    background: #eee; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center
+}

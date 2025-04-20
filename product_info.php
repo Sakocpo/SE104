@@ -42,6 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
     $price = $_POST['product_price'];
     $description = $_POST['product_desc'] ?? '';
     $selected_options = [];
+    $image_path = $product['image'];
+    $upload_dir = 'uploads/';
+    $image_path = '';
+
+    if (!empty($_FILES['product_image']['name'])) {
+        $upload_dir = 'uploads/';
+        $image_path = $upload_dir . basename($_FILES['product_image']['name']);
+        move_uploaded_file($_FILES['product_image']['tmp_name'], $image_path);
+    }
 
     foreach ($options_by_type as $type => $_) {
         if (isset($_POST[$type . '_options'])) {
@@ -51,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 
     $options_str = implode(',', $selected_options);
 
-    $stmt = $connection->prepare("UPDATE products SET name = ?, price = ?, options = ?, description = ? WHERE id = ?");
-    $stmt->bind_param("sissi", $name, $price, $options_str, $description, $product_id);
+    $stmt = $connection->prepare("UPDATE products SET name = ?, price = ?, options = ?, description = ?, image = ? WHERE id = ?");
+    $stmt->bind_param("sisssi", $name, $price, $options_str, $description, $image_path, $product_id);
     $stmt->execute();
     $stmt->close();
 
@@ -69,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 </head>
 <body>
 <div class="forms-container">
-    <form id="edit-product-form" method="POST">
+    <form id="edit-product-form" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="category_id" value="<?= htmlspecialchars($current_category_id) ?>">
 
         <h3>Edit Product</h3>
@@ -104,6 +113,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
                 </div>
             </div>
         <?php endforeach; ?>
+
+        <?php if (!empty($product['image'])): ?>
+            <div style="margin-bottom:10px;">
+                <img src="<?= htmlspecialchars($product['image']) ?>" alt="Product Image" style="max-width: 150px;">
+            </div>
+        <?php endif; ?>
+        <label for="product_image">Product Image:</label>
+        <input type="file" name="product_image" accept="image/*">
 
         <label for="product_desc">Product Description:</label>
         <textarea name="product_desc"><?= htmlspecialchars($product['description']) ?></textarea>

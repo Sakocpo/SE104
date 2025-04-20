@@ -26,8 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $name = $_POST['product_name'];
     $price = $_POST['product_price'];
     $description = $_POST['product_desc'] ?? '';
-
     $selected_options = [];
+    $image_path=null;
+    $upload_dir = 'uploads/';
+    $image_path = '';
+
+    if (!empty($_FILES['product_image']['name'])) {
+        $upload_dir = 'uploads/';
+        $image_path = $upload_dir . basename($_FILES['product_image']['name']);
+        move_uploaded_file($_FILES['product_image']['tmp_name'], $image_path);
+    }
+    
     foreach ($options_by_type as $type => $_) {
         if (isset($_POST[$type . '_options'])) {
             $selected_options = array_merge($selected_options, $_POST[$type . '_options']);
@@ -36,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 
     $options_str = implode(',', $selected_options);
 
-    $stmt = $connection->prepare("INSERT INTO products (name, category, price, options, description) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssiss", $name, $current_category_id, $price, $options_str, $description);
+    $stmt = $connection->prepare("INSERT INTO products (name, category, price, options, description, image) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssisss", $name, $current_category_id, $price, $options_str, $description, $image_path);
     $stmt->execute();
     $stmt->close();
 
@@ -54,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 </head>
 <body>
 <div class="forms-container">
-    <form id="add-product-form" method="POST">
+    <form id="add-product-form" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="category_id" value="<?= htmlspecialchars($current_category_id) ?>">
 
         <h3>Add Product</h3>
@@ -88,6 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
                 </div>
             </div>
         <?php endforeach; ?>
+
+        <label for="product_image">Product Image:</label>
+        <input type="file" name="product_image" accept="image/*">
+
+
 
         <label for="product_desc">Product Description:</label>
         <textarea name="product_desc"></textarea>

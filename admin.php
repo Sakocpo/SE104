@@ -25,6 +25,7 @@ if (!isset($_SESSION['user'])) {
             <li><a href="product_management.php">Product Management</a></li>
             <li><a href="inventory_management.php">Inventory Management</a></li>
             <li><a href="user_management.php">Users Management</a></li>
+            <li><a href="table_management_admin.php">Table Management</a></li>
         </ul>
     </div>
 

@@ -109,3 +109,7 @@ function toggleCheckboxes(type) {
         box.style.display = 'none';
     }
 }
+function toggleDeleteBtn(){
+    const checked = document.querySelectorAll('input[name="table_ids[]"]:checked').length;
+    document.getElementById('delete-btn').style.display = checked>=2?'inline-block':'none';
+  }

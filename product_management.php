@@ -82,6 +82,7 @@ while ($row = mysqli_fetch_assoc($options_result)) {
                 <li><a href="product_management.php">Product Management</a></li>
                 <li><a href="inventory_management.php">Inventory Management</a></li>
                 <li><a href="user_management.php">Users Management</a></li>
+                <li><a href="table_management_admin.php">Tables Management</a></li>
             </ul>
     </div>
 
@@ -115,7 +116,7 @@ while ($row = mysqli_fetch_assoc($options_result)) {
 
         <!-- Add button container -->
         <div>
-            <a href="add_category.php" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+            <a href="add_product_category.php" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
         </div>
 
 </div>
@@ -123,10 +124,9 @@ while ($row = mysqli_fetch_assoc($options_result)) {
         <div class="product-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
             <?php foreach ($products as $product): ?>
                 <div class="product-card"
-                    onclick="window.location.href='product_info.php?id=<?= $product['id'] ?>'"
-                    style="width: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff;">
-                    <div style="height: 120px; background: #eee; display: flex; align-items: center; justify-content: center;">
-                        <img src="<?= htmlspecialchars($product['image_url'] ?? 'placeholder.png') ?>" alt=""
+                    onclick="window.location.href='product_info.php?id=<?= $product['id'] ?>'">
+                    <div class="product-block" >
+                        <img src="<?= htmlspecialchars($product['image'] ?? 'placeholder.png') ?>" alt=""
                             style="max-height: 100%; max-width: 100%;">
                     </div>
                     <div style="padding: 10px;">

@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
 
         $_SESSION['success_message'] = "Category added successfully!";
-        header("Location: add_category.php");
+        header("Location: add_product_category.php");
         exit();
     }
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
 
         $_SESSION['success_message'] = "Category deleted successfully!";
-        header("Location: add_category.php");
+        header("Location: add_product_category.php");
         exit();
     }
 }
@@ -61,13 +61,16 @@ $categories = $connection->query("SELECT * FROM categories")->fetch_all(MYSQLI_A
 </head>
 <body>
     <div id="sidebar" class="sidebar">
-            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-            <ul>
-                <li><a href="product_management.php">Product Management</a></li>
-                <li><a href="inventory_management.php">Inventory Management</a></li>
-                <li><a href="user_management.php">Users Management</a></li>
-            </ul>
-        </div>
+      <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+      <ul>
+          <li><a href="admin.php">Admin Page</a></li>
+          <li><a href="product_management.php">Product Management</a></li>
+          <li><a href="inventory_management.php">Inventory Management</a></li>
+          <li><a href="user_management.php">Users Management</a></li>
+          <li><a href="table_management_admin.php">Tables Management</a></li>
+      </ul>
+    </div>  
+
     <div class="container">
         <h2>Manage Categories</h2>
 
@@ -99,6 +102,8 @@ $categories = $connection->query("SELECT * FROM categories")->fetch_all(MYSQLI_A
         <a href="product_management.php">← Back to Product Management</a>
     </div>
 </div>
+
+<script src="script.js"></script>
 
 </body>
 </html>
