@@ -287,3 +287,93 @@ p a:hover {
     align-items: center; 
     justify-content: center
 }
+
+
+/* add table category */
+
+.top-category-bar {
+    display: flex;
+    overflow-x: auto;
+    background: #f2f2f2;
+    padding: 10px;
+    border-bottom: 2px solid #ccc;
+    gap: 10px;
+}
+
+.category-tab {
+    background: #ffffff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.3s;
+    border: 1px solid #ccc;
+    cursor: default;
+    position: relative;
+}
+
+.category-tab:hover {
+    background: #e0f7fa;
+}
+
+.delete-category-form {
+    margin: 0;
+}
+
+.delete-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: red;
+    font-size: 16px;
+}
+
+.delete-icon:hover {
+    transform: scale(1.1);
+}
+
+.form-container {
+    margin: 30px auto;
+    max-width: 400px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.form-container input[type="text"] {
+    width: 90%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+    margin-top: 10px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.option-card {
+    width: 180px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background:#fff;
+}
+
+.option-card:hover {
+    background: orange;
+}

@@ -27,21 +27,25 @@ if (!$product) {
 
 $current_category_id = $product['category'];
 
-// Get options
-$options_result = mysqli_query($connection, "SELECT * FROM options");
-$options_by_type = [];
-while ($opt = mysqli_fetch_assoc($options_result)) {
-    $options_by_type[$opt['type']][] = $opt;
-}
 
-$product_option_ids = explode(',', $product['options']);
 
 // Handle update
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
+    $stmt = $connection->prepare("DELETE FROM products WHERE id = ?");
+    $stmt->bind_param("i", $product_id);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: product_management.php?category=$current_category_id&deleted=1");
+    exit();
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
     $name = $_POST['product_name'];
     $price = $_POST['product_price'];
     $description = $_POST['product_desc'] ?? '';
-    $selected_options = [];
     $image_path = $product['image'];
     $upload_dir = 'uploads/';
     $image_path = '';
@@ -52,16 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         move_uploaded_file($_FILES['product_image']['tmp_name'], $image_path);
     }
 
-    foreach ($options_by_type as $type => $_) {
-        if (isset($_POST[$type . '_options'])) {
-            $selected_options = array_merge($selected_options, $_POST[$type . '_options']);
-        }
-    }
 
-    $options_str = implode(',', $selected_options);
-
-    $stmt = $connection->prepare("UPDATE products SET name = ?, price = ?, options = ?, description = ?, image = ? WHERE id = ?");
-    $stmt->bind_param("sisssi", $name, $price, $options_str, $description, $image_path, $product_id);
+    $stmt = $connection->prepare("UPDATE products SET name = ?, price = ?, description = ?, image = ? WHERE id = ?");
+    $stmt->bind_param("sissi", $name, $price, $description, $image_path, $product_id);
     $stmt->execute();
     $stmt->close();
 
@@ -89,31 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         <label for="product_price">Price:</label>
         <input type="number" name="product_price" value="<?= htmlspecialchars($product['price']) ?>" required>
 
-        <div id="option-blocks" style="margin: 5px 0;">
-            <?php foreach ($options_by_type as $type => $optionList): ?>
-                <div class="option-block" onclick="toggleCheckboxes('<?= $type ?>')">
-                    <?= ucfirst($type) ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
-
-        <?php foreach ($options_by_type as $type => $optionList): ?>
-            <div id="checkboxes_<?= $type ?>" class="checkbox-wrapper" style="display:none; margin-top:10px;">
-                <label style="font-weight:bold;"><?= ucfirst($type) ?> Options:</label>
-                <div class="checkbox-grid">
-                    <?php foreach ($optionList as $opt): ?>
-                        <label>
-                            <input type="checkbox"
-                                   name="<?= $type ?>_options[]"
-                                   value="<?= $opt['id'] ?>"
-                                   <?= in_array($opt['id'], $product_option_ids) ? 'checked' : '' ?>>
-                            <?= htmlspecialchars($opt['label']) ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        <?php endforeach; ?>
-
         <?php if (!empty($product['image'])): ?>
             <div style="margin-bottom:10px;">
                 <img src="<?= htmlspecialchars($product['image']) ?>" alt="Product Image" style="max-width: 150px;">
@@ -126,6 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         <textarea name="product_desc"><?= htmlspecialchars($product['description']) ?></textarea>
 
         <button type="submit" name="update_product">Update Product</button>
+
+        <button type="submit"
+                name="delete_product"
+                style="background-color: red; color: white; margin-top: 10px;"
+                onclick="return confirm('Are you sure you want to delete this product?');">
+            Delete Product
+        </button>
+
+
         <a href="product_management.php?category=<?= $current_category_id ?>">
             <button type="button">Cancel</button>
         </a>

@@ -39,15 +39,14 @@ function isActive($formName, $active_form){ // check if the form is active
             <form action="login_register.php" method="post">
                 <h2>Login!!!</h2>
                 <?= showError($error['login']); ?>
-                <input type="email" name="email" placeholder="Email" required>
+                <input type="username" name="username" placeholder="Username" required>
                 <input type="password" name="password" placeholder="Password" required>
                 <button type="submit" class="btn" name="login">Login</button>
-                <p><a href="#" onclick="showForm('register-form')">Register?</a></p>
             </form>
         </div>
     </div>
 
-    <div class="form-box <?= isActive('register',$active_form); ?>" id="register-form">
+    <!-- <div class="form-box <?= isActive('register',$active_form); ?>" id="register-form">
         <form action="login_register.php" method="post">  
             <h2>Register</h2>
             <?= showError($error['register']); ?>
@@ -64,7 +63,7 @@ function isActive($formName, $active_form){ // check if the form is active
             <button type="submit" class="btn" name="register">Register</button>
             <p>Already have an account? <a href="#" onclick="showForm('login-form')">Login</a></p>
         </form>
-    </div>
+    </div> -->
 
     <script src="script.js"></script>
 </body>

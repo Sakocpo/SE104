@@ -9,48 +9,45 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 // Handle category addition
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (isset($_POST['add_category']) && !empty($_POST['category_name'])) {
-      $name = trim($_POST['category_name']);
-      $stmt = $connection->prepare("INSERT INTO table_categories (name) VALUES (?)");
-      $stmt->bind_param("s", $name);
-      $stmt->execute();
-      $stmt->close();
+    if (isset($_POST['add_category']) && !empty($_POST['category_name'])) {
+        $name = trim($_POST['category_name']);
+        $stmt = $connection->prepare("INSERT INTO table_categories (name) VALUES (?)");
+        $stmt->bind_param("s", $name);
+        $stmt->execute();
+        $stmt->close();
 
-      $_SESSION['success_message'] = "Category added successfully!";
-      header("Location: add_table_category.php");
-      exit();
-  }
+        $_SESSION['success_message'] = "Category added successfully!";
+        header("Location: add_table_category.php");
+        exit();
+    }
 
-  // Handle deletion
-  if (isset($_POST['delete_category'])) {
-      $category_id = $_POST['category_id'];
+    // Handle deletion
+    if (isset($_POST['delete_category'])) {
+        $category_id = $_POST['category_id'];
 
-      // OPTIONAL: confirm there are no products assigned first
-      $stmt = $connection->prepare("DELETE FROM table_categories WHERE id = ?");
-      $stmt->bind_param("i", $category_id);
-      $stmt->execute();
-      $stmt->close();
+        // OPTIONAL: confirm there are no products assigned first
+        $stmt = $connection->prepare("DELETE FROM table_categories WHERE id = ?");
+        $stmt->bind_param("i", $category_id);
+        $stmt->execute();
+        $stmt->close();
 
-      $_SESSION['success_message'] = "Category deleted successfully!";
-      header("Location: add_table_category.php");
-      exit();
-  }
+        $_SESSION['success_message'] = "Category deleted successfully!";
+        header("Location: add_table_category.php");
+        exit();
+    }
 }
 
 // Fetch categories
 $categories = $connection->query("SELECT * FROM table_categories")->fetch_all(MYSQLI_ASSOC);
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Categories</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
+    <meta charset="UTF-8">
+    <title>Manage Categories</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
         .container { max-width: 600px; margin: 30px auto; padding: 20px; background: #f9f9f9; border-radius: 10px; }
         h2 { text-align: center; }
         .category-list { margin-top: 20px; }
@@ -63,7 +60,7 @@ $categories = $connection->query("SELECT * FROM table_categories")->fetch_all(MY
     </style>
 </head>
 <body>
-  <div id="sidebar" class="sidebar">
+    <div id="sidebar" class="sidebar">
       <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
       <ul>
           <li><a href="admin.php">Admin Page</a></li>
@@ -71,24 +68,24 @@ $categories = $connection->query("SELECT * FROM table_categories")->fetch_all(MY
           <li><a href="inventory_management.php">Inventory Management</a></li>
           <li><a href="user_management.php">Users Management</a></li>
           <li><a href="table_management_admin.php">Tables Management</a></li>
+          <li><a href="working_calendar.php">Working Calendar</a></li>
       </ul>
-  </div>  
+    </div>  
 
+    <div class="container">
+        <h2>Manage Categories</h2>
 
-  <div class="container">
-    <h2>Manage Categories</h2>
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <script>
+                alert("<?= $_SESSION['success_message'] ?>");
+            </script>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
 
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <script>
-            alert("<?= $_SESSION['success_message'] ?>");
-        </script>
-        <?php unset($_SESSION['success_message']); ?>
-    <?php endif; ?>
-
-    <form method="POST" onsubmit="return confirm('Are you sure you want to add this category?')">
-        <input type="text" name="category_name" placeholder="New category name" required>
-        <button type="submit" name="add_category" class="btn-primary">Add Category</button>
-    </form>
+        <form method="POST" onsubmit="return confirm('Are you sure you want to add this category?')">
+            <input type="text" name="category_name" placeholder="New category name" required>
+            <button type="submit" name="add_category" class="btn-primary">Add Category</button>
+        </form>
 
     <div class="category-list">
         <?php foreach ($categories as $cat): ?>
@@ -103,15 +100,11 @@ $categories = $connection->query("SELECT * FROM table_categories")->fetch_all(MY
     </div>
 
     <div style="margin-top: 20px; text-align: center;">
-        <a href="table_management_admin.php">← Back to Tables Management</a>
+        <a href="table_management_admin.php">← Back to Product Management</a>
     </div>
+</div>
 
-
-  </div>
-
-
-
-  <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
