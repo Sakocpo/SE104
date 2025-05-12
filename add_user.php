@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
       <select name="role" required>
         <option value="admin">Admin</option>
         <option value="waiter">Waiter</option>
+        <option value="kitchen">Kitchen</option>
       </select>
 
       <label for="user_image">User Image (optional)</label>

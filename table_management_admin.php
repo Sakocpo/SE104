@@ -27,7 +27,7 @@ if ($current_category_id !== null) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (isset($_POST['add_table'])) {
       $table_number = $_POST['table_name'];
-      $table_category = $_POST['table_category']; // still assumed to be coming from your form if needed
+      $table_category = $_POST['table_category'];
       $description = isset($_POST['table_desc']) ? $_POST['table_desc'] : '';
       $active_bool = $_POST['active'];
       $stmt = $connection->prepare("INSERT INTO tables (table_name, table_category, table_desc, active) VALUES (?, ?, ?, ?)");
@@ -39,8 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt->close();
   }
 }
-
-
 ?>
 
 
@@ -63,10 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <li><a href="user_management.php">Users Management</a></li>
           <li><a href="table_management_admin.php">Tables Management</a></li>
           <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="working_calendar.php">Working Calendar</a></li>
+          <li><a href="report.php">Report</a></li>
       </ul>
     </div>
-
         <!-- Horizontal category bar -->
         <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
 
@@ -90,14 +87,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Add button container -->
             <div>
-                <a href="add_table_category.php" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+                <a href="categories.php?entity=tables" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
             </div>
 
         </div>
 
         <div class="table-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
             <?php foreach ($tables as $table): ?>
-                <div class="product-card"
+                <div class="table-card"
                     onclick="window.location.href='table_info.php?id=<?= $table['id'] ?>'"
                     style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
 
@@ -125,12 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endforeach; ?>
         </div>
-
-            
-
-
         <div class="add-button">
-
             <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
             <?php if($current_category_id): ?>
             <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
@@ -138,15 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button style="font-size: 28px; padding: 10px 18px; border-radius: 50%; background: #007bff; color: white; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">+</button>
             </div>
         <?php endif; ?>
-
-
-
     </div>
-
-
     <script src="script.js"></script>
-
-
-
 </body>
 </html>

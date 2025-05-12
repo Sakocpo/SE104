@@ -7,19 +7,19 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-$current_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
 $categories_result = $connection->query("SELECT * FROM option_categories");
 $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
+$current_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
 
 // Determine selected category
-$selected_type_id = $current_category_id ?? ($categories[0]['id'] ?? null);
+// $selected_type_id = $current_category_id ?? ($categories[0]['id'] ?? null);
 
 
 // Get options of selected category
 $options = [];
-if ($selected_type_id) {
+if ($current_category_id !== null) {
     $stmt = $connection->prepare("SELECT * FROM options WHERE type_id = ?");
-    $stmt->bind_param("i", $selected_type_id);
+    $stmt->bind_param("i", $current_category_id);
     $stmt->execute();
     $options_result = $stmt->get_result();
     while ($row = $options_result->fetch_assoc()) {
@@ -45,7 +45,7 @@ if ($selected_type_id) {
           <li><a href="user_management.php">Users Management</a></li>
           <li><a href="table_management_admin.php">Tables Management</a></li>
           <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="working_calendar.php">Working Calendar</a></li>
+          <li><a href="report.php">Report</a></li>
       </ul>
     </div>
 
@@ -74,7 +74,7 @@ if ($selected_type_id) {
 
         <!-- Add button container -->
         <div>
-            <a href="add_option_category.php" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+            <a href="categories.php?entity=options" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
         </div>
 
     </div>

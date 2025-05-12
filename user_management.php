@@ -10,7 +10,8 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 $current_category_id = isset($_GET['category']) ? $_GET['category'] : null;
 $categories = [
     ['id' => 'admin', 'name' => 'Admin'],
-    ['id' => 'waiter', 'name' => 'Waiter']
+    ['id' => 'waiter', 'name' => 'Waiter'],
+    ['id' => 'kitchen', 'name' => 'Kitchen']
 ];
 
 
@@ -59,7 +60,6 @@ if (isset($_GET['delete'])) {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="sidebar" class="sidebar">
       <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
       <ul>
@@ -69,7 +69,7 @@ if (isset($_GET['delete'])) {
           <li><a href="user_management.php">Users Management</a></li>
           <li><a href="table_management_admin.php">Tables Management</a></li>
           <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="working_calendar.php">Working Calendar</a></li>
+          <li><a href="report.php">Report</a></li>
       </ul>
     </div>
 

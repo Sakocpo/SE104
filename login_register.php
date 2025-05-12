@@ -48,8 +48,10 @@ if(isset($_POST['login'])) { // check if login button clicked
 
             if ($user['role'] == 'admin') {
                 header("Location: admin.php"); 
-            } else {
+            } else  if ($user['role'] == 'waiter') {
                 header("Location: waiter.php"); 
+            } else if ($user['role'] == 'kitchen') {
+                header("Location: kitchen.php");
             }
 
             exit(); 

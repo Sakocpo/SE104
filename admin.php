@@ -6,8 +6,6 @@ if (!isset($_SESSION['user'])) {
 }
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,11 +21,11 @@ if (!isset($_SESSION['user'])) {
       <ul>
           <li><a href="admin.php">Admin Page</a></li>
           <li><a href="product_management.php">Product Management</a></li>
-          <li><a href="inventory_management.php">Inventory Management</a></li>
+          <li><a href="ingredients_management.php">Ingredients Management</a></li>
           <li><a href="user_management.php">Users Management</a></li>
           <li><a href="table_management_admin.php">Tables Management</a></li>
           <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="working_calendar.php">Working Calendar</a></li>
+          <li><a href="report.php">Report</a></li>
       </ul>
     </div>
 

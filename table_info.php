@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_table'])) {
     $stmt->execute();
     $stmt->close();
 
-    header("Location: product_management.php?category=$current_category_id&deleted=1");
+    header("Location: table_management_admin.php?category=$current_category_id&deleted=1");
     exit();
 }
 
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
     $active = isset($_POST['active']) ? 1 : 0;
 
     $stmt = $connection->prepare("UPDATE tables SET table_name = ?, table_desc = ?, active = ? WHERE id = ?");
-    $stmt->bind_param("ssii ", $name, $description, $active, $table_id);
+    $stmt->bind_param("ssii", $name, $description, $active, $table_id);
     $stmt->execute();
     $stmt->close();
 

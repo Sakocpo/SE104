@@ -19,6 +19,17 @@ $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
 $current_category_id = isset($_GET['category']) ? intval($_GET['category']) : ($categories[0]['id'] ?? null);
 
+// 1. Load table and its current order ID
+$t = intval($_GET['table_id'] ?? 0);
+$stmt = $connection->prepare("SELECT * FROM tables WHERE id = ?");
+$stmt->bind_param("i", $t);
+$stmt->execute();
+$table = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+if (!$table) exit("Table not found");
+
+$table_cat = $table['table_category'];
+
 $products = [];
 if ($current_category_id) {
     $stmt = $connection->prepare("SELECT * FROM products WHERE category = ?");
@@ -80,9 +91,9 @@ if ($current_category_id) {
                     <img src="<?= htmlspecialchars($product['image'] ?? 'placeholder.png') ?>" alt=""
                         style="max-height: 100%; max-width: 100%;">
                 </div>
-                <div style="padding: 10px;">
+                <div class="text-block" style="padding: 10px;">
                     <h4 style="margin: 0 0 8px;"><?= htmlspecialchars($product['name']) ?></h4>
-                    <p style="margin: 0; font-weight: bold; color: #007bff;">₫<?= number_format($product['price']) ?></p>
+                    <p style="margin: 0; font-weight: bold;">₫<?= number_format($product['price']) ?></p>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -90,20 +101,24 @@ if ($current_category_id) {
 
     <div class="options-popup" id="options-popup">
   <div class="popup-content" id="popup-content">
-    <h3 id="popup-product-name">Product Name</h3>
+    <!-- … inside your <div class="popup-content"> … -->
+<h3 id="popup-product-name"></h3>
 
-    <!-- NEW: category buttons go here -->
-    <div id="option-categories" class="option-category-row"></div>
-    <!-- NEW: single options container -->
-    <div id="option-items" class="option-content-row"></div>
+<!-- row of category “tabs” -->
+<div id="option-categories" class="option-category-row"></div>
 
-    <div class="quantity-control">
-      <button onclick="adjustQty(-1)">−</button>
-      <input type="number" id="quantity-input" value="1" min="1" />
-      <button onclick="adjustQty(1)">+</button>
-    </div>
-    <button onclick="addToOrder()" class="confirm-btn">Add to Order</button>
-    <button onclick="closePopup()" class="cancel-btn">Cancel</button>
+<!-- row of that category’s label-pills -->
+<div id="option-items"      class="option-item-row"></div>
+
+<!-- qty and buttons below… -->
+<div class="quantity-control">
+  <button type="button" onclick="adjustQty(-1)">−</button>
+  <input id="quantity-input" type="number" value="1" min="0">
+  <button type="button" onclick="adjustQty(1)">+</button>
+</div>
+<button type="button" onclick="addToOrder()" class="confirm-btn">Add to Order</button>
+<button type="button" onclick="closePopup()"   class="cancel-btn">Cancel</button>
+
   </div>
 </div>
 
@@ -114,14 +129,37 @@ if ($current_category_id) {
 </div>
 
 <!-- Order Review Panel -->
+<!-- Order Review Panel -->
 <div class="order-review" id="order-review">
   <div class="review-content">
     <h3>Order for Table <?= $table_id ?></h3>
+
+    <!-- give this the review-list class -->
     <div id="order-summary-list" class="review-list"></div>
+
     <button onclick="submitOrder(<?= $table_id ?>)" class="submit-order-btn">Send to Kitchen</button>
     <button onclick="closeReview()" class="cancel-review-btn">Cancel</button>
   </div>
 </div>
+
+
+  <!-- Cancel button -->
+  <a href="table_management_waiter.php?category=<?=$table_cat?>"
+    style="
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #dc3545;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      z-index: 1001;
+    ">
+  Cancel
+</a>
 
 
 <script src="waiter_ordering.js"></script>

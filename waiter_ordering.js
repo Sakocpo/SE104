@@ -1,13 +1,14 @@
-let currentProduct = null;
-let optionsData     = {};       // fetched from server: { categoryName: [ {id,label}, ... ] }
-let currentOptions  = {};       // your picks: { categoryName: selectedLabel }
-let currentCategory = null;     // which tab is open
-let order          = [];       // { product, quantity, options: { categoryName: selectedLabel } }
+// waiter_ordering.js
 
+let currentProduct, optionsData = {}, currentOptions = {}, currentCategory, order = [];
+
+/**
+ * Open the “choose options” pop‑up for a product
+ */
 function openOptionsPopup(product) {
   currentProduct = product;
   document.getElementById("popup-product-name").innerText = product.name;
-  document.getElementById("quantity-input").value     = 1;
+  document.getElementById("quantity-input").value = 1;
 
   const catRow  = document.getElementById("option-categories");
   const itemRow = document.getElementById("option-items");
@@ -17,46 +18,47 @@ function openOptionsPopup(product) {
   fetch(`fetch_options.php?product_id=${product.id}`)
     .then(r => r.json())
     .then(data => {
-      optionsData    = data;
-      currentOptions = {};
-      catRow.innerHTML = "";
-
-      // pick first category as default
-      currentCategory = Object.keys(data)[0] || null;
-
-      // initialize default choice = first label
-      for (let cat of Object.keys(data)) {
-        currentOptions[cat] = data[cat][0]?.label || null;
+      optionsData = data;
+      const cats = Object.keys(data);
+      if (!cats.length) {
+        catRow.innerText = "No options";
+        return;
       }
+      // default picks
+      currentCategory = cats[0];
+      currentOptions = {};
+      cats.forEach(cat => {
+        currentOptions[cat] = data[cat][0]?.label || null;
+      });
 
       // build category tabs
-      Object.keys(data).forEach(cat => {
+      catRow.innerHTML = "";
+      cats.forEach(cat => {
         const btn = document.createElement("div");
         btn.className = "option-category-btn";
         btn.innerText = cat;
         btn.onclick = () => {
           currentCategory = cat;
-          // refresh tab highlight & content
-          document.querySelectorAll(".option-category-btn")
-                  .forEach(b => b.classList.toggle("active", b === btn));
+          catRow.querySelectorAll(".option-category-btn")
+                .forEach(b => b.classList.toggle("active", b === btn));
           renderItems();
         };
         catRow.appendChild(btn);
       });
-
-      // mark first active
-      catRow.querySelector(".option-category-btn").classList.add("active");
+      catRow.firstChild.classList.add("active");
       renderItems();
     })
     .catch(err => {
-      catRow.innerText = "Failed to load options.";
       console.error(err);
+      catRow.innerText = "Failed to load options.";
     });
 
   document.getElementById("options-popup").style.display = "flex";
 }
 
-// render only currentCategory’s labels
+/**
+ * Render the labels for the currently selected option‑category
+ */
 function renderItems() {
   const itemRow = document.getElementById("option-items");
   itemRow.innerHTML = "";
@@ -71,7 +73,6 @@ function renderItems() {
     }
     pill.onclick = () => {
       currentOptions[currentCategory] = opt.label;
-      // re-draw only this category’s pills:
       itemRow.querySelectorAll(".option-item")
              .forEach(p => p.classList.toggle("selected", p === pill));
     };
@@ -82,101 +83,131 @@ function renderItems() {
 function closePopup() {
   document.getElementById("options-popup").style.display = "none";
 }
-function adjustQty(d) {
-  const i = document.getElementById("quantity-input");
-  let v = parseInt(i.value)||1; i.value = Math.max(1, v + d);
+
+/**
+ * Adjust quantity by delta, allow going down to 0
+ */
+function adjustQty(delta) {
+  const inp = document.getElementById("quantity-input");
+  let v = parseInt(inp.value) || 0;
+  inp.value = Math.max(0, v + delta);
 }
+
+/**
+ * Add current selection to the in‑memory order
+ */
 function addToOrder() {
-  const qty = parseInt(document.getElementById("quantity-input").value)||1;
-  order.push({ product: currentProduct, quantity: qty, options: {...currentOptions} });
+  const qty = parseInt(document.getElementById("quantity-input").value) || 0;
+  order.push({
+    product : currentProduct,
+    quantity: qty,
+    options : { ...currentOptions }
+  });
   closePopup();
 }
-// … rest of your review/submit handlers …
 
-
+/**
+ * Show the review panel, let you tweak each line
+ */
 function openReview() {
-  const container = document.getElementById("order-summary-list");
-  container.innerHTML = "";
+  const list = document.getElementById("order-summary-list"),
+        popup = document.getElementById("order-review");
+  list.innerHTML = "";
 
   order.forEach((item, idx) => {
     const row = document.createElement("div");
     row.className = "review-item";
 
-    // product name + options string
-    let opts = [];
+    // Product + options text
+    const opts = [];
     for (let cat in item.options) {
       if (item.options[cat]) opts.push(`${cat}: ${item.options[cat]}`);
     }
     const title = document.createElement("div");
-    title.className = "name";
-    title.innerText = `${item.product.name} ${opts.length? '- '+opts.join(' | '): ''}`;
+    title.className = "ri-name";
+    title.innerText = item.product.name
+                      + (opts.length ? " — " + opts.join(" | ") : "");
 
-    // quantity controls
+    // Qty controls
     const qc = document.createElement("div");
-    qc.className = "qty-control";
+    qc.className = "ri-qty";
 
-    const btnDec = document.createElement("button");
-    btnDec.innerText = "−";
-    btnDec.onclick = () => {
-      if (item.quantity > 1) {
-        item.quantity--;
-        qtyInput.value = item.quantity;
-      }
+    const dec = document.createElement("button"); dec.type = "button"; dec.innerText = "−";
+    const inp = document.createElement("input");
+          inp.type = "number";
+          inp.value = item.quantity;
+          inp.onchange = () => {
+            item.quantity = Math.max(0, parseInt(inp.value) || 0);
+            inp.value = item.quantity;
+            if (item.quantity === 0) row.style.display = "none";
+          };
+    const inc = document.createElement("button"); inc.type = "button"; inc.innerText = "+";
+
+    dec.onclick = () => {
+      item.quantity = Math.max(0, item.quantity - 1);
+      inp.value = item.quantity;
+      if (item.quantity === 0) row.style.display = "none";
     };
-
-    const qtyInput = document.createElement("input");
-    qtyInput.type = "number";
-    qtyInput.value = item.quantity;
-    qtyInput.min = 1;
-    qtyInput.onchange = () => {
-      let v = parseInt(qtyInput.value)||1;
-      item.quantity = Math.max(1,v);
-      qtyInput.value = item.quantity;
-    };
-
-    const btnInc = document.createElement("button");
-    btnInc.innerText = "+";
-    btnInc.onclick = () => {
+    inc.onclick = () => {
       item.quantity++;
-      qtyInput.value = item.quantity;
+      inp.value = item.quantity;
+      row.style.display = "";
     };
 
-    qc.append(btnDec, qtyInput, btnInc);
-
+    qc.append(dec, inp, inc);
     row.append(title, qc);
-    container.appendChild(row);
+    list.appendChild(row);
   });
 
-  document.getElementById("order-review").style.display = "flex";
+  popup.style.display = "flex";
 }
-
 
 function closeReview() {
   document.getElementById("order-review").style.display = "none";
 }
 
+/**
+ * Submit only items with quantity > 0
+ */
 function submitOrder(tableId) {
-  alert("Order sent!");
-  window.location.href = `table_management_waiter.php?highlight=${tableId}`;
-}
+  // build only the items with qty > 0
+  const itemsPayload = order
+    .filter(it => it.quantity > 0)
+    .map(it => ({
+      product_id: it.product.id,
+      options: Object.entries(it.options)
+        .map(([cat,label]) => {
+          const opt = optionsData[cat].find(o=>o.label===label);
+          return opt ? opt.id : null;
+        })
+        .filter(x=>x!=null),
+      quantity: it.quantity
+    }));
 
+  // **NEW**: if nothing selected, stop here
+  if (itemsPayload.length === 0) {
+    alert("Please choose at least one product before sending to kitchen.");
+    return;
+  }
 
-const categoryBoxes = document.querySelectorAll('.option-category-box');
-const optionContents = document.querySelectorAll('.option-content');
+  const payload = { table_id: tableId, items: itemsPayload };
 
-categoryBoxes.forEach(box => {
-  box.addEventListener('click', () => {
-    // Remove active from all boxes
-    categoryBoxes.forEach(b => b.classList.remove('active'));
-    // Hide all option contents
-    optionContents.forEach(c => c.classList.remove('visible'));
-
-    // Activate clicked box
-    box.classList.add('active');
-    // Show its related option-content
-    const content = box.querySelector('.option-content');
-    if (content) {
-      content.classList.add('visible');
+  fetch("submit_order.php", {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(r=>r.json())
+  .then(json=>{
+    if (json.success) {
+      alert("Sent to kitchen!");
+      window.location = "table_management_waiter.php";
+    } else {
+      alert("Error: " + (json.error||"unknown"));
     }
+  })
+  .catch(err=>{
+    console.error(err);
+    alert("Failed to submit order.");
   });
-});
+}

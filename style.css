@@ -1,379 +1,797 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap&subset=latin-ext');
 
 * { /* Applies to all elements */
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Poppins", serif;
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: "Roboto", serif;
 }
 
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    /* background: linear-gradient(to right, rgb(255, 76, 76), rgb(203, 252, 4)); */
-    background: gray;
-    color: darkgray;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+/* background: linear-gradient(to right, rgb(255, 76, 76), rgb(203, 252, 4)); */
+background: #FBDB93;
+font-size: 18px;
+color: #BE5B50;
 }
 
 .container {
-    margin: 0 15px; /* 0 top and bottom, 15px left and right */
+margin: 0 15px; /* 0 top and bottom, 15px left and right */
 
 }
 .form-box {
-    width: 100%; /* 100% of the container */
-    max-width: 450px;
-    padding: 30px; /* padding from content to the box */
-    background: white;
-    border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
-    display: none; /* Hide form */
+width: 100%; /* 100% of the container */
+max-width: 450px;
+padding: 30px; /* padding from content to the box */
+background: white;
+border-radius: 10px; /* Rounded corners */
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
+display: none; /* Hide form */
 }
 
 .form-box.active {
-    display: block; /* show form */
+display: block; /* show form */
 }
 
 
 
 h2 {
-    font-size: 34px;
-    text-align: center;
-    margin-bottom: 20px; /* under login */
+font-size: 34px;
+text-align: center;
+margin-bottom: 20px; /* under login */
 }
 
 input, select { /* can have 2 boxes */
-    width: 100%;
-    padding: 12px;
-    background-color: lightgray;
-    border-radius: 6px;
-    border: None;
-    outline: None;
-    font-size: 16px;
-    color: black;
-    margin-bottom: 15px; /* space between email and pass */
+width: 100%;
+padding: 12px;
+background-color: lightgray;
+border-radius: 6px;
+border: None;
+outline: None;
+font-size: 16px;
+color: black;
+margin-bottom: 15px; /* space between email and pass */
 }
 
 button {
-    width: 100%;
-    padding: 12px;
-    background: lightblue;
-    border-radius: 6px;
-    border: None;
-    outline: None;
-    font-size: 16px;
-    color: white;
-    margin-bottom: 20px;
-    font-weight: 500; /* boldness */
-    cursor: pointer;
-    transition: 0.8s; /* smooth transition */
+width: 100%;
+padding: 12px;
+background: lightblue;
+border-radius: 6px;
+border: None;
+outline: None;
+font-size: 16px;
+color: white;
+margin-bottom: 20px;
+font-weight: 500; /* boldness */
+cursor: pointer;
+transition: 0.8s; /* smooth transition */
 }
 
 button:hover {
-    background: lightgreen;
+background: lightgreen;
 }
 
 p {
-    font-size: 14px;
-    text-align: center;
-    margin-bottom: 10px;
+font-size: 14px;
+text-align: center;
+margin-bottom: 10px;
 }
 
 p a {
-    color: gray;
-    text-decoration: None; /* remove underline */
+color: gray;
+text-decoration: None; /* remove underline */
 }
 
 p a:hover {
-    text-decoration: underline;
+text-decoration: underline;
 }
 
 
 .error-message {
-    padding: 12px;
-    background: whitesmoke;
-    border-radius: 6px;
-    font-size: 16px;
-    color: darkred;
-    text-align: center;
-    margin-bottom: 20px;
+padding: 12px;
+background: whitesmoke;
+border-radius: 6px;
+font-size: 16px;
+color: darkred;
+text-align: center;
+margin-bottom: 20px;
 }
 
 /* Sidebar styles */
 .sidebar {
-    position: fixed;
-    top: 10px;
-    left: -250px; /* Hidden by default */
-    width: 250px;
-    height: 100%;
-    background-color: #333;
-    color: white;
-    transition: left 0.3s ease;
-    padding-top: 20px;
-    z-index: 1001;
+position: fixed;
+top: 10px;
+left: -250px; /* Hidden by default */
+width: 250px;
+height: 100%;
+background-color: #333;
+color: white;
+transition: left 0.3s ease;
+padding-top: 20px;
+z-index: 1001;
 }
 
 .sidebar.active {
-    left: 0; /* Show sidebar when active */
+left: 0; /* Show sidebar when active */
 }
 
 .sidebar .toggle-btn {
-    position: absolute;
-    top: 0;
-    left: 100%;
-    width: 40px;
-    height: 40px;
-    background-color: #333;
-    color: white;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 10px;
-    font-size: 22px;
-    z-index: 1001;
-    transition: left 0.3s ease;
+position: absolute;
+top: 0;
+left: 100%;
+width: 40px;
+height: 40px;
+background-color: #333;
+color: white;
+border: none;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: flex-end;
+padding-right: 10px;
+font-size: 22px;
+z-index: 1001;
+transition: left 0.3s ease;
 }
 
 .sidebar.active .toggle-btn {
-    left: 250px; /* Moves with the sidebar */
+left: 250px; /* Moves with the sidebar */
 }
 
 .sidebar ul {
-    list-style: none;
-    padding: 10px 0;
-    margin: 0;
+list-style: none;
+padding: 10px 0;
+margin: 0;
 }
 
 .sidebar ul li {
-    padding: 15px 20px;
-    overflow: hidden; /* Ensure content is not covered */
-    white-space: nowrap; /* Prevent text wrapping */
-    text-overflow: ellipsis; /* Add ellipsis for overflow */
+padding: 15px 20px;
+overflow: hidden; /* Ensure content is not covered */
+white-space: nowrap; /* Prevent text wrapping */
+text-overflow: ellipsis; /* Add ellipsis for overflow */
 }
 
 .sidebar ul li a {
-    color: white;
-    text-decoration: none;
+color: white;
+text-decoration: none;
 }
 
 .sidebar ul li a:hover {
-    text-decoration: underline;
+text-decoration: underline;
 }
 
 /* Content styles */
 .content {
-    margin-left: 0;
-    transition: margin-left 0.3s ease;
+margin-left: 0;
+transition: margin-left 0.3s ease;
 }
 
 .form-containers {
-    margin-top: 70px;
+margin-top: 70px;
 }
 
 .sidebar.active ~ .content {
-    margin-left: 250px; /* Adjust content when sidebar is active */
-    margin-top: 300px;
+margin-left: 250px; /* Adjust content when sidebar is active */
+margin-top: 300px;
 }
 
 .category-bar {
-    display: flex;
-    top: 10px;
-    left: 500px;
-    align-items: center;
-    background: #f1f1f1;
-    padding: 10px;
+display: flex;
+top: 10px;
+left: 500px;
+align-items: center;
+background: #f1f1f1;
+padding: 10px;
 }
 .category-item {
-    margin-right: 10px;
-    padding: 8px 12px;
-    text-decoration: none;
-    color: #333;
-    background: #e0e0e0;
-    border-radius: 5px;
+margin-right: 10px;
+padding: 8px 12px;
+text-decoration: none;
+color: #333;
+background: #e0e0e0;
+border-radius: 5px;
 }
 .category-item.active {
-    background: #007bff;
-    color: white;
+background: #007bff;
+color: white;
 }
 .category-add-button {
-    padding: 8px 12px;
-    background: #28a745;
-    color: white;
-    text-decoration: none;
-    border-radius: 50%;
-    font-weight: bold;
+padding: 8px 12px;
+background: #28a745;
+color: white;
+text-decoration: none;
+border-radius: 50%;
+font-weight: bold;
 }
 
 
 .options-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1px;
-    margin-bottom: 1rem;
+display: flex;
+flex-wrap: wrap;
+gap: 1px;
+margin-bottom: 1rem;
 }
 
 .option-item {
-    flex: 1 1 30%;
+flex: 1 1 30%;
 }
 
 .option-block {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 5px;
-    background: #e0e0e0;
-    border-radius: 5px;
-    cursor: pointer;
-    color: red;
+display: inline-block;
+padding: 10px 15px;
+margin: 5px;
+background: #e0e0e0;
+border-radius: 5px;
+cursor: pointer;
+color: red;
 }
 
 
 
 .checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
+display: grid;
+grid-template-columns: repeat(5, 1fr);
 }
 .checkbox-grid label {
-    display: flex;
-    align-items: center;
-    color: orange;
+display: flex;
+align-items: center;
+color: orange;
 }
 
 
 
 
 .forms-container h3 {
-    margin-top: 0;
+margin-top: 0;
 }
 
 .forms-container input[type="text"],
 .forms-container textarea {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+width: 100%;
+padding: 8px;
+margin-bottom: 12px;
+border: 1px solid #ccc;
+border-radius: 4px;
+box-sizing: border-box;
 }
 
 .forms-container label {
-    display: block;
-    margin-bottom: 6px;
+display: block;
+margin-bottom: 6px;
 }
 
 .forms-container input[type="checkbox"] {
-    margin-right: 5px;
+margin-right: 5px;
 }
 
 .product-card {
-    width: 180px;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    background:#fff;
+width: 180px;
+border: 1px solid #ccc;
+border-radius: 12px;
+overflow: hidden;
+cursor: pointer;
+background:#fff;
 }
 
-.product-card:hover {
-    background: orange;
+.product-card .product-block {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden; /* crop any overflows */
+}
+
+.product-card .text-block {
+  background: #ffb31c;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.product-card .text-block:hover {
+  background: #ff9800;
+  opacity: 1;
+}
+
+.product-card .product-block img {
+  display: block;        /* removes default inline whitespace */
+  width: 100%;           /* fill container width */
+  height: auto;          /* maintain aspect ratio */
+  object-fit: cover;     /* crop/cover if you want it to fill both dims */
+}
+
+.text-block {
+  background: rgb(253, 168, 12);
+  opacity: 1;
+  transition: 0.5s;
+}
+
+.text-block:hover {
+  background: #f9a62a;
+  opacity: 1;
+}
+
+.text-block h4 {
+  text-align: center;
+  color: #ffe7a5;
+}
+
+.text-block p {
+  text-align: center;
+  color: #A86523;
+  font-size: 14px;
 }
 
 .product-block {
-    height: 120px; 
-    background: #eee; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center
+height: 120px; 
+background: #eee; 
+display: flex; 
+align-items: center; 
+justify-content: center
 }
 
 
 /* add table category */
 
 .top-category-bar {
-    display: flex;
-    overflow-x: auto;
-    background: #f2f2f2;
-    padding: 10px;
-    border-bottom: 2px solid #ccc;
-    gap: 10px;
+display: flex;
+overflow-x: auto;
+background: #f2f2f2;
+padding: 10px;
+border-bottom: 2px solid #ccc;
+gap: 10px;
 }
 
 .category-tab {
-    background: #ffffff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: background 0.3s;
-    border: 1px solid #ccc;
-    cursor: default;
-    position: relative;
+background: #ffffff;
+padding: 8px 16px;
+border-radius: 20px;
+display: flex;
+align-items: center;
+gap: 10px;
+transition: background 0.3s;
+border: 1px solid #ccc;
+cursor: default;
+position: relative;
 }
 
 .category-tab:hover {
-    background: #e0f7fa;
+background: #e0f7fa;
 }
 
 .delete-category-form {
-    margin: 0;
+margin: 0;
 }
 
 .delete-icon {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: red;
-    font-size: 16px;
+background: none;
+border: none;
+cursor: pointer;
+color: red;
+font-size: 16px;
 }
 
 .delete-icon:hover {
-    transform: scale(1.1);
+transform: scale(1.1);
 }
 
 .form-container {
-    margin: 30px auto;
-    max-width: 400px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 12px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.05);
-    text-align: center;
+margin: 30px auto;
+max-width: 400px;
+padding: 20px;
+background: #f9f9f9;
+border-radius: 12px;
+box-shadow: 0 0 8px rgba(0,0,0,0.05);
+text-align: center;
 }
 
 .form-container input[type="text"] {
-    width: 90%;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+width: 90%;
+padding: 10px;
+margin-top: 10px;
+border-radius: 6px;
+border: 1px solid #ccc;
 }
 
 .btn-primary {
-    background: #007bff;
-    color: white;
-    border: none;
-    margin-top: 10px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
+background: #007bff;
+color: white;
+border: none;
+margin-top: 10px;
+padding: 10px 20px;
+border-radius: 6px;
+cursor: pointer;
 }
 
 .btn-primary:hover {
-    background: #0056b3;
+background: #0056b3;
 }
 
 .option-card {
-    width: 180px;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    background:#fff;
+width: 180px;
+border: 1px solid #ccc;
+border-radius: 12px;
+overflow: hidden;
+cursor: pointer;
+background:#fff;
 }
 
 .option-card:hover {
-    background: orange;
+background: orange;
+}
+
+.option-category-row {
+display: flex;
+gap: 8px;
+margin: 12px 0;
+}
+.option-category-btn {
+padding: 6px 12px;
+background: #eee;
+border-radius: 20px;
+cursor: pointer;
+user-select: none;
+}
+.option-category-btn.active {
+background: #28a745;
+color: white;
+font-weight: bold;
+}
+
+.option-item-row {
+display: flex;
+gap: 6px;
+flex-wrap: wrap;
+margin-bottom: 12px;
+}
+.option-item {
+padding: 6px 10px;
+background: #f5f5f5;
+border-radius: 12px;
+cursor: pointer;
+user-select: none;
+}
+.option-item.selected {
+background: #28a745;
+color: white;
+}
+
+.review-item {
+display: flex;
+justify-content: space-between;
+margin: 8px 0;
+}
+.ri-name {
+flex: 1;
+}
+.ri-qty input {
+text-align: center;
+}
+
+
+.report-table {
+width: 100%;
+border-collapse: collapse;
+margin: 20px 0;
+font-family: sans-serif;
+}
+
+.report-table th,
+.report-table td {
+border: 1px solid #ccc;
+padding: 8px 12px;
+text-align: left;
+}
+
+.report-table thead {
+background-color: #f0f0f0;
+}
+
+.report-table tfoot {
+background-color: #e0e0e0;
+font-weight: bold;
+}
+
+.report-table tfoot td {
+border-top: 2px solid #999;
+}
+
+
+
+/* style.css */
+
+.table-grid {
+display: flex;
+flex-wrap: wrap;
+margin-top: 80px;
+gap: 16px;
+padding: 20px;
+}
+
+.table-card {
+width: 180px;
+height: 180px;
+border: 1px solid #ccc;
+border-radius: 12px;
+overflow: hidden;
+display: flex;
+align-items: center;
+justify-content: center;
+text-decoration: none;
+color: inherit;
+cursor: pointer;
+background-color: #fff;
+transition: background-color 0.3s ease;
+}
+
+.table-card.occupied {
+background-color: #ffeb3b; /* yellow for occupied */
+}
+
+
+.table-card:hover {
+background: orange;
+}
+
+
+/* existing .table-card styles … */
+
+.table-card {
+  width: 180px;
+  height: 180px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  transition: background 0.3s;
+}
+
+.table-card.occupied {
+  background: #ffc107; /* or your preferred “yellow” */
+}
+
+/* If you’re using the category-bar CSS from before: */
+.top-category-bar {
+  position: fixed;
+  top: 0; left: 50px; right: 0;
+  background: #f0f0f0;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  z-index: 1000;
+}
+
+.category-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.category-btn {
+  padding: 8px 14px;
+  border-radius: 18px;
+  text-decoration: none;
+  background: #e0e0e0;
+  color: #333;
+}
+
+.category-btn.active {
+  background: #28a745;
+  color: white;
+  font-weight: bold;
+}
+
+
+/* make the overall container full‑width and center it if you want a max‑width */
+.main-payment-layout {
+  width: 100%;
+  max-width: 600px;      /* or remove this if you truly want edge‑to‑edge */
+  margin: 0 auto;
+  padding: 0 16px;       /* horizontal padding */
+  box-sizing: border-box;
+}
+
+/* ensure each row stretches */
+.top-bar,
+.payment-types,
+.info-blocks,
+.actions {
+  width: 100%;
+  margin: 12px 0;
+}
+
+/* layout the two payment buttons side by side, equal width */
+.payment-types {
+  display: flex;
+  gap: 12px;
+}
+
+.payment-types button {
+  flex: 1;               /* share available space */
+  padding: 12px;
+  font-size: 1.1em;
+}
+
+/* info blocks side‑by‑side */
+.info-blocks {
+  display: flex;
+  gap: 12px;
+}
+
+.info-blocks > div {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* make action buttons full width */
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.actions > * {
+  flex: 1;
+}
+
+.top-bar {
+  background:#f0f0f0;padding:16px;
+  text-align:center;font-size:1.2em;
+  position:relative;
+}
+.payment-types { text-align:center;margin:12px 0;}
+.payment-types button {
+  padding:10px 24px;margin:0 8px;
+  border:none;border-radius:4px;cursor:pointer;
+}
+#cash-btn {background:#28a745;color:#fff;}
+#qr-btn   {background:#007bff;color:#fff;}
+.info-blocks { display:flex;justify-content:center;gap:10px;margin:16px 0;}
+.info-blocks div {
+  padding:8px 16px;
+  border-radius:15px;
+  width:300px;
+  color: #007bff;
+  border: 3px solid;
+  text-align:center;
+}
+.sidebar-calc {
+  position:fixed;top:0;right:-320px;width:300px;
+  height:100%;background:#fff;box-shadow:-2px 0 8px rgba(0,0,0,0.2);
+  transition:right .3s;padding:16px;
+}
+.sidebar-calc.visible { right:0; }
+.calc-display {
+  width:100%;font-size:1.5em;padding:8px;
+  text-align:right;margin-bottom:12px;border:1px solid #ccc;
+}
+.calc-keys { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+.calc-keys button {
+  font-size:1.2em;padding:12px;border:none;
+  background:#e0e0e0;border-radius:4px;cursor:pointer;
+}
+/* QR modal */
+#qr-modal {
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.5);display:none;
+  justify-content:center;align-items:center;
+}
+#qr-modal img {
+  max-width:300px;border:4px solid #fff;border-radius:8px;
+}
+.actions { text-align:center;margin:20px 0;}
+.actions button {
+  padding:10px 20px;
+  margin:0 10px;
+  border:none;
+  border-radius:4px;
+  height: 100px;
+  cursor:pointer;
+}
+.actions #cancel-btn {background:#ccc;}
+.actions #complete-btn {
+  background:#dc3545;
+  color:#fff;
+}
+.payment-types {
+display: flex;       /* make it a flexbox row */
+gap: 12px;           /* space between buttons */
+/* optional if you want them all the same width: */
+align-items: center;
+}
+.payment-types button {
+    width: 250px;
+    height: 100px;
+}
+.paid-container, .remaining-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border:none;
+    background: white;
+}
+
+
+
+/* 1) Top‑left toolbar */
+.payment-types-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 1001;
+}
+
+.payment-types-bar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  color: #007bff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.payment-types-bar button#cash-btn {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.payment-types-bar button#qr-btn {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+/* 2) Hover “lift” */
+.payment-types-bar button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 3) Paid / Remaining blocks with icons */
+.info-blocks .paid-container::before,
+.info-blocks .remaining-container::before {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: block;
+  font-size: 1.5em;
+  margin-bottom: 6px;
+}
+
+.info-blocks .paid-container::before {
+  content: "\f51e";  /* coins */
+  color: #28a745;
+}
+
+.info-blocks .remaining-container::before {
+  content: "\f522";  /* exclamation triangle as “remaining” icon */
+  color: #dc3545;
+}
+
+/* 4) Smooth sidebar slide */
+.sidebar-calc {
+  transition: right 0.3s ease;
+}
+
+/* 5) QR modal fade-in */
+#qr-modal {
+  transition: opacity 0.3s ease;
+}
+#qr-modal[style*="display: flex"] {
+  opacity: 1;
 }

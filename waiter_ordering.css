@@ -39,16 +39,7 @@
   padding: 20px;
 }
 
-.product-card {
-  width: 160px;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  cursor: pointer;
-  text-align: center;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-}
+
 
 .options-popup {
   position: fixed;
@@ -271,7 +262,6 @@
   border-color: #0056b3;
 }
 
-
 .review-list {
   max-height: 300px;
   overflow-y: auto;
@@ -280,32 +270,21 @@
   flex-direction: column;
   gap: 8px;
 }
-.review-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f8f9fa;
-  padding: 8px 12px;
-  border-radius: 8px;
+
+
+.ri-qty input {
+  width: 70px;
 }
-.review-item .name {
-  flex: 1;
+
+.ri-qty button {
+  width: 50px;
+  height: 50px;
 }
-.review-item .qty-control {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+
+.ri-name {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: orange;
 }
-.review-item .qty-control button {
-  border: none;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: #ddd;
-  cursor: pointer;
-}
-.review-item .qty-control input {
-  width: 40px;
-  text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+
+

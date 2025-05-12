@@ -1,41 +1,31 @@
 <?php
 session_start();
-require_once 'config.php';
-
-
-
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: index.php");
-    exit();
+require 'config.php';
+if (!isset($_SESSION['user']) || $_SESSION['user']['role']!=='admin') {
+  header('Location:index.php'); exit;
 }
 
 $current_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
-$categories_result = $connection->query("SELECT * FROM product_categories");
+$categories_result = $connection->query("SELECT * FROM ingredient_categories");
 $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
-$products = [];
+$ingredients = [];
 if ($current_category_id !== null) {
-    $stmt = $connection->prepare("SELECT * FROM products WHERE category = ?");
+    $stmt = $connection->prepare("SELECT * FROM ingredients WHERE category = ?");
     $stmt->bind_param("s", $current_category_id);
     $stmt->execute();
-    $products_result = $stmt->get_result();
-    $products = $products_result->fetch_all(MYSQLI_ASSOC);
+    $ingredients_result = $stmt->get_result();
+    $ingredients = $ingredients_result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 }
 
-
-
 ?>
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Management</title>
-    <link rel="stylesheet" href="style.css">
-
+<!doctype html>
+<html><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingredients Management</title>
+  <link rel=stylesheet href="style.css">
 </head>
 <body>
     <div id="sidebar" class="sidebar">
@@ -50,11 +40,12 @@ if ($current_category_id !== null) {
           <li><a href="report.php">Report</a></li>
       </ul>
     </div>
-    <!-- Horizontal category bar -->
-    <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
 
-        <!-- Category list container -->
-        <div style="display: flex; gap: 12px; overflow-x: auto;">
+  <!-- horizontal category bar -->
+  <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
+    <!-- Category list container -->
+
+    <div style="display: flex; gap: 12px; overflow-x: auto;">
             <?php foreach ($categories as $cat): ?>
                 <a href="product_management.php?category=<?= $cat['id'] ?>"
                     style="
@@ -71,39 +62,40 @@ if ($current_category_id !== null) {
             <?php endforeach; ?>
         </div>
 
+
         <!-- Add button container -->
         <div>
-            <a href="categories.php?entity=products" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+            <a href="categories.php?entity=ingredients" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
         </div>
 
     </div>
 
     <div class="product-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
-        <?php foreach ($products as $product): ?>
+        <?php foreach ($ingredients as $ingredient): ?>
             <div class="product-card"
-                onclick="window.location.href='product_info.php?id=<?= $product['id'] ?>'">
+                onclick="window.location.href='ingredient_info.php?id=<?= $ingredient['id'] ?>'">
                 <div class="product-block" >
-                    <img src="<?= htmlspecialchars($product['image'] ?? 'placeholder.png') ?>" alt="">
+                    <img src="<?= htmlspecialchars($ingredient['image'] ?? 'placeholder.png') ?>" alt="">
                 </div>
                 <div class="text-block" style="padding: 10px;">
-                    <h4 style="margin: 0 0 8px; text-align: center;"><?= htmlspecialchars($product['name']) ?></h4>
-                    <p style="margin: 0; font-weight: bold; color: #007bff;">₫<?= number_format($product['price']) ?></p>
+                    <h4 style="margin: 0 0 8px; text-align: center;"><?= htmlspecialchars($ingredient['name']) ?></h4>
+                    <p style="margin: 0; font-weight: bold; color: #007bff;">₫<?= number_format($ingredient['price']) ?></p>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
-            
+
+
     <div class="add-button">
             <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
             <?php if($current_category_id): ?>
             <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-                <a href="add_product.php?category=<?= $current_category_id ?>">
+                <a href="add_ingredient.php?category=<?= $current_category_id ?>">
                 <button style="font-size: 28px; padding: 10px 18px; border-radius: 50%; background: #007bff; color: white; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">+</button>
             </div>
         <?php endif; ?>
     </div>
-    
-    <script src="script.js"></script>
 
+  <script src="script.js"></script>
 </body>
 </html>
