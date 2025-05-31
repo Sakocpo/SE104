@@ -67,6 +67,22 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $d->execute(); $d->close();
 
         $connection->commit();
+        
+        $n = $connection->prepare("SELECT table_name FROM tables WHERE id = ?");
+        $n->bind_param("i", $dest);
+        $n->execute();
+        $new = $n->get_result()->fetch_assoc();
+        $n->close();
+        $newTableName = $new['table_name'] ?? '';
+
+        $msg = json_encode([
+          'type'           => 'merge_table',
+          'from_order_id'  => $srcOrder,    // ← source order ID
+          'into_order_id'  => $dstOrder,    // ← destination order ID
+          'new_table'      => $newTableName
+        ]);
+        shell_exec("echo " . escapeshellarg($msg) . " | nc localhost 8080");
+
         header("Location: table_management_waiter.php?category={$catFilter}");
         exit;
     } catch (Exception $e) {
@@ -154,5 +170,34 @@ if ($catFilter) {
   <a href="table_management_waiter.php?category=<?= $catFilter ?>"
      class="cancel-btn">Cancel</a>
   <script src="script.js"></script>
+  <script>
+  const socket = new WebSocket("ws://localhost:8080");
+  socket.addEventListener('open', ()=>console.log('[WAITER WS] connected for merge'));
+
+  const mergeForm = document.querySelector('form[method="POST"]');
+  if (mergeForm) {
+    mergeForm.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const fromId    = <?= json_encode($src) ?>;
+      const intoId    = mergeForm.querySelector('input[name="dest"]').value;
+      const orderId   = <?= json_encode($dstOrder) ?>; 
+      const newName   = mergeForm.querySelector('button').textContent.trim();
+
+      const msg = {
+        type:      'merge_table',
+        from_id:   fromId,
+        into_id:   intoId,
+        order_id:  orderId,
+        new_table: newName
+      };
+      console.log('[WAITER WS] sending merge_table:', msg);
+      socket.send(JSON.stringify(msg));
+
+      mergeForm.submit();
+    });
+  }
+</script>
+
 </body>
 </html>

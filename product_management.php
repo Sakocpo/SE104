@@ -15,7 +15,7 @@ $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
 $products = [];
 if ($current_category_id !== null) {
-    $stmt = $connection->prepare("SELECT * FROM products WHERE category = ?");
+    $stmt = $connection->prepare("SELECT * FROM products WHERE category = ? AND deleted = 0");
     $stmt->bind_param("s", $current_category_id);
     $stmt->execute();
     $products_result = $stmt->get_result();
@@ -35,20 +35,30 @@ if ($current_category_id !== null) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Management</title>
     <link rel="stylesheet" href="style.css">
-
+    <style>
+        body {
+            background-image: url("uploads/admin-page.jpg");
+            background-color: transparent;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+        }
+    </style>
 </head>
 <body>
     <div id="sidebar" class="sidebar">
-      <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-      <ul>
-          <li><a href="admin.php">Admin Page</a></li>
-          <li><a href="product_management.php">Product Management</a></li>
-          <li><a href="inventory_management.php">Inventory Management</a></li>
-          <li><a href="user_management.php">Users Management</a></li>
-          <li><a href="table_management_admin.php">Tables Management</a></li>
-          <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="report.php">Report</a></li>
-      </ul>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <ul>
+        <li><a href="admin.php">Trang Admin</a></li>
+        <li><a href="product_management.php">Quản Lý Hàng</a></li>
+        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
+        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
+        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
+        <li><a href="product_options_management.php">Quản Lý Options</a></li>
+        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
+        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
+    </ul>
     </div>
     <!-- Horizontal category bar -->
     <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
@@ -87,7 +97,7 @@ if ($current_category_id !== null) {
                 </div>
                 <div class="text-block" style="padding: 10px;">
                     <h4 style="margin: 0 0 8px; text-align: center;"><?= htmlspecialchars($product['name']) ?></h4>
-                    <p style="margin: 0; font-weight: bold; color: #007bff;">₫<?= number_format($product['price']) ?></p>
+                    <p style="margin: 0; font-size: 1em; font-weight: 200; color: #007bff;">₫<?= number_format($product['price']) ?></p>
                 </div>
             </div>
         <?php endforeach; ?>

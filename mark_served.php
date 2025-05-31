@@ -2,57 +2,79 @@
 session_start();
 require_once 'config.php';
 
-// Only POSTs from kitchen may hit this
-if ($_SERVER['REQUEST_METHOD'] !== 'POST'
-    || !isset($_SESSION['user'])
-    || $_SESSION['user']['role'] !== 'kitchen') {
-    header('Location: index.php');
-    exit();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user'])) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit;
 }
 
-// Grab order and any explicitly‐checked items
-$order_id    = intval($_POST['order_id'] ?? 0);
-$serve_items = $_POST['serve_items'] ?? [];
+$data = json_decode(file_get_contents('php://input'), true);
+$order_id = intval($data['order_id'] ?? 0);
+$items = $data['items'] ?? [];
 
 if (!$order_id) {
-    exit('No order specified.');
+    echo json_encode(['success' => false, 'error' => 'Invalid order ID']);
+    exit;
 }
 
-// If nothing was checked, fetch all un‑served items for that order
-if (empty($serve_items)) {
+try {
+    // Start transaction
+    $connection->begin_transaction();
+
+    if (empty($items)) {
+        // If no specific items provided, mark all items as served (backward compatibility)
+        $stmt = $connection->prepare("
+            UPDATE order_items 
+            SET served = 1 
+            WHERE order_id = ? AND served = 0
+        ");
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $stmt->close();
+    } else {
+        // Mark only specific items as served
+        foreach ($items as $item) {
+            $stmt = $connection->prepare("
+                UPDATE order_items oi
+                JOIN products p ON oi.product_id = p.id
+                SET oi.served = 1 
+                WHERE oi.order_id = ? 
+                AND p.name = ?
+                AND oi.served = 0
+            ");
+            $stmt->bind_param("is", $order_id, $item['product']);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+
+    // Check if all items are now served
     $stmt = $connection->prepare("
-        SELECT id
-        FROM order_items
-        WHERE order_id = ? AND served = 0
+        SELECT COUNT(*) as total, SUM(CASE WHEN served = 1 THEN 1 ELSE 0 END) as served
+        FROM order_items 
+        WHERE order_id = ?
     ");
     $stmt->bind_param("i", $order_id);
     $stmt->execute();
-    $res = $stmt->get_result();
-    $serve_items = [];
-    while ($row = $res->fetch_assoc()) {
-        $serve_items[] = $row['id'];
-    }
+    $result = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-}
 
-// Now mark each of those items as served
-if (!empty($serve_items)) {
-    $stmt = $connection->prepare("
-        UPDATE order_items
-           SET served = 1
-         WHERE id = ?
-    ");
-    foreach ($serve_items as $item_id) {
-        $iid = intval($item_id);
-        $stmt->bind_param("i", $iid);
+    // Only update table status if ALL items are served
+    if ($result['total'] > 0 && $result['total'] === $result['served']) {
+        $stmt = $connection->prepare("
+            UPDATE tables 
+            SET status = 'served' 
+            WHERE current_order_id = ?
+        ");
+        $stmt->bind_param("i", $order_id);
         $stmt->execute();
+        $stmt->close();
     }
-    $stmt->close();
+
+    $connection->commit();
+    echo json_encode(['success' => true]);
+
+} catch (Exception $e) {
+    $connection->rollback();
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
-
-// (Optional) If you want to mark the entire order as “completed” once *all* its items are served,
-// you could run a quick check here and update orders.status and the table’s occupied flag.
-
-// Finally, send the user back to the kitchen list:
-header("Location: kitchen_orders.php");
-exit();

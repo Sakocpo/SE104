@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     move_uploaded_file($_FILES['image']['tmp_name'],$imgpath);
   }
   $stmt = $connection->prepare("
-    INSERT INTO ingredients(name,category_id,unit_id,quantity,image)
+    INSERT INTO ingredients(name,category,unit_id,quantity,image)
     VALUES(?,?,?,?,?)
   ");
   $stmt->bind_param("siiis",$name,$category,$unit,$qty,$imgpath);
@@ -35,7 +35,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <html><head>
   <meta charset="utf-8"><title>Add Ingredient</title>
   <link rel="stylesheet" href="style.css">
-</head><body>
+</head>
+<body>
   <div class="forms-container">
     <h3>Add Ingredient</h3>
     <form method="POST" enctype="multipart/form-data">
@@ -78,33 +79,91 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     </form>
   </div>
 
+  <!-- UNIT ADD MODAL -->
+  <div id="unit-modal">
+    <div class="modal-box">
+      <h4 style="text-align: center; padding-bottom: 10px;">Add New Unit</h4>
+      <input type="text" id="new-unit-name" placeholder="kg, cái,..." />
+      <div style="text-align:right">
+        <button id="confirm-unit">Confirm</button>
+        <button id="cancel-unit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    const addBtn    = document.getElementById('add-unit');
+    const modal     = document.getElementById('unit-modal');
+    const confirmEl = document.getElementById('confirm-unit');
+    const cancelEl  = document.getElementById('cancel-unit');
+    const inputEl   = document.getElementById('new-unit-name');
+    const selectEl  = document.getElementById('unit-select');
+    addBtn.addEventListener('click', ()=> {
+      inputEl.value = '';
+      modal.style.display = 'flex';
+      inputEl.focus();
+    });
+    cancelEl.addEventListener('click', ()=> {
+      modal.style.display = 'none';
+    });
+
+    confirmEl.addEventListener('click', ()=> {
+      const name = inputEl.value.trim();
+      if (!name) return alert('Please enter a unit name.');
+      // POST to add_unit_option.php
+      fetch('add_unit_option.php', {
+        method: 'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ name })
+      })
+      .then(r=>r.json())
+      .then(j=>{
+        if (j.id) {
+          // add to select
+          const opt = new Option(j.name, j.id);
+          selectEl.add(opt);
+          selectEl.value = j.id;
+          modal.style.display = 'none';
+        } else {
+          alert('Error: '+(j.error||'unknown'));
+        }
+      })
+      .catch(err=>{
+        console.error(err);
+        alert('Failed to add unit.');
+      });
+    });
+
+    // close modal if clicked outside box
+    modal.addEventListener('click', e=> {
+      if (e.target===modal) modal.style.display='none';
+    });
     function q(d){ 
       let i = document.getElementById('qty'),
           v = parseFloat(i.value)||0;
       i.value = Math.max(0, v + d);
     }
 
-    document.getElementById('add-unit')
-      .addEventListener('click',()=> {
-        let name = prompt("New unit name?");
-        if (!name) return;
-        fetch('add_unit_option.php',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({name})
-        })
-        .then(r=>r.json())
-        .then(j=>{
-          if(j.id){
-            let sel = document.getElementById('unit-select'),
-                opt = new Option(j.name,j.id);
-            sel.add(opt);
-            sel.value = j.id;
-          } else {
-            alert("Error: "+j.error);
-          }
-        });
-      });
+    // document.getElementById('add-unit')
+    //   .addEventListener('click',()=> {
+    //     let name = prompt("New unit name?");
+    //     if (!name) return;
+    //     fetch('add_unit_option.php',{
+    //       method:'POST',
+    //       headers:{'Content-Type':'application/json'},
+    //       body:JSON.stringify({name})
+    //     })
+    //     .then(r=>r.json())
+    //     .then(j=>{
+    //       if(j.id){
+    //         let sel = document.getElementById('unit-select'),
+    //             opt = new Option(j.name,j.id);
+    //         sel.add(opt);
+    //         sel.value = j.id;
+    //       } else {
+    //         alert("Error: "+j.error);
+    //       }
+    //     });
+    //   });
   </script>
 </body></html>

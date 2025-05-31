@@ -17,16 +17,17 @@ if (!isset($_SESSION['user'])) {
 
 <body>
     <div id="sidebar" class="sidebar">
-      <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-      <ul>
-          <li><a href="admin.php">Admin Page</a></li>
-          <li><a href="product_management.php">Product Management</a></li>
-          <li><a href="ingredients_management.php">Ingredients Management</a></li>
-          <li><a href="user_management.php">Users Management</a></li>
-          <li><a href="table_management_admin.php">Tables Management</a></li>
-          <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="report.php">Report</a></li>
-      </ul>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <ul>
+        <li><a href="admin.php">Trang Admin</a></li>
+        <li><a href="product_management.php">Quản Lý Hàng</a></li>
+        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
+        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
+        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
+        <li><a href="product_options_management.php">Quản Lý Options</a></li>
+        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
+        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
+    </ul>
     </div>
 
     <div class="content">

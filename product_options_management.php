@@ -18,7 +18,7 @@ $current_category_id = isset($_GET['category']) ? intval($_GET['category']) : nu
 // Get options of selected category
 $options = [];
 if ($current_category_id !== null) {
-    $stmt = $connection->prepare("SELECT * FROM options WHERE type_id = ?");
+    $stmt = $connection->prepare("SELECT * FROM options WHERE type_id = ? AND deleted = 0");
     $stmt->bind_param("i", $current_category_id);
     $stmt->execute();
     $options_result = $stmt->get_result();
@@ -37,19 +37,18 @@ if ($current_category_id !== null) {
 </head>
 <body>
     <div id="sidebar" class="sidebar">
-      <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-      <ul>
-          <li><a href="admin.php">Admin Page</a></li>
-          <li><a href="product_management.php">Product Management</a></li>
-          <li><a href="inventory_management.php">Inventory Management</a></li>
-          <li><a href="user_management.php">Users Management</a></li>
-          <li><a href="table_management_admin.php">Tables Management</a></li>
-          <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="report.php">Report</a></li>
-      </ul>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <ul>
+        <li><a href="admin.php">Trang Admin</a></li>
+        <li><a href="product_management.php">Quản Lý Hàng</a></li>
+        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
+        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
+        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
+        <li><a href="product_options_management.php">Quản Lý Options</a></li>
+        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
+        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
+    </ul>
     </div>
-
-
 
     <!-- Horizontal category bar -->
     <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
@@ -84,7 +83,7 @@ if ($current_category_id !== null) {
 
                 <div class="option-card"
                     onclick="window.location.href='option_info.php?id=<?= $option['id'] ?>'"
-                    style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
+                    style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center; opacity: 0.8;">
 
                     <h4 style="margin: 0; font-size: 18px; text-align: center;"><?= htmlspecialchars($option['label']) ?></h4>
                 </div>

@@ -13,14 +13,24 @@ if (!isset($_SESSION['user'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waiter page</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+    body {
+      background-image: url("uploads/kitchen-page.jpg");
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      background-size: cover;
+    }
+    </style>
 </head>
 
 <body>
     <div id="sidebar" class="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
         <ul>
-            <li><a href="waiter.php">Waiter Page</a></li>
-            <li><a href="kitchen_orders.php">Orders</a></li>
+            <li><a href="kitchen.php">Trang Bếp</a></li>
+            <li><a href="kitchen_orders.php">Nhận Đơn</a></li>
         </ul>
     </div>
 

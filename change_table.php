@@ -56,13 +56,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $u = $connection->prepare("UPDATE tables SET current_order_id = NULL WHERE id = ?");
         $u->bind_param("i", $src);
         $u->execute(); $u->close();
-
+        
         // C) set dest
         $u = $connection->prepare("UPDATE tables SET current_order_id = ? WHERE id = ?");
         $u->bind_param("ii", $order_id, $dest);
         $u->execute(); $u->close();
-
+        // D) update order items
         $connection->commit();
+
+        $n = $connection->prepare("SELECT table_name FROM tables WHERE id = ?");
+        $n->bind_param("i", $dest);
+        $n->execute();
+        $new = $n->get_result()->fetch_assoc();
+        $n->close();
+        $new_table_name = $new['table_name'] ?? '';
+
+        $msg = json_encode([
+          'type'         => 'change_table',
+          'order_id'     => $order_id,
+          'old_table_id' => $src,
+          'new_table_id' => $dest,
+          'new_table'    => $new_table_name
+        ]);
+
+        file_put_contents(
+        __DIR__ . '/change_table_debug.txt',
+        date('c') . " WILL SEND: $msg\n",
+        FILE_APPEND
+      );
+
+        $arg = escapeshellarg($msg);
+        shell_exec("echo $arg | nc localhost 8080");
+        
+        // shell_exec("echo '" . addslashes($msg) . "' | nc localhost 8080");
+
         header("Location: table_management_waiter.php?category={$catFilter}");
         exit;
     } catch (Exception $e) {
@@ -148,5 +175,41 @@ $q->close();
   <a href="table_management_waiter.php?category=<?= $catFilter ?>"
      class="cancel-btn">Cancel</a>
   <script src="script.js"></script>
+  <script>
+  // 1) Open your WebSocket (reuse same port)
+  const socket = new WebSocket("ws://localhost:8080");
+  socket.addEventListener('open', () => {
+    console.log('[WAITER WS] connected for change_table');
+  });
+
+  // 2) Hook the only form on this page
+  const moveForm = document.querySelector('form[method="POST"]');
+  if (moveForm) {
+    moveForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // grab IDs from the hidden inputs
+      const orderId     = <?= json_encode($order_id) ?>;
+      const oldTableId  = <?= json_encode($src) ?>;
+      const newTableId  = moveForm.querySelector('input[name="dest"]').value;
+      const newTableName= moveForm.querySelector('button').textContent.trim();
+
+      // send the WS message *before* we actually submit
+      const msg = {
+        type:         'change_table',
+        order_id:     orderId,
+        old_table_id: oldTableId,
+        new_table_id: newTableId,
+        new_table:    newTableName
+      };
+      console.log('[WAITER WS] sending change_table:', msg);
+      socket.send(JSON.stringify(msg));
+
+      // now carry on with normal POST
+      moveForm.submit();
+    });
+  }
+</script>
+
 </body>
 </html>

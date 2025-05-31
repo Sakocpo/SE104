@@ -1,23 +1,22 @@
 <?php
 session_start();
 require_once 'config.php';
-if (!isset($_SESSION['user'],$_SESSION['user']['role']) || $_SESSION['user']['role']!=='waiter') {
-  header('Location:index.php'); 
-  exit;
+
+if (!isset($_SESSION['user'], $_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'waiter') {
+    header('Location: index.php');
+    exit;
 }
 
-// 1️⃣ Load table & ensure occupied
 $t = intval($_GET['table_id'] ?? 0);
 $stmt = $connection->prepare("SELECT * FROM tables WHERE id=?");
-$stmt->bind_param("i",$t);
+$stmt->bind_param("i", $t);
 $stmt->execute();
 $table = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 if (!$table || empty($table['current_order_id'])) {
-  exit("No active order on this table.");
+    exit("No active order on this table.");
 }
 
-// 2️⃣ Fetch items & compute total
 $oid = intval($table['current_order_id']);
 $res = $connection->prepare("
   SELECT oi.quantity, p.price
@@ -25,123 +24,258 @@ $res = $connection->prepare("
   JOIN products p ON p.id=oi.product_id
   WHERE oi.order_id=?
 ");
-$res->bind_param("i",$oid);
+$res->bind_param("i", $oid);
 $res->execute();
 $items = $res->get_result()->fetch_all(MYSQLI_ASSOC);
 $res->close();
 $total = 0;
-foreach($items as $it) {
-  $total += $it['quantity'] * $it['price'];
+foreach ($items as $it) {
+    $total += $it['quantity'] * $it['price'];
 }
 
-// 3️⃣ Fetch QR‐code image
 $qr = $connection
     ->query("SELECT image_path FROM payment_settings LIMIT 1")
     ->fetch_assoc()['image_path']
-  ?? '';
+    ?? '';
 ?>
 <!DOCTYPE html>
-<html><head>
-  <meta charset="utf-8"><title>Checkout Table <?=$table['table_name']?></title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment - Table <?= htmlspecialchars($table['table_name']) ?></title>
   <link rel="stylesheet" href="style.css">
-  <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  integrity="sha512-pQs4S2mM4FgYkWcPXz6dCv4tvHQqGY9u2tR6E6/jl2jvX0O4T0Y8qkGvulixFanKDF7olg/6t9Yp+UaVJrQT1w=="
-  crossorigin="anonymous"
-  referrerpolicy="no-referrer"
-/>  
+  <style>
+    body {
+      background-image: url("uploads/waiter-page.jpg");
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      color: black;
+    }
+    .payment-wrapper {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      opacity: 0.9;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      background: white;
+    }
+    .payment-header {
+      display: flex;
+      height: 25%;
+    }
+    .payment-mode {
+      flex: 1;
+      text-align: center;
+      padding: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.2em;
+      transition: all 0.2s ease-in-out;
+    }
+    .payment-mode:hover {
+      background: #d9edf7;
+    }
+    .payment-mode.active {
+      background: #28a745;
+      color: white;
+    }
+
+    .payment-body {
+      height: 350px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0.9;
+    }
+
+    .payment-qr img {
+      width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .payment-cash {
+      width: 100%;
+    }
+
+    .payment-cash div {
+      margin-bottom: 20px;
+      font-size: 1.2em;
+    }
+
+    .clickable-underline {
+      border-bottom: 2px solid #007bff;
+      text-align: center;
+      display: inline-block;
+      min-width: 80px;
+      cursor: pointer;
+    }
+
+    .payment-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .payment-actions button {
+      flex: 1;
+      padding: 14px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .payment-actions #cancel-btn {
+      background: #6c757d;
+      color: white;
+    }
+
+    .payment-actions #complete-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    /* calculator sidebar */
+    .sidebar-calc {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100%;
+      background: #E7F2E4;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.2);
+      transition: right .3s;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .sidebar-calc.visible {
+      right: 0;
+    }
+
+    .calc-display {
+      font-size: 1.5em;
+      text-align: right;
+      padding: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+    }
+
+    .calc-keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .calc-keys button {
+      font-size: 1.2em;
+      padding: 12px;
+      background:rgb(253, 128, 128);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #qr-modal {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <div class="main-payment-layout">
-        <div class="top-bar">
-            Total: <strong><?=number_format($total,2)?></strong>
-        </div>
+<div class="payment-wrapper">
+  <!-- Top Mode Selector -->
+  <div class="payment-header">
+    <div id="cash-btn" class="payment-mode active">💵 Cash</div>
+    <div id="qr-btn" class="payment-mode">📱 QR</div>
+  </div>
 
-        <div class="payment-types-bar">
-          <button id="cash-btn">
-            <i class="fas fa-money-bill-wave"></i> Cash
-          </button>
-          <button id="qr-btn">
-            <i class="fas fa-qrcode"></i> QR
-          </button>
-        </div>
-        <div class="info-blocks">
-            <div class="paid-container">
-                <div style="border:none;"><strong>Paid</strong></div>
-                <div id="paid-display" style="border:none;"><?=number_format($total)?>đ</div>
-            </div>
-            <div class="remaining-container">
-                <div style="border:none;"><strong>Remaining</strong></div>
-                <div id="rem-display" style="border:none;">0đ</div>
-            </div>
-        </div>
-
-        <!-- Cash sidebar keyboard -->
-        <div id="cash-sidebar" class="sidebar-calc">
-            <div class="calc-display" id="calc-display"><?=number_format($total,2)?></div>
-            <div class="calc-keys">
-            <?php foreach([7,8,9,4,5,6,1,2,3,'C',0,'.','OK'] as $k): ?>
-                <button data-key="<?=$k?>"><?=$k?></button>
-            <?php endforeach;?>
-            </div>
-        </div>
-
-        <!-- QR modal -->
-        <div id="qr-modal">
-            <img src="<?=htmlspecialchars($qr)?>" alt="Scan to Pay">
-        </div>
-
-        <div class="actions">
-            <button id="cancel-btn">Cancel</button>
-            <button id="complete-btn">Complete</button>
-        </div>
+  <!-- Bottom 3/4 -->
+  <div class="payment-body">
+    <div id="cash-view" class="payment-cash">
+      <div>Total: <strong><?= number_format($total) ?> đ</strong></div>
+      <div>
+        Received:
+        <span id="received-amount" class="clickable-underline"> <?= number_format($total) ?> </span> đ
+      </div>
+      <div>
+        Change:
+        <span id="change-amount"><?= number_format(0) ?> đ</span>
+      </div>
     </div>
+    <div id="qr-view" class="payment-qr" style="display: none;">
+      <img src="<?= htmlspecialchars($qr) ?>" alt="QR Code for Payment">
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="payment-actions">
+    <button id="cancel-btn">Cancel</button>
+    <button id="complete-btn">Complete</button>
+  </div>
+</div>
+
+<!-- Sidebar Calculator -->
+<div id="cash-sidebar" class="sidebar-calc">
+  <div class="calc-display" id="calc-display"><?= number_format($total, 2) ?></div>
+  <div class="calc-keys">
+    <?php foreach ([7,8,9,4,5,6,1,2,3,'C',0,'.','OK'] as $k): ?>
+      <button data-key="<?= $k ?>"><?= $k ?></button>
+    <?php endforeach; ?>
+  </div>
+</div>
+
 <script>
 (() => {
-  const total = <?=$total?>;
+  const total = <?= $total ?>;
   let paid = total;
-  let firstKey = true;   // flag to wipe on first digit
+  let firstKey = true;
 
-  // elements
-  const paidEl = document.getElementById('paid-display');
-  const remEl  = document.getElementById('rem-display');
-  const cashBtn= document.getElementById('cash-btn');
-  const qrBtn  = document.getElementById('qr-btn');
-  const modal  = document.getElementById('qr-modal');
-  const sidebar= document.getElementById('cash-sidebar');
-  const disp   = document.getElementById('calc-display');
-  const keys   = sidebar.querySelectorAll('button');
-  const cancel = document.getElementById('cancel-btn');
-  const complete = document.getElementById('complete-btn');
+  const cashBtn = document.getElementById('cash-btn');
+  const qrBtn = document.getElementById('qr-btn');
+  const cashView = document.getElementById('cash-view');
+  const qrView = document.getElementById('qr-view');
+  const received = document.getElementById('received-amount');
+  const change = document.getElementById('change-amount');
+  const sidebar = document.getElementById('cash-sidebar');
+  const disp = document.getElementById('calc-display');
+  const keys = sidebar.querySelectorAll('button');
 
-  function updateDisplays(){
-    paidEl.innerText = paid.toFixed(0) + ' đ';   // no decimals
-    let rem = paid - total;
-    remEl.innerText = (rem > 0 ? rem.toFixed(0) : 0) + ' đ';
-  }
-
+  // Mode toggle
   cashBtn.onclick = () => {
-    modal.style.display = 'none';
-    sidebar.classList.toggle('visible');
-    // reset to current paid for editing
+    cashBtn.classList.add('active');
+    qrBtn.classList.remove('active');
+    cashView.style.display = 'block';
+    qrView.style.display = 'none';
+  };
+
+  qrBtn.onclick = () => {
+    qrBtn.classList.add('active');
+    cashBtn.classList.remove('active');
+    cashView.style.display = 'none';
+    qrView.style.display = 'block';
+    paid = total;
+    updateDisplays();
+  };
+
+  // Show calculator when clicking received underline
+  received.onclick = () => {
+    sidebar.classList.add('visible');
     disp.innerText = paid.toFixed(0);
     firstKey = true;
   };
 
-  qrBtn.onclick = () => {
-    sidebar.classList.remove('visible');
-    paid = total;
-    updateDisplays();
-    modal.style.display = 'flex';
-  };
-  modal.onclick = () => modal.style.display = 'none';
-
-  // keypad
+  // Calculator key logic
   keys.forEach(btn => {
     const k = btn.dataset.key;
     btn.onclick = () => {
-      let cur = disp.innerText.replace(/\D/g,''); // strip non‑digits
+      let cur = disp.innerText.replace(/\D/g,'');
       if (k === 'C') {
         cur = '0';
         firstKey = true;
@@ -151,36 +285,39 @@ $qr = $connection
         sidebar.classList.remove('visible');
         return;
       } else {
-        // digit pressed
-        if (firstKey || cur === '0') {
-          cur = k.toString();
-        } else {
-          cur += k.toString();
-        }
+        cur = (firstKey || cur === '0') ? k.toString() : cur + k.toString();
         firstKey = false;
       }
       disp.innerText = cur;
     };
   });
 
-  cancel.onclick = () => window.location = `table_info_waiter.php?table_id=<?=$t?>`;
-  complete.onclick = () => {
-    fetch('complete_payment.php',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({table_id:<?=$t?>,paid})
+  function updateDisplays() {
+    received.innerText = paid.toFixed(0);
+    let rem = paid - total;
+    change.innerText = (rem > 0 ? rem.toFixed(0) : 0) + ' đ';
+  }
+
+  // Cancel and Complete actions
+  document.getElementById('cancel-btn').onclick = () => {
+    window.location = `table_info_waiter.php?table_id=<?= $t ?>`;
+  };
+
+  document.getElementById('complete-btn').onclick = () => {
+    fetch('complete_payment.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table_id: <?= $t ?>, paid })
     })
-    .then(r=>r.json())
-    .then(j=>{
-      if(j.success) window.location = "table_management_waiter.php?category=<?=$table['table_category']?>";
-      else alert('Error: '+j.error);
+    .then(r => r.json())
+    .then(j => {
+      if (j.success) window.location = "table_management_waiter.php?category=<?= $table['table_category'] ?>";
+      else alert('Error: ' + j.error);
     });
   };
 
-  // initialize displays
   updateDisplays();
 })();
-
 </script>
-
-</body></html>
+</body>
+</html>

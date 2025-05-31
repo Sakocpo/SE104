@@ -8,25 +8,35 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Get all option categories to populate the dropdown
+// Get category from URL parameter
+$category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
+if (!$category_id) {
+    echo "No category selected.";
+    exit();
+}
 
-$categories_result = mysqli_query($connection, "SELECT * FROM option_categories");
-$categories = [];
-while ($row = mysqli_fetch_assoc($categories_result)) {
-    $categories[] = $row;
+// Get category name for display
+$stmt = $connection->prepare("SELECT name FROM option_categories WHERE id = ?");
+$stmt->bind_param("i", $category_id);
+$stmt->execute();
+$category = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$category) {
+    echo "Invalid category.";
+    exit();
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'], $_POST['type_id'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
     $label = trim($_POST['label']);
-    $type_id = intval($_POST['type_id']);
 
-    if ($label !== '' && $type_id > 0) {
+    if ($label !== '') {
         $stmt = $connection->prepare("INSERT INTO options (label, type_id) VALUES (?, ?)");
-        $stmt->bind_param("si", $label, $type_id);
+        $stmt->bind_param("si", $label, $category_id);
         $stmt->execute();
         $stmt->close();
-        header("Location: product_options_management.php?category=$type_id");
+        header("Location: product_options_management.php?category=$category_id");
         exit();
     }
 }
@@ -41,21 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'], $_POST['type
 <body>
 <div class="form-container">
     <form method="POST">
-        <h3>Add New Option</h3>
+        <h3 style="color: black;">Add New Option</h3>
         <input type="text" name="label" placeholder="Option label" required>
 
-        <select name="type_id" required>
-            <option value="">-- Select Option Category --</option>
-            <?php foreach ($categories as $cat): ?>
-                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
-
         <button type="submit">Add Option</button>
-        <a href="product_options_management.php<?= isset($type_id) ? '?category=' . $type_id : '' ?>">
+        <a href="product_options_management.php?category=<?= $category_id ?>">
             <button type="button">Cancel</button>
         </a>
-
     </form>
 </div>
 </body>

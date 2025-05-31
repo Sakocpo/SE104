@@ -53,7 +53,10 @@
 
 .popup-content {
   background: #fff;
+  color: black;
+  
   padding: 24px;
+  opacity: 0.95;
   border-radius: 10px;
   width: 700px;
   max-height: 80vh;
@@ -98,6 +101,7 @@
 
 .review-content {
   background: white;
+  opacity: 0.9;
   padding: 24px;
   width: 800px;
   border-radius: 10px;
@@ -251,6 +255,7 @@
 
 .option-item {
   padding: 6px 10px;
+  text-align: center;
   border: 1px solid #ccc;
   border-radius: 8px;
   cursor: pointer;
@@ -287,4 +292,37 @@
   color: orange;
 }
 
+.review-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
 
+.ri-info {
+  flex: 1;                          /* take up all available width */
+  display: flex;
+  flex-direction: column;           /* stack name + pills vertically */
+}
+
+.ri-qty {
+  margin-left: 16px;                /* separate from left column */
+  display: flex;
+  align-items: center;
+}
+
+/* your existing pill styles */
+.item-options {
+  margin-top: 4px;
+}
+.option-label {
+  display: inline-block;
+  color: brown;
+  margin-right: 6px;
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: #f5f5f5;
+  font-size: 0.9em;
+}

@@ -29,16 +29,17 @@ if ($current_category_id !== null) {
 </head>
 <body>
     <div id="sidebar" class="sidebar">
-      <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-      <ul>
-          <li><a href="admin.php">Admin Page</a></li>
-          <li><a href="product_management.php">Product Management</a></li>
-          <li><a href="inventory_management.php">Inventory Management</a></li>
-          <li><a href="user_management.php">Users Management</a></li>
-          <li><a href="table_management_admin.php">Tables Management</a></li>
-          <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="report.php">Report</a></li>
-      </ul>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <ul>
+        <li><a href="admin.php">Trang Admin</a></li>
+        <li><a href="product_management.php">Quản Lý Hàng</a></li>
+        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
+        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
+        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
+        <li><a href="product_options_management.php">Quản Lý Options</a></li>
+        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
+        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
+    </ul>
     </div>
 
   <!-- horizontal category bar -->
@@ -47,7 +48,7 @@ if ($current_category_id !== null) {
 
     <div style="display: flex; gap: 12px; overflow-x: auto;">
             <?php foreach ($categories as $cat): ?>
-                <a href="product_management.php?category=<?= $cat['id'] ?>"
+                <a href="ingredients_management.php?category=<?= $cat['id'] ?>"
                     style="
                         padding: 8px 14px;
                         border-radius: 18px;
@@ -79,7 +80,6 @@ if ($current_category_id !== null) {
                 </div>
                 <div class="text-block" style="padding: 10px;">
                     <h4 style="margin: 0 0 8px; text-align: center;"><?= htmlspecialchars($ingredient['name']) ?></h4>
-                    <p style="margin: 0; font-weight: bold; color: #007bff;">₫<?= number_format($ingredient['price']) ?></p>
                 </div>
             </div>
         <?php endforeach; ?>

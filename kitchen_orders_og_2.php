@@ -128,49 +128,6 @@ socket.onopen = () => {
 
 socket.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  console.log('[KITCHEN] Received message:', data);
-  if (data.type === 'cancel') {
-    const card = document.getElementById('order-card-' + data.order_id);
-    if (card) card.remove();
-    return; 
-  }
-
-  // if (data.type === 'change_table' || data.type === 'merge_table') {
-  //   console.log('[KITCHEN] table changed/merged, reloading…');
-  //   window.location.reload();
-  //   return;
-  // }
-
-  // change_table: just update the header’s Table: … line
-  if (data.type === 'change_table') {
-  const card = document.getElementById('order-card-' + data.order_id);
-  if (card) {
-    const hdrDiv = card.querySelector('.order-header > div');
-    const placedSpan = hdrDiv.querySelector('span.placed-at');
-    hdrDiv.innerHTML = `
-      <strong>New Order</strong><br>
-      Table: ${data.new_table}<br>
-    `;
-    // re-append the original timestamp span
-    if (placedSpan) hdrDiv.appendChild(placedSpan);
-  }
-  return;
-}
-
-
-  // merge_table: move rows into the target card and remove the source
-  if (data.type === 'merge_table') {
-    const from = document.getElementById('order-card-' + data.from_order_id);
-    const into = document.getElementById('order-card-' + data.into_order_id);
-    if (from && into) {
-      const rows = Array.from(from.querySelectorAll('tbody tr'));
-      rows.forEach(r => into.querySelector('tbody').appendChild(r));
-      from.remove();
-    }
-    return;
-  }
-
-
   if (data.type === "serve") {
     if (data.quantity === undefined) return;
     const orderId = data.order_id;
@@ -189,6 +146,7 @@ socket.onmessage = function(event) {
       <td>${data.product}</td>
       <td>${data.quantity}</td>
       <td>${optionHTML}</td>
+      <td><input type="checkbox" name="serve_items[]" data-product="${data.product}" data-table="${data.table}" data-order-id="${orderId}"></td>
     `;
 
     if (tbody) {
@@ -209,13 +167,7 @@ socket.onmessage = function(event) {
 
 function createOrderCard(orderId, data, newRow) {
   const container = document.querySelector(".main-kitchen-list");
-  let placedAt;
-  if (data.created_at) {
-    // turn "YYYY-MM-DD hh:mm:ss" into ISO for the browser
-    placedAt = new Date(data.created_at.replace(' ', 'T')).toLocaleString();
-  } else {
-    placedAt = new Date().toLocaleString();
-  }
+  const currentTime = new Date().toLocaleString();
 
   const card = document.createElement("div");
   card.classList.add("order-card");
@@ -226,18 +178,18 @@ function createOrderCard(orderId, data, newRow) {
       <div>
         <strong>New Order</strong><br>
         Table: ${data.table}<br>
-        <span class="placed-at">Placed at: ${placedAt}</span>
+        Placed at: ${currentTime}
       </div>
     </div>
     <form type="button" class="serve-form" data-order-id="${orderId}">
       <input type="hidden" name="order_id" value="${orderId}">
       <table>
         <thead>
-          <tr><th>Product</th><th>Qty</th><th>Options</th></tr>
+          <tr><th>Product</th><th>Qty</th><th>Options</th><th>Serve?</th></tr>
         </thead>
         <tbody id="order-items-${orderId}"></tbody>
       </table>
-      <button type="submit" class="serve-btn">Mark Served</button>
+      <button type="submit" class="serve-btn">Mark Selected Served</button>
     </form>
   `;
 
@@ -256,44 +208,38 @@ function bindFormHandlers() {
 }
 
 function handleServeSubmit(form) {
-  // 1) Gather ALL rows in the order
-  const rows = form.querySelectorAll('tbody tr');
-  if (!rows.length) return;
+  // 1) Gather checkboxes
+  const allBoxes = form.querySelectorAll('input[name="serve_items[]"]');
+  const checked  = form.querySelectorAll('input[name="serve_items[]"]:checked');
+  const selected = checked.length ? checked : allBoxes;
+  if (!selected.length) return;
 
-  // 2) Get orderId and table name
-  const orderId = form.dataset.orderId;
-  const table = form.closest('.order-card').querySelector('.order-header').innerText
-    .split('\n').find(line => line.trim().startsWith('Table:'))
-    ?.replace('Table:', '').trim() || '';
+  const orderId = selected[0].dataset.orderId;
 
-  // 3) For each row, send the serve message
-  rows.forEach(row => {
-    const product = row.cells[0]?.textContent.trim();
-    const quantity = row.cells[1]?.textContent.trim();
-    const options = Array.from(row.cells[2]?.querySelectorAll('.option-pill')).map(p => p.textContent.trim());
-
+  // 2) WebSocket “serve” per item
+  selected.forEach(cb => {
     socket.send(JSON.stringify({
       type: 'serve',
-      table: table,
-      product: product,
-      quantity: quantity,
-      order_id: orderId,
-      options: options
+      table:   cb.dataset.table,
+      product: cb.dataset.product,
+      order_id: orderId
     }));
   });
 
-  // 4) After all, send the order done message
-  socket.send(JSON.stringify({
-    type: 'order',
-    table: table,
-    order_id: orderId
-  }));
+  // 3) If you just served *all* items, send “order done”
+  if (selected.length === allBoxes.length) {
+    socket.send(JSON.stringify({
+      type:     'order',
+      table:    selected[0].dataset.table,
+      order_id: orderId
+    }));
+  }
 
-  // 5) Mark as served in DB
+  // 4) Call API to mark in DB
   fetch('mark_served.php', {
-    method: 'POST',
+    method:  'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ order_id: orderId })
+    body:    JSON.stringify({ order_id: orderId })
   })
   .then(r => r.json())
   .then(json => {
@@ -301,53 +247,21 @@ function handleServeSubmit(form) {
       console.error('Serve failed:', json.error);
       return;
     }
-    // Remove the card entirely
-    form.closest('.order-card').remove();
+
+    // 5) Remove only the served rows
+    selected.forEach(cb => {
+      const row = cb.closest('tr');
+      if (row) row.remove();
+    });
+
+    // 6) If no more rows left, remove the card
+    const tbody = form.querySelector('tbody');
+    if (!tbody.querySelector('tr')) {
+      form.closest('.order-card').remove();
+    }
   })
   .catch(err => console.error('Fetch error:', err));
 }
-
-    // ─── BOOTSTRAP EXISTING ORDERS ───
-    <?php foreach($orders as $oid => $o): ?>
-  (()=>{
-    // 1) Build a JS-friendly order object, including all items
-    const order = <?php echo json_encode([
-      'order_id'   => $oid,
-      'table'      => $o['table_name'],
-      'created_at' => $o['created_at'],
-      'items'      => array_map(fn($it) => [
-        'product'  => $it['product_name'],
-        'quantity' => intval($it['quantity']),
-        'options'  => array_map(fn($optId) => $optLabels[intval($optId)] ?? '', explode(',', $it['options']))
-      ], $o['items'])
-    ]); ?>;
-
-    // 2) For each item, build a <tr>
-    order.items.forEach((it, idx) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${it.product}</td>
-        <td>${it.quantity}</td>
-        <td>${
-          it.options.filter(Boolean)
-            .map(o=>`<span class="option-pill">${o}</span>`)
-            .join('')
-        }</td>
-      `;
-      // 3) First item → create the card, subsequent → append into its tbody
-      if (idx === 0) {
-        createOrderCard(order.order_id, order, tr);
-      } else {
-        document
-          .getElementById(`order-items-${order.order_id}`)
-          .appendChild(tr);
-      }
-    });
-  })();
-  <?php endforeach; ?>
-
-  // 4) Re-bind your serve buttons
-  bindFormHandlers();
 
 </script>
 </body>

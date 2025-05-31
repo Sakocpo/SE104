@@ -44,11 +44,16 @@ if (!empty($table['current_order_id'])) {
 
     // order items + when they were marked served
     $q = $connection->prepare("
-      SELECT oi.quantity, oi.options, oi.served,
-             p.name AS product_name, p.price
-        FROM order_items oi
-        JOIN products p ON p.id = oi.product_id
-       WHERE oi.order_id = ?
+      SELECT 
+        oi.product_id,
+        oi.options,
+        SUM(oi.quantity) AS quantity,
+        p.name AS product_name,
+        p.price
+      FROM order_items oi
+      JOIN products p ON p.id = oi.product_id
+      WHERE oi.order_id = ?
+      GROUP BY oi.product_id, oi.options
     ");
     $q->bind_param("i", $oid);
     $q->execute();
@@ -63,15 +68,27 @@ if (!empty($table['current_order_id'])) {
   <title>Table <?= htmlspecialchars($table['table_name']) ?></title>
   <link rel="stylesheet" href="style.css">
   <style>
+    body {
+      background-image: url("uploads/waiter-page.jpg");
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+    }
     .order-meta {
-      background: #ffc107; color: #222;
-      padding: 16px; border-radius: 8px;
-      max-width: 800px; margin: 24px auto;
+      background: rgba(238,238,238,0.9);
+      color: #222;
+      padding: 16px; 
+      border-radius: 8px;
+      max-width: 800px; 
+      margin: 24px auto;
       font-size: 1.1em;
     }
     .order-meta div { margin-bottom: 4px; }
     .order-meta-buttons {
-      display: flex; gap: 12px; margin-top: 12px;
+      display: flex; 
+      gap: 12px; 
+      margin-top: 12px;
     }
     .order-meta-buttons a button {
       flex: 1;
@@ -98,12 +115,12 @@ if (!empty($table['current_order_id'])) {
       border-color: #FCEFCB;
       padding: 8px;
       text-align: left;
-      background: #f2c47c;
+      background: rgba(255,255,255,0.9);
       color: #062905;
       width: 2000px;
     }
     .order-list-table th {
-      background: #a4daab;
+      background: rgba(200,200,200,0.9);
       color: #724e04;
     }
     .order-list-table td.quantity {
@@ -112,7 +129,8 @@ if (!empty($table['current_order_id'])) {
     }
     .order-list-table .total-row td {
       font-weight: bold;
-      background: #FCEFCB;
+      background: rgba(240,240,240,0.9);
+      border-top: 1px solid black;
     }
     .item-options { margin-top:4px; }
     .option-label {
@@ -165,17 +183,17 @@ if (!empty($table['current_order_id'])) {
   <div class="main-content-list">
     <!-- Meta Block -->
     <div class="order-meta">
-      <div><strong>Table:</strong> <?= htmlspecialchars($table['table_name']) ?></div>
-      <div><strong>Ordered by:</strong> <?= htmlspecialchars($_SESSION['user']['username']) ?></div>
-      <div><strong>Ordered at:</strong>
+      <div><strong>Bàn:</strong> <?= htmlspecialchars($table['table_name']) ?></div>
+      <div><strong>Đặt Bởi:</strong> <?= htmlspecialchars($_SESSION['user']['username']) ?></div>
+      <div><strong>Đặt Lúc:</strong>
         <?php if ($orderMeta): ?>
           <?= date('H:i, j M Y', strtotime($orderMeta['created_at'])) ?>
         <?php else: ?>
-          <em>– no order yet –</em>
+          <em>– Chưa Có Đơn –</em>
         <?php endif; ?>
       </div>
       <div class="order-meta-buttons">
-        <a href="change_table.php?src=<?= $t ?>"><button>Change Table</button></a>
+        <a href="change_table.php?src=<?= $t ?>"><button>Chuyển Bàn</button></a>
         <a href="merge_table.php?src=<?= $t ?>"><button>Merge Table</button></a>
       </div>
     </div>
@@ -185,13 +203,13 @@ if (!empty($table['current_order_id'])) {
       <div style="text-align:center; margin:40px;">
         <a href="waiter_ordering.php?table_id=<?= $t ?>">
           <button style="padding:12px 24px; font-size:1em;">
-            Take First Order
+            Lấy Đơn 
           </button>
         </a>
       </div>
       <div style="text-align:center; margin-bottom:40px;">
         <a class="back" href="table_management_waiter.php">
-          <button>Back to Tables</button>
+          <button>Trở Lại Bàn</button>
         </a>
       </div>
       <?php exit; ?>
@@ -202,10 +220,10 @@ if (!empty($table['current_order_id'])) {
       <table class="order-list-table">
         <thead>
           <tr>
-            <th>Product & Options</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Subtotal</th>
+            <th>Đồ Uống Đã Đặt</th>
+            <th>Giá Thành</th>
+            <th>Số Lượng</th>
+            <th>Tổng Cộng</th>
           </tr>
         </thead>
         <tbody>
@@ -242,8 +260,8 @@ if (!empty($table['current_order_id'])) {
 
           <!-- Total row -->
           <tr class="total-row">
-            <td colspan="3"><strong>Total</strong></td>
-            <td><strong><?= number_format($grandTotal,2) ?></strong></td>
+            <td colspan="3"><strong style="font-size: 2em; font-weight: 9000;">Tổng Cộng</strong></td>
+            <td><strong style="font-size: 2em;"><?= number_format($grandTotal,2) ?></strong></td>
           </tr>
         </tbody>
       </table>
@@ -251,113 +269,53 @@ if (!empty($table['current_order_id'])) {
 
     <!-- Bottom Action Buttons -->
     <div class="action-buttons">
-      <a href="waiter_ordering.php?table_id=<?= $t ?>"><button>Add Product</button></a>
-      <a class="charge" href="charge_table.php?table_id=<?= $t ?>"><button>Charge</button></a>
-      <form method="POST" action="cancel_table.php" onsubmit="return confirm('Cancel this table?')">
+      <form method="POST" action="cancel_table.php" onsubmit="return confirm('Hủy Bàn?')">
         <input type="hidden" name="table_id" value="<?= $t ?>">
-        <button type="submit" class="cancel">Cancel Table</button>
+        <button type="submit" class="cancel">Hủy Đơn</button>
       </form>
-      <a class="back" href="table_management_waiter.php?category=<?=$table_cat?>"><button>Back</button></a>
+      <a href="waiter_ordering.php?table_id=<?= $t ?>"><button>Thêm Món</button></a>
+      <a class="back" href="table_management_waiter.php?category=<?=$table_cat?>"><button>Trở Lại</button></a>
+      <a class="charge" href="charge_table.php?table_id=<?= $t ?>"><button>Thanh Toán</button></a>
     </div>
   </div>
 
   <script src="script.js"></script>
+  <script>
+    // 1) Open the WebSocket to your kitchen server
+    const socket = new WebSocket("ws://localhost:8080");
+    socket.addEventListener('open', () => {
+      console.log('[WAITER WS] connected');
+    });
+    socket.addEventListener('error', err => {
+      console.error('[WAITER WS] error', err);
+    });
+
+    // 2) Hook the cancel form
+    const cancelForm = document.querySelector('form[action="cancel_table.php"]');
+    if (cancelForm) {
+      cancelForm.addEventListener('submit', function(e) {
+        // 3) Grab the order + table info from PHP
+        const orderId   = <?= json_encode($table['current_order_id'] ?? null) ?>;
+        const tableId   = <?= json_encode($t) ?>;
+        const tableName = <?= json_encode($table['table_name']) ?>;
+
+        if (orderId) {
+          // 4) Fire the real-time cancel event
+          const msg = {
+            type:     'cancel',
+            order_id: orderId,
+            table_id: tableId,
+            table:    tableName
+          };
+          console.log('[WAITER WS] sending cancel:', msg);
+          socket.send(JSON.stringify(msg));
+        }
+
+        // 5) Let the form submit as normal (and PHP will clear the DB/redirect)
+      });
+    }
+  </script>
+
+
 </body>
 </html>
-
-
-
-<!-- 
-.order-meta {
-      background: #ffc107;
-      color: #222;
-      padding: 16px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: 24px auto;
-      font-size: 1.1em;
-    }
-    .order-meta div { margin-bottom: 4px; }
-    .order-meta-buttons {
-      display: flex;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .order-meta-buttons a button {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 6px;
-      background: #007bff;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    /* --- Order list table --- */
-    .order-list-container {
-      max-width: 600px;
-      margin: 24px auto;
-      overflow-x: auto;
-    }
-    .order-list-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .order-list-table th,
-    .order-list-table td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-      background: #f2c47c;
-      color: #062905;
-      width: 2000px;
-    }
-    .order-list-table th {
-      background: #a4daab;
-      color: #724e04;
-    }
-    .order-list-table td.quantity {
-      color: #28a745;
-      font-weight: bold;
-    }
-    .order-list-table .total-row td {
-      font-weight: bold;
-      background: #fafafa;
-    }
-
-    /* --- Action buttons --- */
-    .action-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      max-width: 600px;
-      margin: 24px auto;
-    }
-    .action-buttons a button,
-    .action-buttons form button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      background: #007bff;
-      color: #fff;
-      cursor: pointer;
-    }
-    .action-buttons form button.cancel {
-      background: #dc3545;
-    }
-    .action-buttons a.back button {
-      background: #6c757d;
-    }
-
-    /* pill styles */
-    .item-options { margin-top:4px; }
-    .option-label {
-      display:inline-block;
-      margin-right:6px;
-      padding:2px 6px;
-      border:1px solid #ccc;
-      border-radius:12px;
-      background:#f5f5f5;
-      font-size:0.9em;
-    } -->

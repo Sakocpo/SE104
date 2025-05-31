@@ -13,7 +13,6 @@ if (!$user_id) {
     exit();
 }
 
-
 $user_query = $connection->prepare("SELECT * FROM users WHERE id = ?");
 $user_query->bind_param("i", $user_id);
 $user_query->execute();
@@ -27,6 +26,7 @@ if (!$user) {
 }
 
 $current_category_id = $user['user_category'];
+$error = '';
 
 // Handle deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
@@ -47,22 +47,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
 
     if (!empty($password)) {
         if ($password !== $confirm_password) {
-            echo "Passwords do not match.";
+            $error = "Passwords do not match.";
+        } else {
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $connection->prepare("UPDATE users SET username = ?, password = ? WHERE id = ?");
+            $stmt->bind_param("ssi", $username, $hashed_password, $user_id);
+            $stmt->execute();
+            $stmt->close();
+
+            header("Location: user_management.php?category=$current_category_id&updated=1");
             exit();
         }
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $connection->prepare("UPDATE users SET username = ?, password = ? WHERE id = ?");
-        $stmt->bind_param("ssi", $username, $hashed_password, $user_id);
     } else {
         $stmt = $connection->prepare("UPDATE users SET username = ? WHERE id = ?");
         $stmt->bind_param("si", $username, $user_id);
+        $stmt->execute();
+        $stmt->close();
+
+        header("Location: user_management.php?category=$current_category_id&updated=1");
+        exit();
     }
-
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: user_management.php?category=$current_category_id&updated=1");
-    exit();
 }
 ?>
 
@@ -75,6 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
 </head>
 <body>
 <div class="forms-container">
+    <?php if ($error): ?>
+        <div class="error-popup">
+            <?= htmlspecialchars($error) ?>
+            <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Close</button>
+        </div>
+    <?php endif; ?>
+
     <form id="edit-user-form" method="POST">
         <input type="hidden" name="category_id" value="<?= htmlspecialchars($current_category_id) ?>">
 
@@ -84,10 +95,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
         <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
 
         <label for="password">New Password (leave blank to keep current):</label>
-        <input type="password" name="password" placeholder="New Password">
+        <input type="password" name="password" placeholder="New Password" autocomplete="new-password">
 
         <label for="confirm_password">Confirm Password:</label>
-        <input type="password" name="confirm_password" placeholder="Confirm Password">
+        <input type="password" name="confirm_password" placeholder="Confirm Password" autocomplete="new-password">
 
         <button type="submit" name="update_user">Update</button>
 

@@ -113,3 +113,37 @@ function toggleDeleteBtn(){
     const checked = document.querySelectorAll('input[name="table_ids[]"]:checked').length;
     document.getElementById('delete-btn').style.display = checked>=2?'inline-block':'none';
 }
+
+// let lastCheck = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+// const bell = document.getElementById('bell-sound');
+// const box  = document.getElementById('notification');
+
+// function showNotification(message) {
+//   bell.currentTime = 0;
+//   bell.play();
+//   box.textContent = message;
+//   box.classList.add('show');
+//   setTimeout(() => box.classList.remove('show'), 4000);
+// }
+
+// function checkServedItems() {
+//   fetch(`check_served_items.php?since=${encodeURIComponent(lastCheck)}`)
+//     .then(res => res.json())
+//     .then(notifications => {
+//       if (notifications.length > 0) {
+//         lastCheck = new Date().toISOString().slice(0, 19).replace('T', ' ');
+//         notifications.forEach(n => {
+//           if (n.type === 'order') {
+//             showNotification(`Table ${n.table}'s order is complete`);
+//           } else {
+//             showNotification(`${n.product} has been completed for table ${n.table}`);
+//           }
+//         });
+//       }
+//     });
+// }
+
+// setInterval(checkServedItems, 100);
+
+

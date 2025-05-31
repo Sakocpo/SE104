@@ -13,14 +13,23 @@ if (!isset($_SESSION['user'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waiter page</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+    body {
+      background-image: url("uploads/waiter-page.jpg");
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+    }
+  </style>
 </head>
 
 <body>
     <div id="sidebar" class="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
         <ul>
-            <li><a href="waiter.php">Waiter Page</a></li>
-            <li><a href="table_management_waiter.php">Table Management</a></li>
+            <li><a href="waiter.php">Trang Phục Vụ</a></li>
+            <li><a href="table_management_waiter.php">Order Tại Bàn</a></li>
         </ul>
     </div>
 
@@ -32,6 +41,8 @@ if (!isset($_SESSION['user'])) {
         </div>
     </div>
 
+    <div id="notification" class="notification-popup"></div>
+    <audio id="bell-sound" src="bell.mp3" preload="auto"></audio>
 
     <script src="script.js"></script>
 </body>

@@ -1,6 +1,9 @@
-// waiter_ordering.js
-
 let currentProduct, optionsData = {}, currentOptions = {}, currentCategory, order = [];
+const waiterSocket = new WebSocket("ws://localhost:8080");
+
+waiterSocket.onopen = () => {
+  console.log("✅ WebSocket connected from waiter_ordering.js");
+};
 
 /**
  * Open the “choose options” pop‑up for a product
@@ -96,58 +99,111 @@ function adjustQty(delta) {
 /**
  * Add current selection to the in‑memory order
  */
+function notifyKitchenProduct(productName, tableId) {
+  if (waiterSocket.readyState === WebSocket.OPEN) {
+    waiterSocket.send(JSON.stringify({
+      type: "add",
+      table: "Table " + tableId,
+      product: productName
+    }));
+  }
+}
+
 function addToOrder() {
-  const qty = parseInt(document.getElementById("quantity-input").value) || 0;
-  order.push({
-    product : currentProduct,
-    quantity: qty,
-    options : { ...currentOptions }
-  });
+  const qty = parseInt(document.getElementById("quantity-input").value);
+  if (qty <= 0) return;
+
+  const product = currentProduct;
+  const selectedOptions = { ...currentOptions };
+
+  let found = false;
+  for (let item of order) {
+    if (item.product.id === product.id &&
+        JSON.stringify(item.options) === JSON.stringify(selectedOptions)) {
+      item.quantity += qty;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    order.push({
+      product,
+      options: selectedOptions,
+      quantity: qty
+    });
+  }
+
+  // ✅ Notify kitchen no matter what
+  notifyKitchenProduct(product.name, product.table_id  || "???");
+
   closePopup();
 }
+
 
 /**
  * Show the review panel, let you tweak each line
  */
 function openReview() {
-  const list = document.getElementById("order-summary-list"),
+  const list  = document.getElementById("order-summary-list"),
         popup = document.getElementById("order-review");
   list.innerHTML = "";
 
-  order.forEach((item, idx) => {
+  order.forEach(item => {
+    // ─── Row wrapper ───
     const row = document.createElement("div");
     row.className = "review-item";
 
-    // Product + options text
-    const opts = [];
-    for (let cat in item.options) {
-      if (item.options[cat]) opts.push(`${cat}: ${item.options[cat]}`);
-    }
+    // ─── Left “info” column ───
+    const info = document.createElement("div");
+    info.className = "ri-info";
+
+    // Product name
     const title = document.createElement("div");
     title.className = "ri-name";
-    title.innerText = item.product.name
-                      + (opts.length ? " — " + opts.join(" | ") : "");
+    title.innerText = item.product.name;
+    info.appendChild(title);
 
-    // Qty controls
+    // Option pills
+    const optsDiv = document.createElement("div");
+    optsDiv.className = "item-options";
+    for (let cat in item.options) {
+      const val = item.options[cat];
+      if (val) {
+        const pill = document.createElement("span");
+        pill.className = "option-label";
+        pill.innerHTML = `&bull; ${val}`;
+        optsDiv.appendChild(pill);
+      }
+    }
+    if (optsDiv.childElementCount) {
+      info.appendChild(optsDiv);
+    }
+
+    // ─── Right “quantity” column ───
     const qc = document.createElement("div");
     qc.className = "ri-qty";
 
-    const dec = document.createElement("button"); dec.type = "button"; dec.innerText = "−";
-    const inp = document.createElement("input");
-          inp.type = "number";
-          inp.value = item.quantity;
-          inp.onchange = () => {
-            item.quantity = Math.max(0, parseInt(inp.value) || 0);
-            inp.value = item.quantity;
-            if (item.quantity === 0) row.style.display = "none";
-          };
-    const inc = document.createElement("button"); inc.type = "button"; inc.innerText = "+";
-
+    const dec = document.createElement("button");
+    dec.type = "button";
+    dec.innerText = "−";
     dec.onclick = () => {
       item.quantity = Math.max(0, item.quantity - 1);
       inp.value = item.quantity;
       if (item.quantity === 0) row.style.display = "none";
     };
+
+    const inp = document.createElement("input");
+    inp.type = "number";
+    inp.value = item.quantity;
+    inp.onchange = () => {
+      item.quantity = Math.max(0, parseInt(inp.value, 10) || 0);
+      inp.value = item.quantity;
+      if (item.quantity === 0) row.style.display = "none";
+    };
+
+    const inc = document.createElement("button");
+    inc.type = "button";
+    inc.innerText = "+";
     inc.onclick = () => {
       item.quantity++;
       inp.value = item.quantity;
@@ -155,16 +211,34 @@ function openReview() {
     };
 
     qc.append(dec, inp, inc);
-    row.append(title, qc);
+
+    // ─── Assemble and show ───
+    row.appendChild(info);
+    row.appendChild(qc);
     list.appendChild(row);
   });
 
   popup.style.display = "flex";
 }
 
+
+
 function closeReview() {
   document.getElementById("order-review").style.display = "none";
 }
+
+function getOptionLabel(optionId) {
+  for (const category of Object.values(optionsData)) {
+    const opt = category.find(o => o.id === optionId);
+    if (opt) return opt.label;
+  }
+  return '';
+}
+function getProductName(productId) {
+  const product = products.find(p => p.id === productId);
+  return product ? product.name : 'Unknown';
+}
+
 
 /**
  * Submit only items with quantity > 0
@@ -176,38 +250,64 @@ function submitOrder(tableId) {
     .map(it => ({
       product_id: it.product.id,
       options: Object.entries(it.options)
-        .map(([cat,label]) => {
-          const opt = optionsData[cat].find(o=>o.label===label);
+        .map(([cat, label]) => {
+          const opt = optionsData[cat].find(o => o.label === label);
           return opt ? opt.id : null;
         })
-        .filter(x=>x!=null),
+        .filter(x => x != null),
       quantity: it.quantity
     }));
 
-  // **NEW**: if nothing selected, stop here
   if (itemsPayload.length === 0) {
     alert("Please choose at least one product before sending to kitchen.");
     return;
   }
 
-  const payload = { table_id: tableId, items: itemsPayload };
-
   fetch("submit_order.php", {
     method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify(payload)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ table_id: tableId, items: itemsPayload })
   })
-  .then(r=>r.json())
-  .then(json=>{
-    if (json.success) {
-      alert("Sent to kitchen!");
-      window.location = "table_management_waiter.php";
-    } else {
-      alert("Error: " + (json.error||"unknown"));
+  .then(r => r.json())
+  .then(json => {
+    if (!json.success) {
+      alert("Error: " + (json.error || "Unknown error"));
+      return;
     }
+
+    const orderId   = json.order_id;
+    const tableName = json.table;  // your PHP now returns the real table_name
+
+    // Send real-time WebSocket messages
+    if (waiterSocket.readyState === WebSocket.OPEN) {
+      // 1️⃣ Per-item “serve” notifications
+      itemsPayload.forEach(item => {
+        const productName  = getProductName(item.product_id);
+        const optionLabels = item.options.map(getOptionLabel);
+
+        waiterSocket.send(JSON.stringify({
+          type:      "serve",
+          order_id:  orderId,
+          table:     tableName,
+          product:   productName,
+          quantity:  item.quantity,
+          options:   optionLabels
+        }));
+      });
+
+      // 2️⃣ Full-order “ready” notification
+      waiterSocket.send(JSON.stringify({
+        type:      "order",
+        order_id:  orderId,
+        table:     tableName
+      }));
+    }
+
+    alert("Sent to kitchen!");
+    window.location = "table_management_waiter.php";
   })
-  .catch(err=>{
-    console.error(err);
+  .catch(err => {
+    console.error("Submit order failed:", err);
     alert("Failed to submit order.");
   });
 }

@@ -175,7 +175,8 @@ CREATE TABLE `products` (
   `options` varchar(255) NOT NULL,
   `description` varchar(255) NOT NULL,
   `active` tinyint(4) DEFAULT 1,
-  `image` varchar(255) DEFAULT NULL
+  `image` varchar(255) DEFAULT NULL,
+  `deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -200,7 +201,8 @@ CREATE TABLE `tables` (
   `active` tinyint(1) DEFAULT 1,
   `occupied` tinyint(1) NOT NULL DEFAULT 0,
   `current_order_id` int(11) DEFAULT NULL,
-  `status` enum('empty','occupied','served') NOT NULL DEFAULT 'empty'
+  `status` enum('empty','occupied','served') NOT NULL DEFAULT 'empty',
+  `deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

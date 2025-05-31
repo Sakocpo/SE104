@@ -15,7 +15,7 @@ $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
 $tables = [];
 if ($current_category_id !== null) {
-    $stmt = $connection->prepare("SELECT * FROM tables WHERE table_category = ?");
+    $stmt = $connection->prepare("SELECT * FROM tables WHERE table_category = ? AND deleted = 0");
     $stmt->bind_param("s", $current_category_id);
     $stmt->execute();
     $success = True;
@@ -49,20 +49,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tables Management</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+        background-image: url("uploads/admin-page.jpg");
+        background-color: transparent;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+    }
+  </style>
 </head>
+
 <body>
-    
     <div id="sidebar" class="sidebar">
-      <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-      <ul>
-          <li><a href="admin.php">Admin Page</a></li>
-          <li><a href="product_management.php">Product Management</a></li>
-          <li><a href="inventory_management.php">Inventory Management</a></li>
-          <li><a href="user_management.php">Users Management</a></li>
-          <li><a href="table_management_admin.php">Tables Management</a></li>
-          <li><a href="product_options_management.php">Product Options</a></li>
-          <li><a href="report.php">Report</a></li>
-      </ul>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <ul>
+        <li><a href="admin.php">Trang Admin</a></li>
+        <li><a href="product_management.php">Quản Lý Hàng</a></li>
+        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
+        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
+        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
+        <li><a href="product_options_management.php">Quản Lý Options</a></li>
+        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
+        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
+    </ul>
     </div>
         <!-- Horizontal category bar -->
         <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
@@ -99,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
 
                     <!-- Table name centered -->
-                    <h4 style="margin: 0; font-size: 18px; text-align: center;"><?= htmlspecialchars($table['table_name']) ?></h4>
+                    <h4 style="margin: 0; font-size: 18px; text-align: center; color: brown;"><?= htmlspecialchars($table['table_name']) ?></h4>
 
                     <!-- Active status indicator -->
                     <div style="
