@@ -110,13 +110,8 @@ while ($row = $result->fetch_assoc()) {
   </style>
 </head>
 <body>
-  <div id="sidebar" class="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <ul>
-            <li><a href="kitchen.php">Trang Bếp</a></li>
-            <li><a href="kitchen_orders.php">Nhận Đơn</a></li>
-        </ul>
-    </div>
+  <?php include 'sidebar.php'; ?>
+  
 <div class="main-kitchen-list"></div>
 <script src="script.js"></script>
 <script>

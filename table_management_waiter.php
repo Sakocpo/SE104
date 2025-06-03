@@ -17,8 +17,9 @@ if ($current_category_id !== null) {
     $sql = "
       SELECT
         t.*,
-        IFNULL(SUM(CASE WHEN oi.served = 0 THEN 1 END), 0) AS unserved_count
+        IFNULL(SUM(CASE WHEN oi.served = 0 AND o.status != 'deleted' THEN 1 END), 0) AS unserved_count
       FROM tables t
+      LEFT JOIN orders o ON o.id = t.current_order_id
       LEFT JOIN order_items oi
         ON oi.order_id = t.current_order_id
       WHERE t.table_category = ? AND t.active = 1 AND t.deleted = 0

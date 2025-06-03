@@ -6,7 +6,7 @@ waiterSocket.onopen = () => {
 };
 
 /**
- * Open the “choose options” pop‑up for a product
+ * Open the "choose options" pop-up for a product
  */
 function openOptionsPopup(product) {
   currentProduct = product;
@@ -60,7 +60,7 @@ function openOptionsPopup(product) {
 }
 
 /**
- * Render the labels for the currently selected option‑category
+ * Render the labels for the currently selected option-category
  */
 function renderItems() {
   const itemRow = document.getElementById("option-items");
@@ -97,47 +97,72 @@ function adjustQty(delta) {
 }
 
 /**
- * Add current selection to the in‑memory order
+ * Add current selection to the in-memory order
  */
-function notifyKitchenProduct(productName, tableId) {
+function notifyKitchenProduct(productName, tableId, optionIDs) {
+  // Convert IDs → labels, then send a WS message
+  const labels = (Array.isArray(optionIDs) ? optionIDs : [])
+    .map(getOptionLabel)
+    .filter(lbl => lbl);
+
   if (waiterSocket.readyState === WebSocket.OPEN) {
     waiterSocket.send(JSON.stringify({
-      type: "add",
-      table: "Table " + tableId,
-      product: productName
+      type:    "add",
+      table:   "Table " + tableId,
+      product: productName,
+      options: labels   // e.g. ["Nóng","Đá xay"]
     }));
   }
 }
 
+
 function addToOrder() {
-  const qty = parseInt(document.getElementById("quantity-input").value);
-  if (qty <= 0) return;
+  const qty = parseInt(document.getElementById("quantity-input").value, 10);
+  if (isNaN(qty) || qty <= 0) return;
 
-  const product = currentProduct;
-  const selectedOptions = { ...currentOptions };
+  // 1) Map each chosen category→label to a numeric ID, using optionsData
+  const selectedOptionIDs = Object.entries(currentOptions)
+    .map(([cat, label]) => {
+      const optList = optionsData[cat] || [];
+      const found   = optList.find(o => o.label === label);
+      return found ? found.id : null;
+    })
+    .filter(id => id != null);
 
-  let found = false;
+  // 2) Combine identical line‐items (same product + same option IDs) by incrementing qty
+  let foundItem = false;
   for (let item of order) {
-    if (item.product.id === product.id &&
-        JSON.stringify(item.options) === JSON.stringify(selectedOptions)) {
+    if (
+      item.product.id === currentProduct.id &&
+      Array.isArray(item.options) &&
+      item.options.length === selectedOptionIDs.length &&
+      item.options.every((v,i) => v === selectedOptionIDs[i])
+    ) {
       item.quantity += qty;
-      found = true;
+      foundItem = true;
       break;
     }
   }
-  if (!found) {
+  // 3) If not found, push a brand-new line
+  if (!foundItem) {
     order.push({
-      product,
-      options: selectedOptions,
+      product: currentProduct,
+      options: selectedOptionIDs,  // e.g. [2,5]
       quantity: qty
     });
   }
 
-  // ✅ Notify kitchen no matter what
-  notifyKitchenProduct(product.name, product.table_id  || "???");
+  // 4) Send a real-time “add” WS message including the human labels
+  notifyKitchenProduct(
+    currentProduct.name,
+    currentProduct.table_id || "???",
+    selectedOptionIDs
+  );
 
+  // 5) Close the pop-up
   closePopup();
 }
+
 
 
 /**
@@ -148,12 +173,27 @@ function openReview() {
         popup = document.getElementById("order-review");
   list.innerHTML = "";
 
+  // Filter out items with quantity 0 first and update the order array
+  order = order.filter(item => item.quantity > 0);
+
+  // If no items left, show message and return
+  if (order.length === 0) {
+    const emptyMessage = document.createElement("div");
+    emptyMessage.style.textAlign = "center";
+    emptyMessage.style.padding = "20px";
+    emptyMessage.style.color = "#666";
+    emptyMessage.innerText = "No items in order";
+    list.appendChild(emptyMessage);
+    popup.style.display = "flex";
+    return;
+  }
+
   order.forEach(item => {
     // ─── Row wrapper ───
     const row = document.createElement("div");
     row.className = "review-item";
 
-    // ─── Left “info” column ───
+    // ─── Left "info" column ───
     const info = document.createElement("div");
     info.className = "ri-info";
 
@@ -166,20 +206,19 @@ function openReview() {
     // Option pills
     const optsDiv = document.createElement("div");
     optsDiv.className = "item-options";
-    for (let cat in item.options) {
-      const val = item.options[cat];
-      if (val) {
-        const pill = document.createElement("span");
-        pill.className = "option-label";
-        pill.innerHTML = `&bull; ${val}`;
-        optsDiv.appendChild(pill);
-      }
-    }
+    // Build the little “• Label” pills from the numeric IDs in item.options
+item.options.forEach(optionId => {
+  const pill = document.createElement("span");
+  pill.className = "option-label";
+  pill.innerHTML = `&bull; ${ getOptionLabel(optionId) }`;
+  optsDiv.appendChild(pill);
+});
+
     if (optsDiv.childElementCount) {
       info.appendChild(optsDiv);
     }
 
-    // ─── Right “quantity” column ───
+    // ─── Right "quantity" column ───
     const qc = document.createElement("div");
     qc.className = "ri-qty";
 
@@ -189,7 +228,24 @@ function openReview() {
     dec.onclick = () => {
       item.quantity = Math.max(0, item.quantity - 1);
       inp.value = item.quantity;
-      if (item.quantity === 0) row.style.display = "none";
+      if (item.quantity === 0) {
+        // Remove the item from the order array
+        const index = order.indexOf(item);
+        if (index > -1) {
+          order.splice(index, 1);
+        }
+        row.remove(); // Remove the row from DOM
+        
+        // If no items left, show message
+        if (order.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.style.textAlign = "center";
+          emptyMessage.style.padding = "20px";
+          emptyMessage.style.color = "#666";
+          emptyMessage.innerText = "No items in order";
+          list.appendChild(emptyMessage);
+        }
+      }
     };
 
     const inp = document.createElement("input");
@@ -198,7 +254,24 @@ function openReview() {
     inp.onchange = () => {
       item.quantity = Math.max(0, parseInt(inp.value, 10) || 0);
       inp.value = item.quantity;
-      if (item.quantity === 0) row.style.display = "none";
+      if (item.quantity === 0) {
+        // Remove the item from the order array
+        const index = order.indexOf(item);
+        if (index > -1) {
+          order.splice(index, 1);
+        }
+        row.remove(); // Remove the row from DOM
+        
+        // If no items left, show message
+        if (order.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.style.textAlign = "center";
+          emptyMessage.style.padding = "20px";
+          emptyMessage.style.color = "#666";
+          emptyMessage.innerText = "No items in order";
+          list.appendChild(emptyMessage);
+        }
+      }
     };
 
     const inc = document.createElement("button");
@@ -221,8 +294,6 @@ function openReview() {
   popup.style.display = "flex";
 }
 
-
-
 function closeReview() {
   document.getElementById("order-review").style.display = "none";
 }
@@ -239,75 +310,151 @@ function getProductName(productId) {
   return product ? product.name : 'Unknown';
 }
 
-
 /**
  * Submit only items with quantity > 0
  */
+/**
+ * Submit the current `order` to the server, then broadcast each line‐item in real time
+ * over WebSocket with actual labels so the kitchen can render them.
+ */
 function submitOrder(tableId) {
-  // build only the items with qty > 0
-  const itemsPayload = order
-    .filter(it => it.quantity > 0)
-    .map(it => ({
-      product_id: it.product.id,
-      options: Object.entries(it.options)
-        .map(([cat, label]) => {
-          const opt = optionsData[cat].find(o => o.label === label);
-          return opt ? opt.id : null;
-        })
-        .filter(x => x != null),
-      quantity: it.quantity
-    }));
-
-  if (itemsPayload.length === 0) {
-    alert("Please choose at least one product before sending to kitchen.");
+  if (!order.length) {
+    console.log("submitOrder: no items to submit (order is empty).");
+    if (waiterSocket.readyState === WebSocket.OPEN) {
+      waiterSocket.send(JSON.stringify({
+        type:    "debug",
+        message: "submitOrder called with empty order."
+      }));
+    }
     return;
   }
 
-  fetch("submit_order.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ table_id: tableId, items: itemsPayload })
-  })
-  .then(r => r.json())
-  .then(json => {
-    if (!json.success) {
-      alert("Error: " + (json.error || "Unknown error"));
-      return;
-    }
+  // 1) Log raw `order`
+  console.log("submitOrder: raw order =", order);
+  if (waiterSocket.readyState === WebSocket.OPEN) {
+    waiterSocket.send(JSON.stringify({
+      type:    "debug",
+      message: "Raw order: " + JSON.stringify(order)
+    }));
+  }
 
-    const orderId   = json.order_id;
-    const tableName = json.table;  // your PHP now returns the real table_name
-
-    // Send real-time WebSocket messages
+  // 2) Build payload for PHP
+  const itemsPayload = order.map(item => {
+    const payloadItem = {
+      product_id: item.product.id,
+      quantity:   item.quantity,
+      options:    Array.isArray(item.options) ? item.options : []  // these are numeric IDs
+    };
+    console.log("submitOrder: mapping item → payloadItem:", payloadItem);
     if (waiterSocket.readyState === WebSocket.OPEN) {
-      // 1️⃣ Per-item “serve” notifications
-      itemsPayload.forEach(item => {
-        const productName  = getProductName(item.product_id);
-        const optionLabels = item.options.map(getOptionLabel);
-
-        waiterSocket.send(JSON.stringify({
-          type:      "serve",
-          order_id:  orderId,
-          table:     tableName,
-          product:   productName,
-          quantity:  item.quantity,
-          options:   optionLabels
-        }));
-      });
-
-      // 2️⃣ Full-order “ready” notification
       waiterSocket.send(JSON.stringify({
-        type:      "order",
-        order_id:  orderId,
-        table:     tableName
+        type:    "debug",
+        message: "Mapping item → payloadItem: " + JSON.stringify(payloadItem)
       }));
     }
-
-    alert("Sent to kitchen!");
-    window.location = "table_management_waiter.php";
-  })
-  .catch(err => {
-    console.error("Submit order failed:", err);
-    alert("Failed to submit order.");
+    return payloadItem;
   });
+
+  const data = {
+    table_id: tableId,
+    items:    itemsPayload
+  };
+
+  // 3) Log final payload
+  console.log("submitOrder: final data payload =", data);
+  if (waiterSocket.readyState === WebSocket.OPEN) {
+    waiterSocket.send(JSON.stringify({
+      type:    "debug",
+      message: "Final payload: " + JSON.stringify(data)
+    }));
+  }
+
+  // 4) Post to server
+  fetch("submit_order.php", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(data)
+  })
+    .then(response => {
+      console.log("submitOrder: HTTP status =", response.status);
+      if (waiterSocket.readyState === WebSocket.OPEN) {
+        waiterSocket.send(JSON.stringify({
+          type:    "debug",
+          message: "HTTP response status: " + response.status
+        }));
+      }
+      return response.json();
+    })
+    .then(json => {
+      console.log("submitOrder: server JSON response =", json);
+      if (waiterSocket.readyState === WebSocket.OPEN) {
+        waiterSocket.send(JSON.stringify({
+          type:    "debug",
+          message: "Server JSON response: " + JSON.stringify(json)
+        }));
+      }
+
+      if (json.success) {
+        // 5) Send one WS “serve” message per line, with actual labels
+        order.forEach(item => {
+          const optionLabels = (Array.isArray(item.options) ? item.options : [])
+            .map(optionId => getOptionLabel(optionId))
+            .filter(lbl => lbl);
+
+          const serveMsg = {
+            type:      "serve",
+            order_id:  json.order_id,
+            table:     json.table,
+            product:   item.product.name,
+            quantity:  item.quantity,
+            options:   optionLabels
+          };
+
+          console.log("submitOrder: WS send serveMsg →", serveMsg);
+          if (waiterSocket.readyState === WebSocket.OPEN) {
+            waiterSocket.send(JSON.stringify(serveMsg));
+          }
+        });
+
+        // 6) Send final WS “order complete” message
+        const doneMsg = {
+          type:     "order",
+          order_id: json.order_id,
+          table:    json.table
+        };
+        console.log("submitOrder: WS send doneMsg →", doneMsg);
+        if (waiterSocket.readyState === WebSocket.OPEN) {
+          waiterSocket.send(JSON.stringify(doneMsg));
+        }
+
+        console.log("submitOrder: submission succeeded, redirecting to waiter.php");
+        if (waiterSocket.readyState === WebSocket.OPEN) {
+          waiterSocket.send(JSON.stringify({
+            type:    "debug",
+            message: "Submission succeeded, redirecting."
+          }));
+        }
+        window.location.href = "table_management_waiter.php";
+      } else {
+        console.warn("submitOrder: submission failed —", json.error);
+        if (waiterSocket.readyState === WebSocket.OPEN) {
+          waiterSocket.send(JSON.stringify({
+            type:    "debug",
+            message: "Submission failed: " + json.error
+          }));
+        }
+        alert("Failed to submit order: " + json.error);
+      }
+    })
+    .catch(err => {
+      console.error("submitOrder: fetch error —", err);
+      if (waiterSocket.readyState === WebSocket.OPEN) {
+        waiterSocket.send(JSON.stringify({
+          type:    "debug",
+          message: "Fetch error: " + err.toString()
+        }));
+      }
+      alert("Failed to submit order");
+    });
 }
+

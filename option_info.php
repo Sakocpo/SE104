@@ -79,19 +79,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
         </div>
     <?php endif; ?>
 
+    <?php if (isset($_GET['confirm_delete'])): ?>
+        <div class="confirm-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000;">
+            <h3>Confirm Delete Option</h3>
+            <p>Are you sure you want to delete option "<?= htmlspecialchars($option['label']) ?>"?</p>
+            <form method="POST">
+                <button type="submit" name="delete_option" class="confirm-btn">Confirm</button>
+                <button type="button" class="cancel-btn" onclick="window.location.href='option_info.php?id=<?= $option_id ?>'">Cancel</button>
+            </form>
+        </div>
+    <?php endif; ?>
+
     <form method="POST">
         <h3 style="color: black;">Edit Option</h3>
         <input type="text" name="label" value="<?= htmlspecialchars($option['label']) ?>" required>
         <button type="submit">Save</button>        
     </form>
 
-    <form method="POST" onsubmit="return confirm('Are you sure you want to delete this option?');">
-        <button type="submit" name="delete_option" style="background: #dc3545; color: white;">Delete Option</button>
-    </form>
+    <button type="button" onclick="window.location.href='option_info.php?id=<?= $option_id ?>&confirm_delete=1'" style="background: #dc3545; color: white;">Delete Option</button>
 
-    <form method="POST">
     <a href="product_options_management.php?category=<?= $option['type_id'] ?>"><button type="button">Cancel</button></a>
-    </form>
 </div>
 </body>
 </html>

@@ -189,28 +189,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             <input type="hidden" name="category_id" value="<?= htmlspecialchars($current_category_id) ?>">
             <input type="hidden" name="option_ids" id="option_ids">
 
-            <h3>Add Product</h3>
+            <h3>Thêm Món</h3>
 
-            <label for="product_name">Product Name:</label>
+            <label for="product_name">Tên Món:</label>
             <input type="text" name="product_name" required>
 
-            <label for="product_price">Price:</label>
+            <label for="product_price">Giá Thành:</label>
             <input type="number" name="product_price" required>
 
-            <label for="product_image">Product Image:</label>
+            <label for="product_image">Ảnh:</label>
             <input type="file" name="product_image" accept="image/*">
 
-            <label for="product_desc">Product Description:</label>
+            <label for="product_desc">Mô Tả:</label>
             <textarea name="product_desc"></textarea>
 
-            <button type="submit" name="add_product">Add Product</button>
+            <button type="submit" name="add_product">Thêm Món</button>
             <a href="product_management.php?category=<?= $current_category_id ?>">
-                <button type="button">Cancel</button>
+                <button type="button">Hủy</button>
             </a>
         </form>
         <!-- Options Panel -->
         <div class="options-panel">
-            <div class="options-header">Available Options</div>
+            <div class="options-header">Các Tùy Chọn</div>
             <input type="hidden" name="option_ids" id="option_ids">
             <?php foreach ($optCats as $cat): ?>
                 <details class="opt-category">

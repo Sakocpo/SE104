@@ -20,6 +20,8 @@ if (!$table) {
     exit("Table not found.");
 }
 
+$showConfirmCancel = isset($_GET['confirm_cancel']) && $_GET['confirm_cancel'] == '1';
+
 // 3️⃣ Build a map of option_id → label
 $optLabels = [];
 $res = $connection->query("SELECT id,label FROM options");
@@ -172,6 +174,28 @@ if (!empty($table['current_order_id'])) {
   </style>
 </head>
 <body>
+
+<!-- ── ADDED: If “confirm_cancel” is set, show the confirmation overlay ── -->
+<?php if ($showConfirmCancel): ?>
+      <div class="confirm-popup">
+        <h3 style="margin-bottom: 10px;">Xác Nhận Hủy Đơn</h3>
+        <p>Bạn có chắc chắn muốn hủy đơn cho bàn “<?= htmlspecialchars($table['table_name']) ?>”?</p>
+        <div class="confirm-buttons">
+          <!-- When “Yes” is clicked, POST to cancel_table.php -->
+          <form method="POST" action="cancel_table.php" style="margin:0;">
+            <input type="hidden" name="table_id" value="<?= $t ?>">
+            <button type="submit" class="confirm-btn">Xác Nhận</button>
+          </form>
+          <!-- When “No” is clicked, simply reload without confirm_cancel -->
+          <button 
+            type="button" 
+            class="cancel-btn" 
+            onclick="window.location.href='table_info_waiter.php?table_id=<?= $t ?>'">
+            Hủy
+          </button>
+        </div>
+      </div>
+  <?php endif; ?>
   <div id="sidebar" class="sidebar">
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     <ul>
@@ -194,7 +218,7 @@ if (!empty($table['current_order_id'])) {
       </div>
       <div class="order-meta-buttons">
         <a href="change_table.php?src=<?= $t ?>"><button>Chuyển Bàn</button></a>
-        <a href="merge_table.php?src=<?= $t ?>"><button>Merge Table</button></a>
+        <!-- <a href="merge_table.php?src=<?= $t ?>"><button>Merge Table</button></a> -->
       </div>
     </div>
 
@@ -269,10 +293,9 @@ if (!empty($table['current_order_id'])) {
 
     <!-- Bottom Action Buttons -->
     <div class="action-buttons">
-      <form method="POST" action="cancel_table.php" onsubmit="return confirm('Hủy Bàn?')">
-        <input type="hidden" name="table_id" value="<?= $t ?>">
-        <button type="submit" class="cancel">Hủy Đơn</button>
-      </form>
+      <a href="table_info_waiter.php?table_id=<?= $t ?>&confirm_cancel=1">
+        <button style="background: red;"class="cancel">Hủy Đơn</button>
+      </a>
       <a href="waiter_ordering.php?table_id=<?= $t ?>"><button>Thêm Món</button></a>
       <a class="back" href="table_management_waiter.php?category=<?=$table_cat?>"><button>Trở Lại</button></a>
       <a class="charge" href="charge_table.php?table_id=<?= $t ?>"><button>Thanh Toán</button></a>
@@ -290,30 +313,30 @@ if (!empty($table['current_order_id'])) {
       console.error('[WAITER WS] error', err);
     });
 
-    // 2) Hook the cancel form
-    const cancelForm = document.querySelector('form[action="cancel_table.php"]');
-    if (cancelForm) {
-      cancelForm.addEventListener('submit', function(e) {
-        // 3) Grab the order + table info from PHP
-        const orderId   = <?= json_encode($table['current_order_id'] ?? null) ?>;
-        const tableId   = <?= json_encode($t) ?>;
-        const tableName = <?= json_encode($table['table_name']) ?>;
+    // // 2) Hook the cancel form
+    // const cancelForm = document.querySelector('form[action="cancel_table.php"]');
+    // if (cancelForm) {
+    //   cancelForm.addEventListener('submit', function(e) {
+    //     // 3) Grab the order + table info from PHP
+    //     const orderId   = <?= json_encode($table['current_order_id'] ?? null) ?>;
+    //     const tableId   = <?= json_encode($t) ?>;
+    //     const tableName = <?= json_encode($table['table_name']) ?>;
 
-        if (orderId) {
-          // 4) Fire the real-time cancel event
-          const msg = {
-            type:     'cancel',
-            order_id: orderId,
-            table_id: tableId,
-            table:    tableName
-          };
-          console.log('[WAITER WS] sending cancel:', msg);
-          socket.send(JSON.stringify(msg));
-        }
+    //     if (orderId) {
+    //       // 4) Fire the real-time cancel event
+    //       const msg = {
+    //         type:     'cancel',
+    //         order_id: orderId,
+    //         table_id: tableId,
+    //         table:    tableName
+    //       };
+    //       console.log('[WAITER WS] sending cancel:', msg);
+    //       socket.send(JSON.stringify(msg));
+    //     }
 
-        // 5) Let the form submit as normal (and PHP will clear the DB/redirect)
-      });
-    }
+    //     // 5) Let the form submit as normal (and PHP will clear the DB/redirect)
+    //   });
+    // }
   </script>
 
 

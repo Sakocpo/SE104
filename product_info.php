@@ -249,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         <?php if ($product['image']): ?>
           <img src="<?=htmlspecialchars($product['image'])?>" style="max-width:100%;border:1px solid #ccc;padding:4px;">
           <button form="edit-product-form" name="clear_image" style="margin-top:8px;">
-            Clear Image
+            Xóa Ảnh
           </button>
         <?php endif; ?>
       </div>
@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 
       <!-- ▶ RIGHT PANEL: options dropdowns (outside the form) ▶ -->
       <div class="options-panel" style="width:300px;">
-        <div class="options-header">Tùy Chọn</div>
+        <div class="options-header">Các Tùy Chọn</div>
         <?php foreach ($optCats as $cat): ?>
           <details class="opt-category">
             <summary><?=htmlspecialchars($cat['name'])?></summary>

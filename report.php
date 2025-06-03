@@ -53,6 +53,7 @@ $stmt = $connection->prepare("
   JOIN order_items oi ON o.id = oi.order_id
   JOIN products p ON oi.product_id = p.id
   WHERE o.created_at BETWEEN ? AND ?
+  AND o.deleted = 0
   GROUP BY p.id, p.name, p.price, p.deleted
   ORDER BY p.name
 ");
@@ -78,6 +79,7 @@ $stmt = $connection->prepare("
   FROM orders o
   JOIN tables t ON o.table_id = t.id
   WHERE o.created_at BETWEEN ? AND ?
+  AND o.deleted = 0
   ORDER BY o.created_at ASC
 ");
 
@@ -176,73 +178,60 @@ $stmt->close();
   </script>
 </head>
 <body>
-    <div id="sidebar" class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <ul>
-        <li><a href="admin.php">Trang Admin</a></li>
-        <li><a href="product_management.php">Quản Lý Hàng</a></li>
-        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
-        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
-        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
-        <li><a href="product_options_management.php">Quản Lý Options</a></li>
-        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
-        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
-    </ul>
-    </div>
+    <?php include 'sidebar.php'; ?>
+    <div class="main-content" style="padding:20px;">
+      <h2>Báo Cáo Doanh Thu</h2>
+      <form id="filterForm" method="GET" class="filters">
+        <div>
+          <label>Từ Ngày
+            <input type="datetime-local" id="start_dt" name="start_dt" value="<?= toLocalInput($start_sql) ?>">
+          </label>
+        </div>
+        <div>
+          <label>Đến Ngày
+            <input type="datetime-local" id="end_dt" name="end_dt" value="<?= toLocalInput($end_sql) ?>">
+          </label>
+        </div>
+        <select id="preset" onchange="applyPreset()">
+          <option value="today"     <?= $preset==='today'     ? 'selected':''?>>Hôm Nay</option>
+          <option value="yesterday" <?= $preset==='yesterday' ? 'selected':''?>>Hôm Qua</option>
+          <option value="week"      <?= $preset==='week'      ? 'selected':''?>>Tuần Này</option>
+        </select>
+        <input type="hidden" id="preset_input" name="preset" value="<?= htmlspecialchars($preset) ?>">
+        <button type="submit">Lọc</button>
+      </form>
 
-<div class="main-content" style="padding:20px;">
-  <h2>Sales Report</h2>
-  <form id="filterForm" method="GET" class="filters">
-    <div>
-      <label>From 
-        <input type="datetime-local" id="start_dt" name="start_dt" value="<?= toLocalInput($start_sql) ?>">
-      </label>
-    </div>
-    <div>
-      <label>To
-        <input type="datetime-local" id="end_dt" name="end_dt" value="<?= toLocalInput($end_sql) ?>">
-      </label>
-    </div>
-    <select id="preset" onchange="applyPreset()">
-      <option value="today"     <?= $preset==='today'     ? 'selected':''?>>Today</option>
-      <option value="yesterday" <?= $preset==='yesterday' ? 'selected':''?>>Yesterday</option>
-      <option value="week"      <?= $preset==='week'      ? 'selected':''?>>This Week</option>
-    </select>
-    <input type="hidden" id="preset_input" name="preset" value="<?= htmlspecialchars($preset) ?>">
-    <button type="submit">Filter</button>
-  </form>
+      <?php if (empty($sales)): ?>
+        <p style="text-align:center;">Không Có Doanh Thu Trong Khoảng Thời Gian Này.</p>
+      <?php else: ?>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Sản Phẩm</th><th>Đơn Giá</th><th>Số Lượng</th><th>Tổng</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach($sales as $row): ?>
+            <tr>
+              <td><?= htmlspecialchars($row['product_name']) ?></td>
+              <td><?= number_format($row['unit_price'],2) ?></td>
+              <td><?= intval($row['total_qty']) ?></td>
+              <td><?= number_format($row['total_rev'],2) ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Tổng Cộng</strong></td><td></td>
+              <td><?= $grand_qty ?></td>
+              <td><?= number_format($grand_rev,2) ?></td>
+            </tr>
+          </tfoot>
+        </table>
+      <?php endif; ?>
 
-  <?php if (empty($sales)): ?>
-    <p style="text-align:center;">No sales in this period.</p>
-  <?php else: ?>
-    <table class="report-table">
-      <thead>
-        <tr>
-          <th>Product</th><th>Unit Price</th><th>Qty</th><th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach($sales as $row): ?>
-        <tr>
-          <td><?= htmlspecialchars($row['product_name']) ?></td>
-          <td><?= number_format($row['unit_price'],2) ?></td>
-          <td><?= intval($row['total_qty']) ?></td>
-          <td><?= number_format($row['total_rev'],2) ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><strong>Grand Total</strong></td><td></td>
-          <td><?= $grand_qty ?></td>
-          <td><?= number_format($grand_rev,2) ?></td>
-        </tr>
-      </tfoot>
-    </table>
-  <?php endif; ?>
-
-</div>
-<script src="script.js"></script>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
 

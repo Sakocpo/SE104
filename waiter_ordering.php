@@ -128,8 +128,8 @@ if ($current_category_id) {
   <input id="quantity-input" type="number" value="1" min="0">
   <button type="button" onclick="adjustQty(1)">+</button>
 </div>
-<button type="button" onclick="addToOrder()" class="confirm-btn">Add to Order</button>
-<button type="button" onclick="closePopup()"   class="cancel-btn">Cancel</button>
+<button type="button" onclick="addToOrder()" class="confirm-btn">Thêm Vào Đơn</button>
+<button type="button" onclick="closePopup()"   class="cancel-btn">Hủy</button>
 
   </div>
 </div>
@@ -137,19 +137,19 @@ if ($current_category_id) {
 
 <!-- Review Order Button -->
 <div class="review-order-btn-container">
-  <button onclick="openReview()" class="review-btn">📝 Review Order</button>
+  <button onclick="openReview()" class="review-btn">📝 Xem Lại Đơn</button>
 </div>
 
 <!-- Order Review Panel -->
 <div class="order-review" id="order-review">
   <div class="review-content">
-    <h3 style="color: black; ">Order for Table <?= $table_name ?></h3>
+    <h3 style="color: black; ">Đơn Của Bàn <?= $table_name ?></h3>
 
     <!-- give this the review-list class -->
     <div id="order-summary-list" class="review-list"></div>
 
-    <button onclick="submitOrder(<?= $table_id ?>)" class="submit-order-btn">Send to Kitchen</button>
-    <button onclick="closeReview()" class="cancel-review-btn">Cancel</button>
+    <button onclick="submitOrder(<?= $table_id ?>)" class="submit-order-btn">Gửi Đến Bếp</button>
+    <button onclick="closeReview()" class="cancel-review-btn">Hủy</button>
   </div>
 </div>
 
@@ -169,9 +169,20 @@ if ($current_category_id) {
       font-weight: bold;
       z-index: 1001;
     ">
-  Cancel
+  Quay Lại
 </a>
-
+<?php
+  // Build a global map of every option ID → label
+  $allOptionLabels = [];
+  $res = $connection->query("SELECT id, label FROM options");
+  while ($row = $res->fetch_assoc()) {
+    $allOptionLabels[intval($row['id'])] = $row['label'];
+  }
+?>
+<script>
+  // Make it available to JavaScript
+  window.allOptionLabels = <?= json_encode($allOptionLabels, JSON_UNESCAPED_UNICODE) ?>;
+</script>
 
 <script src="waiter_ordering.js"></script>
 <script src="script.js"></script>
@@ -187,12 +198,12 @@ if ($current_category_id) {
    * Assumes your waiter_ordering.js already populated `optionsData`.
    */
   function getOptionLabel(optionId) {
-    for (const category of Object.values(optionsData || {})) {
-      const opt = category.find(o => o.id === optionId);
-      if (opt) return opt.label;
-    }
-    return '';
-  }
+  const key = String(optionId);
+  return window.allOptionLabels && window.allOptionLabels[key]
+    ? window.allOptionLabels[key]
+    : "";
+}
+
 
   /**
    * Look up a product by ID in our injected `window.products`.
@@ -249,75 +260,75 @@ if ($current_category_id) {
       document.body.style.backgroundColor = "";
     }, 5000);
   }
-  function submitOrder(tableId) {
-  // build only the items with qty > 0
-  const itemsPayload = order
-    .filter(it => it.quantity > 0)
-    .map(it => ({
-      product_id: it.product.id,
-      options: Object.entries(it.options)
-        .map(([cat, label]) => {
-          const opt = optionsData[cat].find(o => o.label === label);
-          return opt ? opt.id : null;
-        })
-        .filter(x => x != null),
-      quantity: it.quantity
-    }));
+//   function submitOrder(tableId) {
+//   // build only the items with qty > 0
+//   const itemsPayload = order
+//     .filter(it => it.quantity > 0)
+//     .map(it => ({
+//       product_id: it.product.id,
+//       options: Object.entries(it.options)
+//         .map(([cat, label]) => {
+//           const opt = optionsData[cat].find(o => o.label === label);
+//           return opt ? opt.id : null;
+//         })
+//         .filter(x => x != null),
+//       quantity: it.quantity
+//     }));
 
-  if (itemsPayload.length === 0) {
-    alert("Please choose at least one product before sending to kitchen.");
-    return;
-  }
+//   if (itemsPayload.length === 0) {
+//     alert("Please choose at least one product before sending to kitchen.");
+//     return;
+//   }
 
-  fetch("submit_order.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ table_id: tableId, items: itemsPayload })
-  })
-  .then(r => r.json())
-  .then(json => {
-    if (!json.success) {
-      alert("Error: " + (json.error || "Unknown error"));
-      return;
-    }
+//   fetch("submit_order.php", {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ table_id: tableId, items: itemsPayload })
+//   })
+//   .then(r => r.json())
+//   .then(json => {
+//     if (!json.success) {
+//       alert("Error: " + (json.error || "Unknown error"));
+//       return;
+//     }
 
-    const orderId   = json.order_id;
-    const tableName = json.table;  // PHP now returns the real table_name
+//     const orderId   = json.order_id;
+//     const tableName = json.table;  // PHP now returns the real table_name
 
-    // Make sure we're using the socket you opened at top of the page:
-    if (socket.readyState === WebSocket.OPEN) {
-      // 1️⃣ Per-item "serve" messages
-      itemsPayload.forEach(item => {
-        const msg = {
-          type:      "serve",
-          order_id:  orderId,
-          table:     tableName,
-          product:   getProductName(item.product_id),
-          quantity:  item.quantity,
-          options:   item.options.map(getOptionLabel)
-        };
-        console.log("⏩ WS send:", msg);
-        socket.send(JSON.stringify(msg));
-      });
+//     // Make sure we're using the socket you opened at top of the page:
+//     if (socket.readyState === WebSocket.OPEN) {
+//       // 1️⃣ Per-item "serve" messages
+//       itemsPayload.forEach(item => {
+//         const msg = {
+//           type:      "serve",
+//           order_id:  orderId,
+//           table:     tableName,
+//           product:   getProductName(item.product_id),
+//           quantity:  item.quantity,
+//           options:   item.options.map(getOptionLabel)
+//         };
+//         console.log("⏩ WS send:", msg);
+//         socket.send(JSON.stringify(msg));
+//       });
 
-      // 2️⃣ Final "order complete" message
-      const doneMsg = {
-        type:     "order",
-        order_id: orderId,
-        table:    tableName
-      };
-      console.log("⏩ WS send:", doneMsg);
-      socket.send(JSON.stringify(doneMsg));
-    }
+//       // 2️⃣ Final "order complete" message
+//       const doneMsg = {
+//         type:     "order",
+//         order_id: orderId,
+//         table:    tableName
+//       };
+//       console.log("⏩ WS send:", doneMsg);
+//       socket.send(JSON.stringify(doneMsg));
+//     }
 
-    alert("Sent to kitchen!");
-    window.location = "table_management_waiter.php";
-  })
-  .catch(err => {
-    console.error("Submit order failed:", err);
-    alert("Failed to submit order.");
-  });
-}
+//     alert("Sent to kitchen!");
+//     window.location = "table_management_waiter.php";
+//   })
+//   .catch(err => {
+//     console.error("Submit order failed:", err);
+//     alert("Failed to submit order.");
+//   });
+// }
 
 </script>
 

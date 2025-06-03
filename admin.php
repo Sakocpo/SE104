@@ -13,31 +13,31 @@ if (!isset($_SESSION['user'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin page</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-image {
+            width: 300px;
+            height: 300px;
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+        .box {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="sidebar" class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <ul>
-        <li><a href="admin.php">Trang Admin</a></li>
-        <li><a href="product_management.php">Quản Lý Hàng</a></li>
-        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
-        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
-        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
-        <li><a href="product_options_management.php">Quản Lý Options</a></li>
-        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
-        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
-    </ul>
-    </div>
+    <?php include 'sidebar.php'; ?>
 
     <div class="content">
         <div class="box">
-            <h1>Welcome to Admin page</h1>
-            <p>Admin page test</p>
+            <img src="uploads/coffee_logo.png" alt="Admin Page" class="admin-image">
+            <h1 style="margin-bottom: 10px; color: white;">Welcome to Admin page</h1>
             <button onclick="window.location.href='logout.php'">Logout</button>
         </div>
     </div>
-
 
     <script src="script.js"></script>
 </body>

@@ -21,22 +21,27 @@ if (!isset($_SESSION['user'])) {
       background-position: center;
       background-size: cover;
     }
+    .admin-image {
+        width: 300px;
+        height: 300px;
+        display: block;
+        margin: 0 auto;
+        margin-bottom: 20px;
+    }
+    .box {
+        text-align: center;
+        padding: 20px;
+    }
   </style>
 </head>
 
 <body>
-    <div id="sidebar" class="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <ul>
-            <li><a href="waiter.php">Trang Phục Vụ</a></li>
-            <li><a href="table_management_waiter.php">Order Tại Bàn</a></li>
-        </ul>
-    </div>
+    <?php include 'sidebar.php'; ?>
 
     <div class="content">
         <div class="box">
+            <img src="uploads/coffee_logo.png" alt="Admin Page" class="admin-image">
             <h1>Welcome to Waiter page</h1>
-            <p>Waiter page test</p>
             <button onclick="window.location.href='logout.php'">Logout</button>
         </div>
     </div>

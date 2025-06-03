@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
             <?php if ($ing['image']): ?>
                 <img src="<?=htmlspecialchars($ing['image'])?>" style="max-width:100%;border:1px solid #ccc;padding:4px;">
                 <button form="edit-ingredient-form" name="clear_image" style="margin-top:8px;">
-                    Clear Image
+                    Xóa Ảnh
                 </button>
             <?php endif; ?>
         </div>
@@ -97,12 +97,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
         <?php if ($error): ?>
             <div class="error-message"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
+
+        <?php if (isset($_GET['confirm_delete'])): ?>
+            <div class="confirm-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000;">
+                <h3>Xác Nhận Xóa Nguyên Liệu</h3>
+                <p>Bạn Có Chắc Chắn Muốn Xóa Nguyên Liệu "<?= htmlspecialchars($ing['name']) ?>"?</p>
+                <form method="POST">
+                    <button type="submit" name="delete_ingredient" class="confirm-btn">Confirm</button>
+                    <button type="button" class="cancel-btn" onclick="window.location.href='ingredient_info.php?id=<?= $id ?>'">Cancel</button>
+                </form>
+            </div>
+        <?php endif; ?>
+
         <form method="POST" enctype="multipart/form-data" style="min-width: 300px; margin: 0 auto;">
-            <h3>Edit Ingredient</h3>
-            <label>Name:</label>
+            <h3>Sửa Nguyên Liệu</h3>
+            <label>Tên:</label>
             <input name="name" value="<?= htmlspecialchars($ing['name']) ?>" required>
 
-            <label>Category:</label>
+            <label>Danh Mục:</label>
             <select name="category">
                 <?php foreach($connection->query("SELECT * FROM ingredient_categories")->fetch_all(MYSQLI_ASSOC) as $c): ?>
                     <option value="<?= $c['id'] ?>" <?= $c['id']==$ing['category']?'selected':'' ?>>
@@ -111,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
                 <?php endforeach; ?>
             </select>
 
-            <label>Unit:</label>
+            <label>Đơn Vị:</label>
             <select name="unit_id">
                 <?php foreach($connection->query("SELECT * FROM unit_options")->fetch_all(MYSQLI_ASSOC) as $u): ?>
                     <option value="<?= $u['id'] ?>" <?= $u['id']==$ing['unit_id']?'selected':'' ?>>
@@ -120,16 +132,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
                 <?php endforeach; ?>
             </select>
 
-            <label>Quantity:</label>
+            <label>Số Lượng:</label>
             <div style="display:flex;align-items:center;gap:8px">
                 <button type="button" onclick="adjustQty(-1)">−</button>
                 <input id="qty" name="quantity" type="number" step="0.01" value="<?=htmlspecialchars($ing['quantity'])?>">
                 <button type="button" onclick="adjustQty(1)">+</button>
             </div>
             <div style="margin-top:12px;">
-                <button type="submit" name="update_ingredient">Update</button>
-                <button type="submit" name="delete_ingredient" style="background:red;color:white;" onclick="return confirm('Bạn có chắc muốn xóa nguyên liệu này?');">Delete Ingredient</button>
-                <a href="ingredients_management.php?category=<?= $current_category_id ?>"><button type="button">Cancel</button></a>
+                <button type="submit" name="update_ingredient">Cập Nhật</button>
+                <button type="button" onclick="window.location.href='ingredient_info.php?id=<?= $id ?>&confirm_delete=1'" style="background:red;color:white;">Xóa Nguyên Liệu</button>
+                <a href="ingredients_management.php?category=<?= $current_category_id ?>"><button type="button">Hủy</button></a>
             </div>
         </form>
     </div>

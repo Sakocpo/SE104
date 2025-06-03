@@ -22,7 +22,7 @@ try {
     $connection->begin_transaction();
 
     if (empty($items)) {
-        // If no specific items provided, mark all items as served (backward compatibility)
+        // If no specific items provided, mark all items as served
         $stmt = $connection->prepare("
             UPDATE order_items 
             SET served = 1 
@@ -35,14 +35,13 @@ try {
         // Mark only specific items as served
         foreach ($items as $item) {
             $stmt = $connection->prepare("
-                UPDATE order_items oi
-                JOIN products p ON oi.product_id = p.id
-                SET oi.served = 1 
-                WHERE oi.order_id = ? 
-                AND p.name = ?
-                AND oi.served = 0
+                UPDATE order_items 
+                SET served = 1 
+                WHERE order_id = ? 
+                AND product_id = ?
+                AND served = 0
             ");
-            $stmt->bind_param("is", $order_id, $item['product']);
+            $stmt->bind_param("ii", $order_id, $item['product_id']);
             $stmt->execute();
             $stmt->close();
         }
@@ -59,8 +58,19 @@ try {
     $result = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    // Only update table status if ALL items are served
+    // Update order and table status if ALL items are served
     if ($result['total'] > 0 && $result['total'] === $result['served']) {
+        // Update order status
+        $stmt = $connection->prepare("
+            UPDATE orders 
+            SET status = 'served' 
+            WHERE id = ?
+        ");
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Update table status
         $stmt = $connection->prepare("
             UPDATE tables 
             SET status = 'served' 

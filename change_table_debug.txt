@@ -10,3 +10,7 @@
 2025-05-28T16:36:53+02:00 WILL SEND: {"type":"change_table","order_id":320,"old_table_id":6,"new_table_id":2,"new_table":"2"}
 2025-05-29T05:30:23+02:00 WILL SEND: {"type":"change_table","order_id":331,"old_table_id":6,"new_table_id":2,"new_table":"2"}
 2025-05-31T15:20:31+02:00 WILL SEND: {"type":"change_table","order_id":352,"old_table_id":2,"new_table_id":6,"new_table":"1"}
+2025-06-02T15:00:16+02:00 WILL SEND: {"type":"change_table","order_id":368,"old_table_id":6,"new_table_id":2,"new_table":"2"}
+2025-06-02T15:01:01+02:00 WILL SEND: {"type":"change_table","order_id":370,"old_table_id":6,"new_table_id":2,"new_table":"2"}
+2025-06-02T15:34:33+02:00 WILL SEND: {"type":"change_table","order_id":401,"old_table_id":6,"new_table_id":2,"new_table":"2"}
+2025-06-02T15:35:24+02:00 WILL SEND: {"type":"change_table","order_id":404,"old_table_id":2,"new_table_id":6,"new_table":"1"}

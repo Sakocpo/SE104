@@ -79,7 +79,8 @@ while ($row = $res->fetch_assoc()) {
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .form-container h3 {
-      margin-bottom: 16px;
+      margin-bottom: 10px;
+      color: black;
     }
     .form-container form {
       display: flex;
@@ -145,29 +146,32 @@ while ($row = $res->fetch_assoc()) {
       border-radius: 4px;
       cursor: pointer;
     }
+    .category-list button {
+      width: 100px;
+    }
   </style>
 </head>
 <body>
 
 <div class="form-container">
-  <h3><?= htmlspecialchars($pageLabel) ?></h3>
+  <h3>Thêm Danh Mục Mới</h3>
   <form method="POST">
-    <input type="text" name="category_name" placeholder="New <?= htmlspecialchars($pageLabel) ?>" required>
-    <button type="submit">Add</button>
-    <a href="<?= htmlspecialchars($cancelHref) ?>"><button type="button">Cancel</button></a>
+    <input type="text" name="category_name" placeholder="Danh Mục Mới" required>
+    <button type="submit">Thêm Danh Mục</button>
+    <a href="<?= htmlspecialchars($cancelHref) ?>"><button type="button">Hủy</button></a>
   </form>
 
   <div class="category-list">
-    <h4>Existing <?= htmlspecialchars($pageLabel) ?></h4>
+    <h4>Danh Mục Hiện Tại</h4>
     <?php if (empty($cats)): ?>
-      <p><em>No categories yet.</em></p>
+      <p><em>Chưa có nhóm nào.</em></p>
     <?php else: ?>
       <?php foreach ($cats as $c): ?>
         <div class="category-item" data-id="<?= $c['id'] ?>">
           <span class="category-name"><?= htmlspecialchars($c['name']) ?></span>
           <div class="category-actions">
-            <button class="rename-btn">Rename</button>
-            <button class="delete-btn" onclick="confirmDelete(<?= $c['id'] ?>)">Delete</button>
+            <button class="rename-btn">Đổi Tên</button>
+            <button class="delete-btn" onclick="confirmDelete(<?= $c['id'] ?>)">Xóa</button>
           </div>
         </div>
       <?php endforeach; ?>

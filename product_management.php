@@ -47,19 +47,7 @@ if ($current_category_id !== null) {
     </style>
 </head>
 <body>
-    <div id="sidebar" class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <ul>
-        <li><a href="admin.php">Trang Admin</a></li>
-        <li><a href="product_management.php">Quản Lý Hàng</a></li>
-        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
-        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
-        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
-        <li><a href="product_options_management.php">Quản Lý Options</a></li>
-        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
-        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
-    </ul>
-    </div>
+    <?php include 'sidebar.php'; ?>
     <!-- Horizontal category bar -->
     <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
 

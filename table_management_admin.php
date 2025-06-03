@@ -62,86 +62,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <div id="sidebar" class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <ul>
-        <li><a href="admin.php">Trang Admin</a></li>
-        <li><a href="product_management.php">Quản Lý Hàng</a></li>
-        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
-        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
-        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
-        <li><a href="product_options_management.php">Quản Lý Options</a></li>
-        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
-        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
-    </ul>
-    </div>
-        <!-- Horizontal category bar -->
-        <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
+    <?php include 'sidebar.php'; ?>
+    <!-- Horizontal category bar -->
+    <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
 
-            <!-- Category list container -->
-            <div style="display: flex; gap: 12px; overflow-x: auto;">
-                <?php foreach ($categories as $cat): ?>
-                    <a href="table_management_admin.php?category=<?= $cat['id'] ?>"
-                        style="
-                            padding: 8px 14px;
-                            border-radius: 18px;
-                            text-decoration: none;
-                            white-space: nowrap;
-                            background-color: <?= ($current_category_id == $cat['id']) ? '#007bff' : '#e0e0e0' ?>;
-                            color: <?= ($current_category_id == $cat['id']) ? 'white' : '#333' ?>;
-                            font-weight: <?= ($current_category_id == $cat['id']) ? 'bold' : 'normal' ?>;
-                        ">
-                        <?= htmlspecialchars($cat['name']) ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-
-            <!-- Add button container -->
-            <div>
-                <a href="categories.php?entity=tables" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
-            </div>
-
-        </div>
-
-        <div class="table-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
-            <?php foreach ($tables as $table): ?>
-                <div class="table-card"
-                    onclick="window.location.href='table_info.php?id=<?= $table['id'] ?>'"
-                    style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
-
-                    <!-- Table name centered -->
-                    <h4 style="margin: 0; font-size: 18px; text-align: center; color: brown;"><?= htmlspecialchars($table['table_name']) ?></h4>
-
-                    <!-- Active status indicator -->
-                    <div style="
-                        position: absolute;
-                        bottom: 10px;
-                        right: 10px;
-                        width: 18px;
-                        height: 18px;
-                        border: 2px solid #666;
-                        border-radius: 4px;
-                        background-color: <?= $table['active'] ? '#28a745' : '#ccc' ?>;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                        color: white;
+        <!-- Category list container -->
+        <div style="display: flex; gap: 12px; overflow-x: auto;">
+            <?php foreach ($categories as $cat): ?>
+                <a href="table_management_admin.php?category=<?= $cat['id'] ?>"
+                    style="
+                        padding: 8px 14px;
+                        border-radius: 18px;
+                        text-decoration: none;
+                        white-space: nowrap;
+                        background-color: <?= ($current_category_id == $cat['id']) ? '#007bff' : '#e0e0e0' ?>;
+                        color: <?= ($current_category_id == $cat['id']) ? 'white' : '#333' ?>;
+                        font-weight: <?= ($current_category_id == $cat['id']) ? 'bold' : 'normal' ?>;
                     ">
-                        <?= $table['active'] ? '✓' : '' ?>
-                    </div>
-                </div>
+                    <?= htmlspecialchars($cat['name']) ?>
+                </a>
             <?php endforeach; ?>
         </div>
-        <div class="add-button">
-            <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
-            <?php if($current_category_id): ?>
-            <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-                <a href="add_table.php?category=<?= $current_category_id ?>">
-                <button style="font-size: 28px; padding: 10px 18px; border-radius: 50%; background: #007bff; color: white; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">+</button>
-            </div>
-        <?php endif; ?>
+
+        <!-- Add button container -->
+        <div>
+            <a href="categories.php?entity=tables" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
+        </div>
+
     </div>
-    <script src="script.js"></script>
+
+    <div class="table-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
+        <?php foreach ($tables as $table): ?>
+            <div class="table-card"
+                onclick="window.location.href='table_info.php?id=<?= $table['id'] ?>'"
+                style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
+
+                <!-- Table name centered -->
+                <h4 style="margin: 0; font-size: 18px; text-align: center; color: brown;"><?= htmlspecialchars($table['table_name']) ?></h4>
+
+                <!-- Active status indicator -->
+                <div style="
+                    position: absolute;
+                    bottom: 10px;
+                    right: 10px;
+                    width: 18px;
+                    height: 18px;
+                    border: 2px solid #666;
+                    border-radius: 4px;
+                    background-color: <?= $table['active'] ? '#28a745' : '#ccc' ?>;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    color: white;
+                ">
+                    <?= $table['active'] ? '✓' : '' ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <div class="add-button">
+        <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
+        <?php if($current_category_id): ?>
+        <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+            <a href="add_table.php?category=<?= $current_category_id ?>">
+            <button style="font-size: 28px; padding: 10px 18px; border-radius: 50%; background: #007bff; color: white; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">+</button>
+        </div>
+    <?php endif; ?>
+</div>
+<script src="script.js"></script>
 </body>
 </html>

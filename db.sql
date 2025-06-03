@@ -66,9 +66,11 @@ INSERT INTO `options` (`id`, `label`, `type_id`) VALUES
 CREATE TABLE `orders` (
   `id` int(11) NOT NULL,
   `table_id` int(11) NOT NULL,
-  `status` enum('pending','served','paid') NOT NULL DEFAULT 'pending',
+  `status` enum('pending','served','paid','deleted') NOT NULL DEFAULT 'pending',
   `paid_amount` decimal(10,0) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `charged_at` datetime DEFAULT NULL,
+  `deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -114,7 +116,8 @@ CREATE TABLE `order_items` (
   `options` varchar(255) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
   `gift` tinyint(1) NOT NULL DEFAULT 0,
-  `served` tinyint(1) NOT NULL DEFAULT 0
+  `served` tinyint(1) NOT NULL DEFAULT 0,
+  `deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

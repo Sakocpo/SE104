@@ -16,7 +16,7 @@ if (!$table_id) {
     exit;
 }
 
-// 1) fetch that table’s current_order_id AND table_name
+// 1) fetch that table's current_order_id AND table_name
 $stmt = $connection->prepare("
   SELECT current_order_id, table_name
     FROM tables
@@ -31,25 +31,17 @@ if (!empty($row['current_order_id'])) {
     $order_id   = intval($row['current_order_id']);
     $table_name = $row['table_name'];
 
-    // 2) delete its items
-    $del = $connection->prepare("
-      DELETE FROM order_items 
-       WHERE order_id = ?
-    ");
-    $del->bind_param("i", $order_id);
-    $del->execute();
-    $del->close();
-
-    // 3) delete the order itself
-    $del = $connection->prepare("
-      DELETE FROM orders 
+    // 3) Mark the order as deleted
+    $upd = $connection->prepare("
+      UPDATE orders 
+         SET status = 'deleted'
        WHERE id = ?
     ");
-    $del->bind_param("i", $order_id);
-    $del->execute();
-    $del->close();
+    $upd->bind_param("i", $order_id);
+    $upd->execute();
+    $upd->close();
 
-    // 4) clear the table’s pointer
+    // 4) clear the table's pointer
     $upd = $connection->prepare("
       UPDATE tables 
          SET current_order_id = NULL 

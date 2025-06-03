@@ -37,6 +37,18 @@ $qr = $connection
     ->query("SELECT image_path FROM payment_settings LIMIT 1")
     ->fetch_assoc()['image_path']
     ?? '';
+
+// Update order status to paid
+$stmt = $connection->prepare("
+    UPDATE orders 
+    SET status = 'paid', 
+        paid_amount = ?, 
+        charged_at = NOW() 
+    WHERE id = ?
+");
+$stmt->bind_param("di", $total, $oid);
+$stmt->execute();
+$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -199,18 +211,18 @@ $qr = $connection
   <!-- Bottom 3/4 -->
   <div class="payment-body">
     <div id="cash-view" class="payment-cash">
-      <div>Total: <strong><?= number_format($total) ?> đ</strong></div>
+      <div>Tổng: <strong><?= number_format($total) ?> đ</strong></div>
       <div>
-        Received:
+        Khách Trả:
         <span id="received-amount" class="clickable-underline"> <?= number_format($total) ?> </span> đ
       </div>
       <div>
-        Change:
+        Tiền Thừa:
         <span id="change-amount"><?= number_format(0) ?> đ</span>
       </div>
     </div>
     <div id="qr-view" class="payment-qr" style="display: none;">
-      <img src="<?= htmlspecialchars($qr) ?>" alt="QR Code for Payment">
+      <img src="uploads/qr_2.png" alt="Mã QR" style="height: auto; display: block; margin: 0 auto;">
     </div>
   </div>
 
@@ -295,7 +307,15 @@ $qr = $connection
   function updateDisplays() {
     received.innerText = paid.toFixed(0);
     let rem = paid - total;
-    change.innerText = (rem > 0 ? rem.toFixed(0) : 0) + ' đ';
+    if (paid < total) {
+      change.innerText = "Lỗi";
+      document.getElementById('complete-btn').disabled = true;
+      document.getElementById('complete-btn').style.opacity = '0.5';
+    } else {
+      change.innerText = rem.toFixed(0) + ' đ';
+      document.getElementById('complete-btn').disabled = false;
+      document.getElementById('complete-btn').style.opacity = '1';
+    }
   }
 
   // Cancel and Complete actions
@@ -304,6 +324,10 @@ $qr = $connection
   };
 
   document.getElementById('complete-btn').onclick = () => {
+    if (paid < total) {
+      alert('Số tiền thanh toán không được nhỏ hơn tổng số tiền');
+      return;
+    }
     fetch('complete_payment.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

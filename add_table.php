@@ -65,20 +65,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
   <form id="add-table-form" method="POST">
     <input type="hidden" name="table_category" value="<?= htmlspecialchars($current_category_id) ?>">
 
-    <h3>Add Table</h3>
+    <h3>Thêm Bàn</h3>
 
-    <label for="table_name">Table Name</label>
+    <label for="table_name">Tên Bàn</label>
     <input type="text" name="table_name" style="width: 300px" required>
 
-    <label for="table_desc">Table Information</label>
+    <label for="table_desc">Mô Tả Bàn</label>
     <textarea name="table_desc"></textarea>
 
-    <label for="table_state">Table State</label>
+    <label for="table_state">Trạng Thái Bàn</label>
     <input type="checkbox" id="table_state" name="active">
 
-    <button type="submit" name="add_table">Add Table</button>
+    <button type="submit" name="add_table">Thêm Bàn</button>
     <a href="table_management_admin.php?category=<?= $current_category_id ?>">
-      <button type="button">Cancel</button>
+      <button type="button">Hủy</button>
     </a>
   </form>
 

@@ -247,3 +247,5 @@
 {"type":"serve","order_id":351,"table":"1","product":"C\u00e0 ph\u00ea \u0111\u00e1 ","quantity":1,"options":["N\u00f3ng","B\u00ecnh Th\u01b0\u1eddng"]}
 {"type":"serve","order_id":352,"table":"2","product":"C\u00e0 ph\u00ea s\u1eefa","quantity":1,"options":["N\u00f3ng","B\u00ecnh Th\u01b0\u1eddng"]}
 {"type":"serve","order_id":352,"table":"1","product":"C\u00e0 ph\u00ea \u0111\u00e1 ","quantity":1,"options":["N\u00f3ng","B\u00ecnh Th\u01b0\u1eddng"]}
+{"type":"serve","order_id":353,"table":"1","product":"C\u00e0 ph\u00ea \u0111\u00e1 ","quantity":1,"options":["N\u00f3ng","B\u00ecnh Th\u01b0\u1eddng"]}
+{"type":"serve","order_id":354,"table":"1","product":"C\u00e0 ph\u00ea \u0111\u00e1 ","quantity":1,"options":["N\u00f3ng","B\u00ecnh Th\u01b0\u1eddng"]}

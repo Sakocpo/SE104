@@ -42,20 +42,19 @@ if (!$raw_start || !$raw_end) {
 $start_sql = $startObj->format('Y-m-d H:i:s');
 $end_sql = $endObj->format('Y-m-d H:i:s');
 
+// Fetch each order only once, no join to order_items
 $stmt = $connection->prepare("
   SELECT
-    o.id, o.created_at, o.status, o.paid_amount, o.method,
-    CASE WHEN t.deleted = 1 THEN '*deleted*' ELSE t.table_name END as table_name,
-    oi.id as item_id,
-    oi.quantity,
-    oi.options,
-    CASE WHEN p.deleted = 1 THEN '*deleted*' ELSE p.name END as product_name,
-    p.price
+    o.id,
+    o.created_at,
+    o.status,
+    o.paid_amount,
+    o.method,
+    CASE WHEN t.deleted = 1 THEN '*deleted*' ELSE t.table_name END AS table_name
   FROM orders o
   JOIN tables t ON o.table_id = t.id
-  JOIN order_items oi ON o.id = oi.order_id
-  JOIN products p ON oi.product_id = p.id
   WHERE o.created_at BETWEEN ? AND ?
+  AND o.deleted = 0
   ORDER BY o.created_at ASC
 ");
 $stmt->bind_param("ss", $start_sql, $end_sql);
@@ -131,7 +130,6 @@ $stmt->close();
     .scroll-box {
       max-height: 520px;
       overflow-y: auto;
-      /* border: 1px solid #ccc; */
       border-radius: 8px;
     }
     .status-icon {
@@ -140,13 +138,13 @@ $stmt->close();
   </style>
   <script>
     function fmt(d) {
-    const pad = n => n.toString().padStart(2, '0');
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const min = pad(d.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+      const pad = n => n.toString().padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const mm = pad(d.getMonth() + 1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
     }
 
     function applyPreset(e) {
@@ -185,92 +183,82 @@ $stmt->close();
   </script>
 </head>
 <body>
-    <div id="sidebar" class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <ul>
-        <li><a href="admin.php">Trang Admin</a></li>
-        <li><a href="product_management.php">Quản Lý Hàng</a></li>
-        <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
-        <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
-        <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>
-        <li><a href="product_options_management.php">Quản Lý Options</a></li>
-        <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
-        <li><a href="order_logs.php">Danh Sách Đơn</a></li>
-    </ul>
-    </div>
-
-<div class="main-content">
-  <h2 style="text-align:center;">Order Logs</h2>
-  <div class="page-layout">
-    
-    <!-- LEFT: Order List -->
-    <div class="order-list-container">
-      <?php if (empty($orders)): ?>
-        <div class="scroll-box">
-          <div style="height: 100%; display: flex; align-items: center; justify-content: center; padding: 40px;">
-            <div style="background: #fef2f2; color: #c00; padding: 20px 30px; border-radius: 8px; border: 1px solid #f5c2c7;">
-              No orders in this period.
+    <?php include 'sidebar.php'; ?>
+    <div class="main-content">
+    <h2 style="text-align:center;">Danh Sách Đơn</h2>
+    <div class="page-layout">
+      <!-- LEFT: Order List -->
+      <div class="order-list-container">
+        <?php if (empty($orders)): ?>
+          <div class="scroll-box">
+            <div style="height: 100%; display: flex; align-items: center; justify-content: center; padding: 40px;">
+              <div style="background: #fef2f2; color: #c00; padding: 20px 30px; border-radius: 8px; border: 1px solid #f5c2c7;">
+                Không Có Đơn Nào Trong Khoảng Thời Gian Này.
+              </div>
             </div>
           </div>
-        </div>
-      <?php else: ?>
-        <div class="scroll-box">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Method</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php
-              $orderNo = 1;
-              foreach ($orders as $order):
-                $methodIcon = $order['method'] === 'qr' ? '📱' : '💵';
-                $statusIcon = $order['status'] === 'paid' ? '✅' : ($order['status'] === 'pending' ? '⌛' : '❌');
-                $timeStr = date("H:i - d M Y", strtotime($order['created_at']));
-              ?>
-              <tr onclick="window.location='order_view.php?order_id=<?= $order['id'] ?>'">
-                <td><?= $orderNo++ ?></td>
-                <td><?= $methodIcon ?></td>
-                <td><?= number_format($order['paid_amount'], 2) ?> đ</td>
-                <td class="status-icon"><?= $statusIcon ?></td>
-                <td><?= $timeStr ?></td>
-              </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      <?php endif; ?>
-    </div>
+        <?php else: ?>
+          <div class="scroll-box">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Phương Thức</th>
+                  <th>Tổng</th>
+                  <th>Trạng Thái</th>
+                  <th>Thời Gian</th>
+                  <th>Bàn</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                $orderNo = 1;
+                foreach ($orders as $order):
+                  $methodIcon = ($order['method'] === 'qr') ? '📱' : '💵';
+                  $statusIcon = ($order['status'] === 'paid')
+                                ? '✅'
+                                : (($order['status'] === 'pending') ? '⌛' : '❌');
+                  $timeStr = date("H:i - d M Y", strtotime($order['created_at']));
+                  $isDeleted = $order['status'] === 'deleted';
+                ?>
+                <tr onclick="window.location='order_view.php?order_id=<?= $order['id'] ?>'">
+                  <td><?= $orderNo++ ?></td>
+                  <td><?= $methodIcon ?></td>
+                  <td><?= number_format($order['paid_amount'], 2) ?> đ</td>
+                  <td class="status-icon"><?= $statusIcon ?></td>
+                  <td><?= $timeStr ?></td>
+                  <td><?= htmlspecialchars($order['table_name']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php endif; ?>
+      </div>
 
-    <!-- RIGHT: Date Filter -->
-    <div class="filter-sidebar">
-      <form id="filterForm" method="GET" class="filters">
-        <label for="start_dt">From</label>
-        <input type="datetime-local" id="start_dt" name="start_dt" value="<?= toLocalInput($start_sql) ?>">
-        
-        <label for="end_dt">To</label>
-        <input type="datetime-local" id="end_dt" name="end_dt" value="<?= toLocalInput($end_sql) ?>">
+      <!-- RIGHT: Date Filter -->
+      <div class="filter-sidebar">
+        <form id="filterForm" method="GET" class="filters">
+          <label style="color: black;" for="start_dt">Từ Ngày</label>
+          <input type="datetime-local" id="start_dt" name="start_dt" value="<?= toLocalInput($start_sql) ?>">
 
-        <label for="preset">Quick Range</label>
-        <select id="preset" onchange="applyPreset(event)">
-          <option value="today"     <?= $preset==='today'     ? 'selected':''?>>Today</option>
-          <option value="yesterday" <?= $preset==='yesterday' ? 'selected':''?>>Yesterday</option>
-          <option value="week"      <?= $preset==='week'      ? 'selected':''?>>This Week</option>
-        </select>
+          <label style="color: black;" for="end_dt">Đến Ngày</label>
+          <input type="datetime-local" id="end_dt" name="end_dt" value="<?= toLocalInput($end_sql) ?>">
 
-        <input type="hidden" id="preset_input" name="preset" value="<?= htmlspecialchars($preset) ?>">
+          <select id="preset" onchange="applyPreset(event)">
+            <option value="today" <?= $preset==='today' ? 'selected':''?>>Hôm Nay</option>
+            <option value="yesterday" <?= $preset==='yesterday' ? 'selected':''?>>Hôm Qua</option>
+            <option value="week" <?= $preset==='week' ? 'selected':''?>>Tuần Này</option>
+          </select>
 
-        <button type="submit">Filter</button>
-      </form>
+          <input type="hidden" id="preset_input" name="preset" value="<?= htmlspecialchars($preset) ?>">
+
+          <button type="submit">Lọc</button>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

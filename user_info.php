@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
 
     if (!empty($password)) {
         if ($password !== $confirm_password) {
-            $error = "Passwords do not match.";
+            $error = "Mật Khẩu Không Trùng Khớp.";
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $connection->prepare("UPDATE users SET username = ?, password = ? WHERE id = ?");
@@ -86,31 +86,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
         </div>
     <?php endif; ?>
 
+    <?php if (isset($_GET['confirm_delete'])): ?>
+        <div class="confirm-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000;">
+            <h3>Xác Nhận Xóa Người Dùng</h3>
+            <p>Bạn Có Chắc Chắn Muốn Xóa Người Dùng "<?= htmlspecialchars($user['username']) ?>"?</p>
+            <form method="POST">
+                <button type="submit" name="delete_user" class="confirm-btn">Xác Nhận</button>
+                <button type="button" class="cancel-btn" onclick="window.location.href='user_info.php?id=<?= $user_id ?>'">Hủy</button>
+            </form>
+        </div>
+    <?php endif; ?>
+
     <form id="edit-user-form" method="POST">
         <input type="hidden" name="category_id" value="<?= htmlspecialchars($current_category_id) ?>">
 
-        <h3>Edit User</h3>
+        <h3>Sửa Người Dùng</h3>
 
-        <label for="username">Username:</label>
+        <label for="username">Tên Người Dùng:</label>
         <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
 
-        <label for="password">New Password (leave blank to keep current):</label>
-        <input type="password" name="password" placeholder="New Password" autocomplete="new-password">
+        <label for="password">Mật Khẩu Mới (Để Trống Nếu Không Đổi):</label>
+        <input type="password" name="password" placeholder="Mật Khẩu Mới" autocomplete="new-password">
 
-        <label for="confirm_password">Confirm Password:</label>
-        <input type="password" name="confirm_password" placeholder="Confirm Password" autocomplete="new-password">
+        <label for="confirm_password">Xác Nhận Mật Khẩu:</label>
+        <input type="password" name="confirm_password" placeholder="Xác Nhận Mật Khẩu" autocomplete="new-password">
 
-        <button type="submit" name="update_user">Update</button>
+        <button type="submit" name="update_user">Cập Nhật</button>
 
-        <button type="submit"
-                name="delete_user"
-                style="background-color: red; color: white; margin-top: 10px;"
-                onclick="return confirm('Are you sure you want to delete this user?');">
-            Delete User
+        <button type="button"
+                onclick="window.location.href='user_info.php?id=<?= $user_id ?>&confirm_delete=1'"
+                style="background-color: red; color: white; margin-top: 10px;">
+            Xóa Người Dùng
         </button>
 
         <a href="user_management.php?category=<?= $current_category_id ?>">
-            <button type="button">Cancel</button>
+            <button type="button">Hủy</button>
         </a>
     </form>
 </div>

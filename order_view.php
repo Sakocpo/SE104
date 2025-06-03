@@ -1,10 +1,12 @@
 <?php
+// order_view.php
+
 session_start();
-require_once 'config.php';
+require 'config.php';
 
 if (!isset($_SESSION['user'], $_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: index.php");
-    exit;
+    exit();
 }
 
 $order_id = intval($_GET['order_id'] ?? 0);
@@ -12,8 +14,13 @@ if (!$order_id) {
     exit("Invalid order ID.");
 }
 
+// Fetch order master data
 $stmt = $connection->prepare("
-  SELECT o.*, t.table_name, u.username
+  SELECT o.*, t.table_name, u.username,
+         CASE 
+           WHEN o.status = 'paid' THEN o.charged_at
+           ELSE NULL
+         END as charged_at
   FROM orders o
   JOIN tables t ON o.table_id = t.id
   LEFT JOIN users u ON o.created_by = u.id
@@ -23,11 +30,11 @@ $stmt->bind_param("i", $order_id);
 $stmt->execute();
 $order = $stmt->get_result()->fetch_assoc();
 $stmt->close();
-
 if (!$order) {
     exit("Order not found.");
 }
 
+// Fetch all items in this order
 $stmt = $connection->prepare("
   SELECT oi.quantity, oi.options, oi.served,
          p.name AS product_name, p.price
@@ -40,8 +47,9 @@ $stmt->execute();
 $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// Build option‐label lookup
 $optLabels = [];
-$res = $connection->query("SELECT id, label FROM options");
+$res = $connection->query("SELECT id,label FROM options");
 while ($row = $res->fetch_assoc()) {
     $optLabels[intval($row['id'])] = $row['label'];
 }
@@ -69,7 +77,6 @@ while ($row = $res->fetch_assoc()) {
       padding: 16px;
       border-radius: 8px;
       max-width: 800px;
-      /* margin: 24px auto; */
       font-size: 1.1em;
       position: relative;
     }
@@ -81,19 +88,22 @@ while ($row = $res->fetch_assoc()) {
       font-size: 1.8em;
     }
     .main-content-list {
-        border: 5px solid rgb(12, 9, 4);
-        border-radius: 6px;
+      border: 5px solid #0c0904;
+      border-radius: 6px;
+      max-width: 850px;
+      margin: 24px auto;
+      background: rgba(255,255,255,0.6);
     }
     .order-list-container {
-      max-width: 800px;
-      margin: 24px auto;
       overflow-x: auto;
+      padding-top: 5px;
     }
     .order-list-table {
       width: 100%;
       border-collapse: collapse;
     }
-    .order-list-table th, .order-list-table td {
+    .order-list-table th,
+    .order-list-table td {
       border: 1px solid #ccc;
       padding: 8px;
       background: #f2c47c;
@@ -127,9 +137,8 @@ while ($row = $res->fetch_assoc()) {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 16px;
-      /* margin: 24px auto; */
-      max-width: 8000px;
+      gap: 10px;
+      padding: 16px 0;
     }
     .action-buttons form button,
     .action-buttons button,
@@ -146,7 +155,7 @@ while ($row = $res->fetch_assoc()) {
       text-align: center;
       margin-bottom: 10px;
     }
-    .action-buttons .cancel-btn {
+    .action-buttons .delete-btn {
       background: #dc3545;
     }
     @media print {
@@ -158,114 +167,115 @@ while ($row = $res->fetch_assoc()) {
         margin: 0;
       }
     }
-    
   </style>
 </head>
 <body>
-<div id="sidebar" class="sidebar">
-  <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-  <ul>
-    <li><a href="admin.php">Admin Page</a></li>
-    <li><a href="product_management.php">Product Management</a></li>
-    <li><a href="inventory_management.php">Inventory Management</a></li>
-    <li><a href="user_management.php">Users Management</a></li>
-    <li><a href="table_management_admin.php">Tables Management</a></li>
-    <li><a href="product_options_management.php">Product Options</a></li>
-    <li><a href="report.php">Report</a></li>
-    <li><a href="order_logs.php">Order Logs</a></li>
-  </ul>
-</div>
-
-<div class="main-content-list">
-  <div class="order-meta">
-    <div><strong>Table:</strong> <?= htmlspecialchars($order['table_name']) ?></div>
-    <div><strong>Ordered by:</strong> <?= htmlspecialchars($order['username'] ?? 'Unknown') ?></div>
-    <div><strong>Ordered at:</strong> <?= date('H:i, j M Y', strtotime($order['created_at'])) ?></div>
-    <div><strong>Method:</strong> <?= $order['method'] === 'qr' ? '📱 QR' : '💵 Cash' ?></div>
-    <div class="order-status-icon">
-      <?= $order['status'] === 'paid' ? '✅' : ($order['status'] === 'pending' ? '⌛' : '❌') ?>
+  <?php include 'sidebar.php'; ?>
+  <div class="main-content-list">
+    <div class="order-meta">
+      <div><strong>Bàn:</strong> <?= htmlspecialchars($order['table_name']) ?></div>
+      <div><strong>Được Đặt Bởi:</strong> <?= htmlspecialchars($order['username'] ?? 'Không Xác Định') ?></div>
+      <div><strong>Được Đặt Lúc:</strong> <?= date('H:i, j M Y', strtotime($order['created_at'])) ?></div>
+      <div><strong>Phương Thức:</strong> <?= $order['method'] === 'qr' ? '📱 QR' : '💵 Tiền Mặt' ?></div>
+      <div><strong>Tính Tiền Lúc:</strong> <?= $order['charged_at'] ? date('H:i, j M Y', strtotime($order['charged_at'])) : 'Chưa tính tiền' ?></div>
+      <div class="order-status-icon">
+        <?= $order['status'] === 'paid' ? '✅' : ($order['status'] === 'pending' ? '⌛' : '❌') ?>
+      </div>
     </div>
-  </div>
 
-  <div class="order-list-container">
-    <table class="order-list-table">
-      <thead>
-        <tr>
-          <th>Product & Options</th>
-          <th>Price</th>
-          <th>Quantity</th>
-          <th>Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php
-        $grouped = [];
-        $grandTotal = 0;
-        foreach ($items as $item) {
-            $key = $item['product_name'] . '|' . $item['price'] . '|' . $item['options'];
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'name' => $item['product_name'],
-                    'price' => $item['price'],
-                    'options' => $item['options'],
-                    'quantity' => 0
-                ];
-            }
-            $grouped[$key]['quantity'] += $item['quantity'];
-        }
+    <div class="order-list-container">
+      <table class="order-list-table">
+        <thead>
+          <tr>
+            <th>Món Đã Đặt</th>
+            <th>Giá</th>
+            <th>Số Lượng</th>
+            <th>Tổng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          // Group items by product+options
+          $grouped = [];
+          $grandTotal = 0;
+          foreach ($items as $item) {
+              $key = $item['product_name'] . '|' . $item['price'] . '|' . $item['options'];
+              if (!isset($grouped[$key])) {
+                  $grouped[$key] = [
+                      'name' => $item['product_name'],
+                      'price' => $item['price'],
+                      'options' => $item['options'],
+                      'quantity' => 0
+                  ];
+              }
+              $grouped[$key]['quantity'] += $item['quantity'];
+          }
 
-        foreach ($grouped as $g) {
-            $sub = $g['quantity'] * $g['price'];
-            $grandTotal += $sub;
+          foreach ($grouped as $g) {
+              $sub = $g['quantity'] * $g['price'];
+              $grandTotal += $sub;
+              $labels = [];
+              foreach (explode(',', $g['options']) as $optId) {
+                  $id = intval($optId);
+                  if (isset($optLabels[$id])) {
+                      $labels[] = $optLabels[$id];
+                  }
+              }
+              ?>
+              <tr>
+                <td>
+                  <?= htmlspecialchars($g['name']) ?>
+                  <?php if ($labels): ?>
+                    <div class="item-options">
+                      <?php foreach ($labels as $lbl): ?>
+                        <span class="option-label">&bull; <?= htmlspecialchars($lbl) ?></span>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+                </td>
+                <td><?= number_format($g['price'], 2) ?></td>
+                <td class="quantity"><?= intval($g['quantity']) ?></td>
+                <td><?= number_format($sub, 2) ?></td>
+              </tr>
+              <?php
+          }
+          ?>
+          <tr class="total-row">
+            <td colspan="3"><strong>Tổng</strong></td>
+            <td><strong><?= number_format($grandTotal, 2) ?></strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-            $labels = [];
-            foreach (explode(',', $g['options']) as $optId) {
-                $id = intval($optId);
-                if (isset($optLabels[$id])) {
-                    $labels[] = $optLabels[$id];
-                }
-            }
-            ?>
-            <tr>
-              <td>
-                <?= htmlspecialchars($g['name']) ?>
-                <?php if ($labels): ?>
-                  <div class="item-options">
-                    <?php foreach ($labels as $lbl): ?>
-                      <span class="option-label">&bull; <?= htmlspecialchars($lbl) ?></span>
-                    <?php endforeach; ?>
-                  </div>
-                <?php endif; ?>
-              </td>
-              <td><?= number_format($g['price'], 2) ?></td>
-              <td class="quantity"><?= intval($g['quantity']) ?></td>
-              <td><?= number_format($sub, 2) ?></td>
-            </tr>
-            <?php
-        }
-        ?>
-        <tr class="total-row">
-          <td colspan="3"><strong>Total</strong></td>
-          <td><strong><?= number_format($grandTotal, 2) ?></strong></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Action Buttons -->
-    <div class="action-buttons">
-        <form method="POST" action="cancel_table.php" onsubmit="return confirm('Cancel this order?')" style="display: inline;">
-            <input type="hidden" name="table_id" value="<?= $order['table_id'] ?>">
-            <button type="submit" class="cancel-btn">Cancel Order</button>
+    <?php if (isset($_GET['confirm_delete'])): ?>
+      <div class="confirm-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000;">
+        <h3>Xác Nhận Xóa Đơn</h3>
+        <p>Bạn có chắc chắn muốn xóa đơn hàng #<?= intval($order['id']) ?> tại bàn "<?= htmlspecialchars($order['table_name']) ?>"?</p>
+        <form method="POST" action="delete_order.php">
+          <input type="hidden" name="order_id" value="<?= intval($order['id']) ?>">
+          <button type="submit" name="confirm_delete" class="confirm-btn">Xác Nhận</button>
+          <button type="button" class="cancel-btn"
+                  onclick="window.location.href='order_view.php?order_id=<?= intval($order['id']) ?>'">
+            Hủy
+          </button>
         </form>
+      </div>
+    <?php endif; ?>
 
-        <button onclick="window.print()">🖨️ Print</button>
+    <div class="action-buttons">
+      <form method="GET" action="order_view.php" style="display:inline; padding:0; margin:0;">
+        <input type="hidden" name="order_id" value="<?= intval($order['id']) ?>">
+        <input type="hidden" name="confirm_delete" value="1">
+        <button type="submit" class="delete-btn">Xóa Hóa Đơn</button>
+      </form>
 
-        <a href="order_logs.php" class="back-btn">← Back to Logs</a>
+      <button onclick="window.print()">🖨️ In Hóa Đơn</button>
+      <a href="order_logs.php" class="back-btn">← Quay Lại</a>
     </div>
 
-</div>
+  </div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
