@@ -3,6 +3,7 @@
 2. Vào folder htdocs và tạo folder mới tên là "website"
 3. Clone cả cái git này bỏ vô
 4. Bật XAMPP enable Apache và MySQL rồi vô localhost/website trên trình duyệt (chrome, edge,...)
+5. Vào phpmyadmin để mở giao diện database -> Bấm Import và nhét file db.sql vào.
 
 ## Làm Thêm phần này nếu muốn real-time
 
