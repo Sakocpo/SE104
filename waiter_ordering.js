@@ -108,7 +108,7 @@ function notifyKitchenProduct(productName, tableId, optionIDs) {
   if (waiterSocket.readyState === WebSocket.OPEN) {
     waiterSocket.send(JSON.stringify({
       type:    "add",
-      table:   "Table " + tableId,
+      table:   "Bàn " + tableId,
       product: productName,
       options: labels   // e.g. ["Nóng","Đá xay"]
     }));
@@ -152,7 +152,7 @@ function addToOrder() {
     });
   }
 
-  // 4) Send a real-time “add” WS message including the human labels
+  // 4) Send a real-time "add" WS message including the human labels
   notifyKitchenProduct(
     currentProduct.name,
     currentProduct.table_id || "???",
@@ -182,7 +182,7 @@ function openReview() {
     emptyMessage.style.textAlign = "center";
     emptyMessage.style.padding = "20px";
     emptyMessage.style.color = "#666";
-    emptyMessage.innerText = "No items in order";
+    emptyMessage.innerText = "Chưa Có Món Nào";
     list.appendChild(emptyMessage);
     popup.style.display = "flex";
     return;

@@ -2,127 +2,250 @@
 session_start();
 require_once 'config.php';
 
-if (!isset($_SESSION['user'], $_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+// Only admin users can view this page
+if (!isset($_SESSION['user'], $_SESSION['user']['role']) 
+    || $_SESSION['user']['role'] !== 'admin') 
+{
     header("Location:index.php");
     exit();
 }
 
+// ------------------------------------------------------
+// Helper functions to convert between MySQL DATETIME and <input type="datetime-local">
+// ------------------------------------------------------
 function toLocalInput(string $dt): string {
+    // "YYYY-MM-DD HH:MM:SS" → "YYYY-MM-DDTHH:MM"
     return str_replace(' ', 'T', substr($dt, 0, 16));
 }
 
 function fromLocalInput(string $s): string {
+    // "YYYY-MM-DDTHH:MM" → "YYYY-MM-DD HH:MM:00"
     return str_replace('T', ' ', $s) . ':00';
 }
 
-$now = new DateTimeImmutable();
+// ------------------------------------------------------
+// 1) Read GET parameters: start_dt, end_dt, preset, log_type
+// ------------------------------------------------------
+$now       = new DateTimeImmutable();
 $raw_start = $_GET['start_dt'] ?? '';
-$raw_end = $_GET['end_dt'] ?? '';
-$preset = $_GET['preset'] ?? '';
+$raw_end   = $_GET['end_dt']   ?? '';
+$preset    = $_GET['preset']   ?? '';
+$log_type  = $_GET['log_type'] ?? 'orders'; 
+// Valid values: "orders" or "ingredients"; default to "orders".
 
+// ------------------------------------------------------
+// 2) Determine $startObj / $endObj based on GET or default to today
+// ------------------------------------------------------
 if (!$raw_start || !$raw_end) {
+    // If either is missing, default to “today 00:00:00” → “today 23:59:59”
     $startObj = $now->setTime(0, 0, 0);
-    $endObj = $now->setTime(23, 59, 59);
-    $preset = 'today';
+    $endObj   = $now->setTime(23, 59, 59);
+    $preset   = 'today';
 } else {
-    $startObj = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $raw_start) ?: $now->setTime(0, 0, 0);
-    $endObj = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $raw_end) ?: $now->setTime(23, 59, 59);
+    // Parse "YYYY-MM-DDTHH:MM" into a DateTimeImmutable
+    $startObj = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $raw_start) 
+                  ?: $now->setTime(0, 0, 0);
+    $endObj   = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $raw_end) 
+                  ?: $now->setTime(23, 59, 59);
 }
 
-if (!$raw_start && !$raw_end) {
-    // do nothing, already set to today
-} elseif ($startObj->format('Y-m-d') === $now->format('Y-m-d') && $endObj->format('Y-m-d') === $now->format('Y-m-d')) {
-    $preset = 'today';
-} elseif ($startObj->format('Y-m-d') === $now->modify('-1 day')->format('Y-m-d') && $endObj->format('Y-m-d') === $now->modify('-1 day')->format('Y-m-d')) {
-    $preset = 'yesterday';
-} elseif ($startObj->format('Y-m-d') === $now->modify('last sunday')->format('Y-m-d') && $endObj->format('Y-m-d') === $now->modify('next saturday')->format('Y-m-d')) {
-    $preset = 'week';
+// If both raw_start & raw_end are set, check if they match one of “today”, “yesterday”, or “week”
+if ($raw_start && $raw_end) {
+    $todayStr     = $now->format('Y-m-d');
+    $yesterdayStr = $now->modify('-1 day')->format('Y-m-d');
+    $weekStartStr = $now->modify('last sunday')->format('Y-m-d');
+    $weekEndStr   = $now->modify('next saturday')->format('Y-m-d');
+
+    $sd = $startObj->format('Y-m-d');
+    $ed = $endObj->format('Y-m-d');
+
+    if ($sd === $todayStr && $ed === $todayStr) {
+        $preset = 'today';
+    } elseif ($sd === $yesterdayStr && $ed === $yesterdayStr) {
+        $preset = 'yesterday';
+    } elseif ($sd === $weekStartStr && $ed === $weekEndStr) {
+        $preset = 'week';
+    }
 }
 
+// Convert to SQL‐friendly timestamps
 $start_sql = $startObj->format('Y-m-d H:i:s');
-$end_sql = $endObj->format('Y-m-d H:i:s');
+$end_sql   = $endObj->format('Y-m-d H:i:s');
 
-// Sales summary
-$stmt = $connection->prepare("
-  SELECT
-    CASE WHEN p.deleted = 1 THEN '*deleted*' ELSE p.name END AS product_name,
-    p.price AS unit_price,
-    SUM(oi.quantity) AS total_qty,
-    SUM(oi.quantity * p.price) AS total_rev
-  FROM orders o
-  JOIN order_items oi ON o.id = oi.order_id
-  JOIN products p ON oi.product_id = p.id
-  WHERE o.created_at BETWEEN ? AND ?
-  AND o.deleted = 0
-  GROUP BY p.id, p.name, p.price, p.deleted
-  ORDER BY p.name
-");
-$stmt->bind_param("ss", $start_sql, $end_sql);
-$stmt->execute();
-$result = $stmt->get_result();
+// ------------------------------------------------------
+// 3) Fetch data based on log_type
+//    a) If "orders", run your existing sales‐summary + order‐logs queries
+//    b) If "ingredients", run a query against ingredient_logs
+// ------------------------------------------------------
+$sales          = [];
+$grand_qty      = 0;
+$grand_rev      = 0.0;
+$orders         = [];
+$ingredientLogs = [];
 
-$grand_qty = 0;
-$grand_rev = 0.0;
-$sales = [];
-while ($r = $result->fetch_assoc()) {
-    $sales[] = $r;
-    $grand_qty += (int)$r['total_qty'];
-    $grand_rev += (float)$r['total_rev'];
+if ($log_type === 'orders') {
+    // ------------------------------------------------------
+    // 3a) Sales summary (per product) between $start_sql and $end_sql
+    // ------------------------------------------------------
+    $stmt = $connection->prepare("
+      SELECT
+        CASE WHEN p.deleted = 1 THEN '*deleted*' ELSE p.name END AS product_name,
+        p.price AS unit_price,
+        SUM(oi.quantity) AS total_qty,
+        SUM(oi.quantity * p.price) AS total_rev
+      FROM orders o
+      JOIN order_items oi ON o.id = oi.order_id
+      JOIN products p    ON oi.product_id = p.id
+      WHERE o.created_at BETWEEN ? AND ?
+        AND o.deleted = 0
+        AND o.status  = 'paid'
+      GROUP BY p.id, p.name, p.price, p.deleted
+      ORDER BY p.name
+    ");
+    $stmt->bind_param("ss", $start_sql, $end_sql);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $sales[]      = $row;
+        $grand_qty   += (int)$row['total_qty'];
+        $grand_rev   += (float)$row['total_rev'];
+    }
+    $stmt->close();
+
+    // ------------------------------------------------------
+    // 3b) Detailed paid orders log (chronological)
+    // ------------------------------------------------------
+    $stmt = $connection->prepare("
+      SELECT
+        o.id,
+        o.created_at,
+        o.status,
+        o.paid_amount,
+        o.method,
+        CASE WHEN t.deleted = 1 THEN '*deleted*' ELSE t.table_name END AS table_name
+      FROM orders o
+      JOIN tables t ON o.table_id = t.id
+      WHERE o.created_at BETWEEN ? AND ?
+        AND o.deleted = 0 
+        AND o.status  = 'paid'
+      ORDER BY o.created_at ASC
+    ");
+    $stmt->bind_param("ss", $start_sql, $end_sql);
+    $stmt->execute();
+    $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 }
-$stmt->close();
 
-// Order logs
-$stmt = $connection->prepare("
-  SELECT
-    o.id, o.created_at, o.status, o.paid_amount, o.method,
-    CASE WHEN t.deleted = 1 THEN '*deleted*' ELSE t.table_name END as table_name
-  FROM orders o
-  JOIN tables t ON o.table_id = t.id
-  WHERE o.created_at BETWEEN ? AND ?
-  AND o.deleted = 0
-  ORDER BY o.created_at ASC
-");
+elseif ($log_type === 'ingredients') {
+    // ------------------------------------------------------
+    // 3c) Ingredient logs: join ingredient_logs → ingredients → unit_options → users
+    // ------------------------------------------------------
+    $stmt = $connection->prepare("
+      SELECT
+        il.id,
+        il.created_at,
+        i.name       AS ingredient_name,
+        uo.name     AS unit_label,
+        il.change_amount,
+        il.before_qty,
+        il.after_qty,
+        usr.username AS taken_by
+      FROM ingredient_logs il
+      JOIN ingredients i   ON il.ingredient_id = i.id
+      JOIN unit_options uo ON i.unit_id       = uo.id
+      LEFT JOIN users usr  ON il.user_id       = usr.id
+      WHERE il.created_at BETWEEN ? AND ?
+      ORDER BY il.created_at ASC
+    ");
+    $stmt->bind_param("ss", $start_sql, $end_sql);
+    $stmt->execute();
+    $ingredientLogs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+}
 
-$stmt->bind_param("ss", $start_sql, $end_sql);
-$stmt->execute();
-$orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+// ------------------------------------------------------
+// 4) Output HTML
+// ------------------------------------------------------
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Sales Report</title>
+  <title>Sales &amp; Ingredient Logs Report</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {
       background-image: url("uploads/admin-page.jpg");
-      background-color: transparent;
       background-attachment: fixed;
       background-repeat: no-repeat;
       background-position: center;
       background-size: cover;
     }
+
     .filters {
       margin: 20px auto;
-      max-width: 800px;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;         /* force a single horizontal row */
+      align-items: flex-end;     /* align the bottoms of all children */
       gap: 12px;
-      align-items: center;
+      max-width: 100%;
+      overflow-x: auto;          /* allow horizontal scroll if viewport is narrow */
     }
-    .filters input, .filters select, .filters button {
-      padding: 6px;
+
+    /* Each date field (label above input) */
+    .filters .field-from,
+    .filters .field-to {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;                  /* small gap between label and input */
+      flex: 1 1 200px;           /* each takes at least 200px, can grow */
     }
+
+    /* The dropdowns (no labels) */
+    .filters .field-preset,
+    .filters .field-logtype {
+      flex: 0 0 150px;           /* fixed width of 150px each */
+    }
+
+    /* Remove any default margin/spacing from selects */
+    .filters select {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+    }
+
+    /* The “Lọc” button container (placed underneath) */
+    .filter-button-container {
+      margin-top: 12px;
+      text-align: right;         /* align button to the right, if desired */
+    }
+
+    /* The “Lọc” button itself */
+    .filter-button-container button {
+      padding: 6px 12px;
+      font-size: 1em;
+    }
+
+    /* Optional: horizontal scrollbar styling */
+    .filters::-webkit-scrollbar {
+      height: 6px;
+    }
+    .filters::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
     .report-table {
       width: 100%;
       border-collapse: collapse;
       margin: 20px auto;
       border: 3px solid black;
-      max-width: 800px;
+      max-width: 900px;
     }
-    .report-table th, .report-table td {
-      border: 1px solid black; /* color cells here */
+    .report-table th,
+    .report-table td {
+      border: 1px solid black;
       padding: 8px;
       background: gray;
       opacity: 0.8;
@@ -131,110 +254,236 @@ $stmt->close();
     .report-table tfoot td {
       font-weight: bold;
       background-color: green;
+      color: white;
     }
     .report-table tbody tr:hover {
       background: #f1f1f1;
-      cursor: pointer;
+      cursor: default;
     }
+
     .report-section {
       margin-top: 40px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
     }
+
     .status-icon {
       font-size: 1.2em;
     }
+
+    .no-data {
+      background: #fef2f2;
+      color: #c00;
+      padding: 20px 30px;
+      border-radius: 8px;
+      border: 1px solid #f5c2c7;
+      font-size: 1em;
+      max-width: 900px;
+      margin: 20px auto;
+      text-align: center;
+    }
   </style>
+
   <script>
+    // Format a JS Date as "YYYY-MM-DDTHH:MM"
     function fmt(d) {
-    const pad = n => n.toString().padStart(2, '0');
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const min = pad(d.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+      const pad = n => n.toString().padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const mm   = pad(d.getMonth() + 1);
+      const dd   = pad(d.getDate());
+      const hh   = pad(d.getHours());
+      const min  = pad(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
     }
 
+    // Apply the selected preset (today/yesterday/week), update datetime inputs, re‐submit
     function applyPreset() {
       const sel = document.getElementById('preset');
-      const p = sel.value;
-      let now = new Date(), sd, ed;
+      const p   = sel.value;
+      let now   = new Date(),
+          sd, ed;
+
       if (p === 'today') {
-        sd = new Date(now); sd.setHours(0,0,0);
-        ed = new Date(now); ed.setHours(23,59,0);
-      } else if (p === 'yesterday') {
-        now.setDate(now.getDate()-1);
-        sd = new Date(now); sd.setHours(0,0,0);
-        ed = new Date(now); ed.setHours(23,59,0);
-      } else if (p === 'week') {
-        let dow = now.getDay();
-        sd = new Date(now); sd.setDate(now.getDate()-dow); sd.setHours(0,0,0);
-        ed = new Date(sd); ed.setDate(sd.getDate()+6); ed.setHours(23,59,0);
-      } else return;
+        sd = new Date(now); sd.setHours(0,  0, 0);
+        ed = new Date(now); ed.setHours(23, 59, 0);
+      }
+      else if (p === 'yesterday') {
+        now.setDate(now.getDate() - 1);
+        sd = new Date(now); sd.setHours(0,  0,  0);
+        ed = new Date(now); ed.setHours(23, 59,  0);
+      }
+      else if (p === 'week') {
+        ed = new Date(now);        ed.setHours(23, 59, 0);
+        sd = new Date(now);
+        sd.setDate(now.getDate() - 7);
+        sd.setHours(0,  0,  0);
+      }
+      else {
+        return; // no change
+      }
+
       document.getElementById('start_dt').value = fmt(sd);
       document.getElementById('end_dt').value   = fmt(ed);
       document.getElementById('preset_input').value = p;
+
+      // Preserve chosen log_type
+      const logTypeSel = document.getElementById('log_type');
+      document.getElementById('log_type_input').value = logTypeSel.value;
+
+      document.getElementById('filterForm').submit();
+    }
+
+    // When log_type dropdown changes, copy to hidden input and resubmit
+    function onLogTypeChange() {
+      const lt = document.getElementById('log_type').value;
+      document.getElementById('log_type_input').value = lt;
       document.getElementById('filterForm').submit();
     }
   </script>
 </head>
 <body>
-    <?php include 'sidebar.php'; ?>
-    <div class="main-content" style="padding:20px;">
-      <h2>Báo Cáo Doanh Thu</h2>
-      <form id="filterForm" method="GET" class="filters">
-        <div>
-          <label>Từ Ngày
-            <input type="datetime-local" id="start_dt" name="start_dt" value="<?= toLocalInput($start_sql) ?>">
-          </label>
-        </div>
-        <div>
-          <label>Đến Ngày
-            <input type="datetime-local" id="end_dt" name="end_dt" value="<?= toLocalInput($end_sql) ?>">
-          </label>
-        </div>
-        <select id="preset" onchange="applyPreset()">
-          <option value="today"     <?= $preset==='today'     ? 'selected':''?>>Hôm Nay</option>
-          <option value="yesterday" <?= $preset==='yesterday' ? 'selected':''?>>Hôm Qua</option>
-          <option value="week"      <?= $preset==='week'      ? 'selected':''?>>Tuần Này</option>
-        </select>
-        <input type="hidden" id="preset_input" name="preset" value="<?= htmlspecialchars($preset) ?>">
-        <button type="submit">Lọc</button>
-      </form>
+  <?php include 'sidebar.php'; ?>
 
-      <?php if (empty($sales)): ?>
-        <p style="text-align:center;">Không Có Doanh Thu Trong Khoảng Thời Gian Này.</p>
-      <?php else: ?>
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th>Sản Phẩm</th><th>Đơn Giá</th><th>Số Lượng</th><th>Tổng</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach($sales as $row): ?>
-            <tr>
-              <td><?= htmlspecialchars($row['product_name']) ?></td>
-              <td><?= number_format($row['unit_price'],2) ?></td>
-              <td><?= intval($row['total_qty']) ?></td>
-              <td><?= number_format($row['total_rev'],2) ?></td>
-            </tr>
-            <?php endforeach; ?>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td><strong>Tổng Cộng</strong></td><td></td>
-              <td><?= $grand_qty ?></td>
-              <td><?= number_format($grand_rev,2) ?></td>
-            </tr>
-          </tfoot>
-        </table>
-      <?php endif; ?>
+  <div class="main-content" style="padding:20px;">
+    <h2>Báo Cáo Doanh Thu </h2>
 
+    <!-- ==========================================
+         5) FILTER FORM: Date range, Preset, Log Type
+         ========================================== -->
+    <form id="filterForm" method="GET">
+  <!-- This row contains only the four fields -->
+  <div class="filters">
+    <!-- “From” date: label above input -->
+    <div class="field-from">
+      <label for="start_dt">Từ Ngày</label>
+      <input 
+        type="datetime-local" 
+        id="start_dt" 
+        name="start_dt" 
+        value="<?= toLocalInput($start_sql) ?>"
+        required
+      >
     </div>
-    <script src="script.js"></script>
+
+    <!-- “To” date: label above input -->
+    <div class="field-to">
+      <label for="end_dt">Đến Ngày</label>
+      <input 
+        type="datetime-local" 
+        id="end_dt" 
+        name="end_dt" 
+        value="<?= toLocalInput($end_sql) ?>"
+        required
+      >
+    </div>
+
+    <div class="field-preset">
+      <select id="preset" name="preset" onchange="applyPreset()">
+        <option value="today"     <?= $preset==='today'     ? 'selected':'' ?>>Hôm Nay</option>
+        <option value="yesterday" <?= $preset==='yesterday' ? 'selected':'' ?>>Hôm Qua</option>
+        <option value="week"      <?= $preset==='week'      ? 'selected':'' ?>>Tuần Này</option>
+      </select>
+    </div>
+
+    <div class="field-logtype">
+      <select id="log_type" name="log_type" onchange="onLogTypeChange()">
+        <option value="orders"      <?= $log_type==='orders'      ? 'selected':'' ?>>Đơn</option>
+        <option value="ingredients" <?= $log_type==='ingredients' ? 'selected':'' ?>>Nguyên Liệu</option>
+      </select>
+    </div>
+
+    <input type="hidden" id="preset_input"   name="preset"   value="<?= htmlspecialchars($preset) ?>">
+    <input type="hidden" id="log_type_input" name="log_type" value="<?= htmlspecialchars($log_type) ?>">
+  </div>
+
+  <div class="filter-button-container">
+    <button type="submit">Lọc</button>
+  </div>
+</form>
+
+
+    <?php if ($log_type === 'orders'): ?>
+      <div class="report-section">
+        <?php if (empty($sales)): ?>
+          <div class="no-data">Không Có Doanh Thu Trong Khoảng Thời Gian Này.</div>
+        <?php else: ?>
+          <!-- Sales Summary Table -->
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Sản Phẩm</th>
+                <th>Đơn Giá</th>
+                <th>Số Lượng</th>
+                <th>Tổng</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($sales as $row): ?>
+                <tr>
+                  <td><?= htmlspecialchars($row['product_name']) ?></td>
+                  <td><?= number_format($row['unit_price'], 2) ?></td>
+                  <td><?= intval($row['total_qty']) ?></td>
+                  <td><?= number_format($row['total_rev'], 2) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td><strong>Tổng Cộng</strong></td>
+                <td></td>
+                <td><?= $grand_qty ?></td>
+                <td><?= number_format($grand_rev, 2) ?></td>
+              </tr>
+            </tfoot>
+          </table>
+        <?php endif; ?>
+      </div>
+
+
+    <!-- ==================================================
+         7) INGREDIENTS VIEW (when log_type === "ingredients")
+         ================================================== -->
+    <?php elseif ($log_type === 'ingredients'): ?>
+      <div class="report-section">
+
+        <?php if (empty($ingredientLogs)): ?>
+          <div class="no-data">Không Có Lịch Sử Lấy Nguyên Liệu Trong Khoảng Thời Gian Này.</div>
+        <?php else: ?>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Log ID</th>
+                <th>Thời Gian Lấy</th>
+                <th>Nguyên Liệu</th>
+                <th>Thay Đổi (+/-)</th>
+                <th>Đơn Vị</th>
+                <th>Trước Khi Lấy</th>
+                <th>Sau Khi Lấy</th>
+                <th>Người Thực Hiện</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($ingredientLogs as $log): ?>
+                <tr>
+                  <td><?= htmlspecialchars($log['id']) ?></td>
+                  <td><?= htmlspecialchars($log['created_at']) ?></td>
+                  <td><?= htmlspecialchars($log['ingredient_name']) ?></td>
+                  <td style="text-align:center;"><?= number_format($log['change_amount'], 2) ?></td>
+                  <td><?= htmlspecialchars($log['unit_label']) ?></td>
+                  <td style="text-align:center;"><?= number_format($log['before_qty'], 2) ?></td>
+                  <td style="text-align:center;"><?= number_format($log['after_qty'], 2) ?></td>
+                  <td><?= htmlspecialchars($log['taken_by'] ?? '—') ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
-
-
-
-<!-- repot should save as text and not pointer  -->

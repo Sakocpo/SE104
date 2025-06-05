@@ -118,7 +118,7 @@ $q->close();
       width:180px; height:180px;
       border:1px solid #ccc; border-radius:12px;
       display:flex; align-items:center; justify-content:center;
-      background:#fff; cursor:pointer; font-size:1.2em;
+      background:#fff; cursor:pointer; font-size:1.2em; color: brown;
     }
     .cancel-btn {
       position:fixed; top:50%; right:20px;

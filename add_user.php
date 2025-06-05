@@ -76,30 +76,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     <form id="add-user-form" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="user_category" value="<?= htmlspecialchars($current_category_id) ?>">
 
-      <h3>Add User</h3>
+      <h3>Thêm Người Dùng</h3>
 
-      <label for="username">Username</label>
+      <label for="username">Tên Người Dùng</label>
       <input type="text" name="username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required>
 
-      <label for="password">Password</label>
+      <label for="password">Mật Khẩu</label>
       <input type="password" name="password" required autocomplete="new-password">
 
-      <label for="confirm_password">Confirm Password</label>
+      <label for="confirm_password">Xác Nhận Mật Khẩu</label>
       <input type="password" name="confirm_password" required autocomplete="new-password">
 
-      <label for="role">Role</label>
+      <label for="role">Vị Trí</label>
       <select name="role" required>
         <option value="admin">Admin</option>
         <option value="waiter">Waiter</option>
         <option value="kitchen">Kitchen</option>
       </select>
 
-      <label for="user_image">User Image (optional)</label>
+      <label for="user_image">Ảnh</label>
       <input type="file" name="user_image" accept="image/*">
 
-      <button type="submit" name="add_user">Add User</button>
+      <button type="submit" name="add_user">Thêm Người Dùng</button>
       <a href="user_management.php?category=<?= $current_category_id ?>">
-        <button type="button">Cancel</button>
+        <button type="button">Hủy</button>
       </a>
     </form>
   </div>

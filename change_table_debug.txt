@@ -14,3 +14,5 @@
 2025-06-02T15:01:01+02:00 WILL SEND: {"type":"change_table","order_id":370,"old_table_id":6,"new_table_id":2,"new_table":"2"}
 2025-06-02T15:34:33+02:00 WILL SEND: {"type":"change_table","order_id":401,"old_table_id":6,"new_table_id":2,"new_table":"2"}
 2025-06-02T15:35:24+02:00 WILL SEND: {"type":"change_table","order_id":404,"old_table_id":2,"new_table_id":6,"new_table":"1"}
+2025-06-03T14:42:24+02:00 WILL SEND: {"type":"change_table","order_id":486,"old_table_id":7,"new_table_id":9,"new_table":"4"}
+2025-06-03T14:44:59+02:00 WILL SEND: {"type":"change_table","order_id":487,"old_table_id":2,"new_table_id":6,"new_table":"1"}

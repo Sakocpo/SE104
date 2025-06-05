@@ -45,18 +45,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add New Option</title>
+    <title>Thêm Tùy Chọn</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="form-container">
     <form method="POST">
-        <h3 style="color: black;">Add New Option</h3>
-        <input type="text" name="label" placeholder="Option label" required>
+        <h3 style="color: black;">Thêm Tùy Chọn</h3>
+        <input type="text" name="label" placeholder="Tên Tùy Chọn" required>
 
-        <button type="submit">Add Option</button>
+        <button type="submit">Thêm</button>
         <a href="product_options_management.php?category=<?= $category_id ?>">
-            <button type="button">Cancel</button>
+            <button type="button">Quay Lại</button>
         </a>
     </form>
 </div>

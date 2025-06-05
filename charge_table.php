@@ -201,11 +201,14 @@ $stmt->close();
   </style>
 </head>
 <body>
+
+  <audio id="complete-sound" src="cash-sound.mp3" preload="auto"></audio>
+
 <div class="payment-wrapper">
   <!-- Top Mode Selector -->
   <div class="payment-header">
-    <div id="cash-btn" class="payment-mode active">💵 Cash</div>
-    <div id="qr-btn" class="payment-mode">📱 QR</div>
+    <div id="cash-btn" class="payment-mode active">💵 Tiền Mặt</div>
+    <div id="qr-btn" class="payment-mode">📱 Mã QR</div>
   </div>
 
   <!-- Bottom 3/4 -->
@@ -228,8 +231,8 @@ $stmt->close();
 
   <!-- Buttons -->
   <div class="payment-actions">
-    <button id="cancel-btn">Cancel</button>
-    <button id="complete-btn">Complete</button>
+    <button id="cancel-btn">Quay Lại</button>
+    <button id="complete-btn">Hoàn Tất</button>
   </div>
 </div>
 
@@ -324,21 +327,38 @@ $stmt->close();
   };
 
   document.getElementById('complete-btn').onclick = () => {
-    if (paid < total) {
-      alert('Số tiền thanh toán không được nhỏ hơn tổng số tiền');
-      return;
+  if (paid < total) {
+    alert('Số tiền thanh toán không được nhỏ hơn tổng số tiền');
+    return;
+  }
+
+  fetch('complete_payment.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table_id: <?= $t ?>, paid })
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (j.success) {
+      const sound = document.getElementById('complete-sound');
+      if (sound) {
+        setTimeout(() => {
+          sound.currentTime = 0;
+          sound.play().catch(() => {});
+        }, 100);
+      }
+      setTimeout(() => {
+        window.location = "table_management_waiter.php?category=<?= $table['table_category'] ?>";
+      }, 1000);
+    } else {
+      alert('Error: ' + j.error);
     }
-    fetch('complete_payment.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ table_id: <?= $t ?>, paid })
-    })
-    .then(r => r.json())
-    .then(j => {
-      if (j.success) window.location = "table_management_waiter.php?category=<?= $table['table_category'] ?>";
-      else alert('Error: ' + j.error);
-    });
-  };
+  })
+  .catch(() => {
+    alert('Failed to complete payment');
+  });
+};
+
 
   updateDisplays();
 })();

@@ -52,11 +52,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
     $category = intval($_POST['category']);
     $unit = intval($_POST['unit_id']);
     $qty = floatval($_POST['quantity'] ?? 0);
-    $imgpath = $ing['image'];
+    $imgpath = $ing['image']; // Keep existing image by default
+
     if (!empty($_FILES['image']['name'])) {
-        $imgpath = 'uploads/' . basename($_FILES['image']['name']);
+        $upload_dir = 'uploads/';
+        $imgpath = $upload_dir . basename($_FILES['image']['name']);
         move_uploaded_file($_FILES['image']['tmp_name'], $imgpath);
     }
+
     $upd = $connection->prepare("UPDATE ingredients SET name=?,category=?,unit_id=?,quantity=?,image=? WHERE id=?");
     $upd->bind_param("siiisi", $name, $category, $unit, $qty, $imgpath, $id);
     $upd->execute();
@@ -88,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
         <div style="width:250px;">
             <?php if ($ing['image']): ?>
                 <img src="<?=htmlspecialchars($ing['image'])?>" style="max-width:100%;border:1px solid #ccc;padding:4px;">
-                <button form="edit-ingredient-form" name="clear_image" style="margin-top:8px;">
-                    Xóa Ảnh
-                </button>
+                <form method="POST" style="margin-top:8px;">
+                    <button type="submit" name="clear_image">Xóa Ảnh</button>
+                </form>
             <?php endif; ?>
         </div>
 
@@ -138,6 +141,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
                 <input id="qty" name="quantity" type="number" step="0.01" value="<?=htmlspecialchars($ing['quantity'])?>">
                 <button type="button" onclick="adjustQty(1)">+</button>
             </div>
+
+            <label>Hình Ảnh:</label>
+            <input type="file" name="image" accept="image/*">
+            <?php if ($ing['image']): ?>
+            <?php endif; ?>
+
             <div style="margin-top:12px;">
                 <button type="submit" name="update_ingredient">Cập Nhật</button>
                 <button type="button" onclick="window.location.href='ingredient_info.php?id=<?= $id ?>&confirm_delete=1'" style="background:red;color:white;">Xóa Nguyên Liệu</button>

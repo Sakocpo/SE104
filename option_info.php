@@ -91,14 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
     <?php endif; ?>
 
     <form method="POST">
-        <h3 style="color: black;">Edit Option</h3>
+        <h3 style="color: black;">Sửa Tùy Chọn</h3>
         <input type="text" name="label" value="<?= htmlspecialchars($option['label']) ?>" required>
-        <button type="submit">Save</button>        
+        <button type="submit">Lưu</button>        
     </form>
 
-    <button type="button" onclick="window.location.href='option_info.php?id=<?= $option_id ?>&confirm_delete=1'" style="background: #dc3545; color: white;">Delete Option</button>
+    <button type="button" onclick="window.location.href='option_info.php?id=<?= $option_id ?>&confirm_delete=1'" style="background: #dc3545; color: white;">Xóa Tùy Chọn</button>
 
-    <a href="product_options_management.php?category=<?= $option['type_id'] ?>"><button type="button">Cancel</button></a>
+    <a href="product_options_management.php?category=<?= $option['type_id'] ?>"><button type="button">Hủy</button></a>
 </div>
 </body>
 </html>

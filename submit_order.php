@@ -44,10 +44,10 @@ try {
     } else {
         // Create new order
         $stmt = $connection->prepare("
-            INSERT INTO orders (table_id, status, created_at)
-            VALUES (?, 'pending', NOW())
+            INSERT INTO orders (table_id, status, created_at, created_by)
+            VALUES (?, 'pending', NOW(), ?)
         ");
-        $stmt->bind_param("i", $table_id);
+        $stmt->bind_param("ii", $table_id, $_SESSION['user']['id']);
         $stmt->execute();
         $order_id = $connection->insert_id;
         $stmt->close();

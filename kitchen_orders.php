@@ -136,7 +136,7 @@ socket.onmessage = function(event) {
   //   return;
   // }
 
-  // change_table: just update the header’s Table: … line
+  // change_table: just update the header's Table: ... line
   if (data.type === 'change_table') {
   const card = document.getElementById('order-card-' + data.order_id);
   if (card) {
@@ -219,20 +219,20 @@ function createOrderCard(orderId, data, newRow) {
   card.innerHTML = `
     <div class="order-header">
       <div>
-        <strong>New Order</strong><br>
-        Table: ${data.table}<br>
-        <span class="placed-at">Placed at: ${placedAt}</span>
+        <strong>Đơn Mới</strong><br>
+        Bàn: ${data.table}<br>
+        <span class="placed-at">Đặt Lúc: ${placedAt}</span>
       </div>
     </div>
     <form type="button" class="serve-form" data-order-id="${orderId}">
       <input type="hidden" name="order_id" value="${orderId}">
       <table>
         <thead>
-          <tr><th>Product</th><th>Qty</th><th>Options</th></tr>
+          <tr><th>Sản Phẩm</th><th>Số Lượng</th><th>Tùy Chọn</th></tr>
         </thead>
         <tbody id="order-items-${orderId}"></tbody>
       </table>
-      <button type="submit" class="serve-btn">Mark Served</button>
+      <button type="submit" class="serve-btn">Hoàn Tất</button>
     </form>
   `;
 
@@ -258,8 +258,8 @@ function handleServeSubmit(form) {
   // 2) Get orderId and table name
   const orderId = form.dataset.orderId;
   const table = form.closest('.order-card').querySelector('.order-header').innerText
-    .split('\n').find(line => line.trim().startsWith('Table:'))
-    ?.replace('Table:', '').trim() || '';
+    .split('\n').find(line => line.trim().startsWith('Bàn:'))
+    ?.replace('Bàn:', '').trim() || '';
 
   // 3) For each row, send the serve message
   rows.forEach(row => {

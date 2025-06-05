@@ -33,17 +33,17 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 ?>
 <!doctype html>
 <html><head>
-  <meta charset="utf-8"><title>Add Ingredient</title>
+  <meta charset="utf-8"><title>Thêm Nguyên Liệu</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="forms-container">
-    <h3>Add Ingredient</h3>
+    <h3>Thêm Nguyên Liệu</h3>
     <form method="POST" enctype="multipart/form-data">
-      <label>Name:</label>
+      <label>Tên Nguyên Liệu:</label>
       <input name="name" required>
 
-      <label>Category:</label>
+      <label>Danh Mục:</label>
       <select name="category_id">
         <?php foreach($cats as $c): ?>
           <option value="<?=$c['id']?>" <?= $c['id']==$cat?'selected':''?>>
@@ -52,29 +52,29 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         <?php endforeach;?>
       </select>
 
-      <label>Unit:</label>
+      <label>Đơn Vị:</label>
       <div style="display:flex;gap:8px;align-items:center">
         <select id="unit-select" name="unit_id">
           <?php foreach($units as $u): ?>
             <option value="<?=$u['id']?>"><?=htmlspecialchars($u['name'])?></option>
           <?php endforeach;?>
         </select>
-        <button type="button" id="add-unit">+ Add</button>
+        <button type="button" id="add-unit">+ Thêm</button>
       </div>
 
-      <label>Quantity:</label>
+      <label>Số Lượng:</label>
       <div style="display:flex;align-items:center;gap:8px">
         <button type="button" onclick="q(-1)">−</button>
         <input id="qty" name="quantity" type="number" step="0.01" value="0">
         <button type="button" onclick="q(+1)">+</button>
       </div>
 
-      <label>Image:</label>
+      <label>Hình Ảnh:</label>
       <input type="file" name="image" accept="image/*">
 
-      <button type="submit">Save</button>
+      <button type="submit">Lưu</button>
       <a href="ingredients_management.php?category=<?=$cat?>">
-        <button type="button">Cancel</button>
+        <button type="button">Hủy</button>
       </a>
     </form>
   </div>
@@ -82,11 +82,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   <!-- UNIT ADD MODAL -->
   <div id="unit-modal">
     <div class="modal-box">
-      <h4 style="text-align: center; padding-bottom: 10px;">Add New Unit</h4>
+      <h4 style="text-align: center; padding-bottom: 10px;">Thêm Đơn Vị Mới</h4>
       <input type="text" id="new-unit-name" placeholder="kg, cái,..." />
       <div style="text-align:right">
-        <button id="confirm-unit">Confirm</button>
-        <button id="cancel-unit">Cancel</button>
+        <button id="confirm-unit">Xác Nhận</button>
+        <button id="cancel-unit">Quay Lại</button>
       </div>
     </div>
   </div>
