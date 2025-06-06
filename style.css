@@ -29,6 +29,7 @@ background-size: cover;
 margin: 0 15px; /* 0 top and bottom, 15px left and right */
 
 }
+
 .form-box {
 width: 100%; /* 100% of the container */
 max-width: 450px;
@@ -883,7 +884,6 @@ h4
 }
 
 .confirm-popup button {
-  margin: 10px;
   padding: 8px 16px;
   border: none;
   border-radius: 4px;

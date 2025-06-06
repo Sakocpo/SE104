@@ -27,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $check->execute();
   $result = $check->get_result();
   if ($result->num_rows > 0) {
-    $error = "Username already exists.";
+    $error = "Tên người dùng đã tồn tại.";
   } else if ($password !== $confirm_password) {
-    $error = "Passwords do not match.";
+    $error = "Mật khẩu không khớp.";
   } else {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     <?php if ($error): ?>
       <div class="error-popup">
         <?= htmlspecialchars($error) ?>
-        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Close</button>
+        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
       </div>
     <?php endif; ?>
 

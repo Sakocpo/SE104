@@ -17,18 +17,34 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   $unit     = intval($_POST['unit_id']);
   $qty      = floatval($_POST['quantity'] ?? 0);
   $imgpath  = null;
-  if (!empty($_FILES['image']['name'])) {
-    $imgpath = 'uploads/'.basename($_FILES['image']['name']);
-    move_uploaded_file($_FILES['image']['tmp_name'],$imgpath);
-  }
-  $stmt = $connection->prepare("
-    INSERT INTO ingredients(name,category,unit_id,quantity,image)
-    VALUES(?,?,?,?,?)
-  ");
-  $stmt->bind_param("siiis",$name,$category,$unit,$qty,$imgpath);
+
+  $stmt = $connection->prepare("SELECT COUNT(*) as cnt FROM ingredients WHERE name = ? AND deleted = 0");
+  $stmt->bind_param("s", $name);
   $stmt->execute();
-  header("Location: ingredients_management.php?category=$category");
-  exit;
+  $result = $stmt->get_result();
+  $count = $result->fetch_assoc()['cnt'];
+  $stmt->close();
+
+  if ($count > 0) {
+    $error = "Nguyên liệu \"$name\" đã tồn tại, vui lòng chọn tên khác.";
+  } elseif (!$name || !$category || !$unit || $qty <= 0) {
+    $error = "Vui lòng điền đầy đủ thông tin.";
+  }
+  else
+  {
+    if (!empty($_FILES['image']['name'])) {
+      $imgpath = 'uploads/'.basename($_FILES['image']['name']);
+      move_uploaded_file($_FILES['image']['tmp_name'],$imgpath);
+    }
+    $stmt = $connection->prepare("
+      INSERT INTO ingredients(name,category,unit_id,quantity,image)
+      VALUES(?,?,?,?,?)
+    ");
+    $stmt->bind_param("siiis",$name,$category,$unit,$qty,$imgpath);
+    $stmt->execute();
+    header("Location: ingredients_management.php?category=$category");
+    exit;
+  }
 }
 ?>
 <!doctype html>
@@ -38,6 +54,12 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 </head>
 <body>
   <div class="forms-container">
+    <?php if ($error): ?>
+          <div class="error-popup">
+              <?= htmlspecialchars($error) ?>
+              <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
+          </div>
+      <?php endif; ?>
     <h3>Thêm Nguyên Liệu</h3>
     <form method="POST" enctype="multipart/form-data">
       <label>Tên Nguyên Liệu:</label>

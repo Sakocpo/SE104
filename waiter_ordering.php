@@ -131,6 +131,17 @@ if ($current_category_id) {
 <button type="button" onclick="addToOrder()" class="confirm-btn">Thêm Vào Đơn</button>
 <button type="button" onclick="closePopup()"   class="cancel-btn">Hủy</button>
 
+    <div class="note-control" style="margin: 12px 0;">
+      <label for="note-input" style="display: block; margin-bottom: 4px; font-weight: bold;">Ghi Chú</label>
+      <textarea
+        id="note-input"
+        placeholder="Nhập ghi chú (nếu có)"
+        maxlength="200"
+        rows="2"
+        style="width: 100%; padding: 6px; font-size: 1em; resize: vertical;"
+      ></textarea>
+    </div>
+
   </div>
 </div>
 

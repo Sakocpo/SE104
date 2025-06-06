@@ -57,10 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
   <div class="forms-container">
   <!-- Show the error, if any -->
   <?php if ($error): ?>
-        <div class="error-popup">
-        <?= htmlspecialchars($error) ?>
-        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Close</button>
-        </div>
+    <div class="error-popup">
+    <?= htmlspecialchars($error) ?>
+    <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
+    </div>
   <?php endif; ?>
   <form id="add-table-form" method="POST">
     <input type="hidden" name="table_category" value="<?= htmlspecialchars($current_category_id) ?>">

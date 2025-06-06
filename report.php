@@ -10,9 +10,6 @@ if (!isset($_SESSION['user'], $_SESSION['user']['role'])
     exit();
 }
 
-// ------------------------------------------------------
-// Helper functions to convert between MySQL DATETIME and <input type="datetime-local">
-// ------------------------------------------------------
 function toLocalInput(string $dt): string {
     // "YYYY-MM-DD HH:MM:SS" → "YYYY-MM-DDTHH:MM"
     return str_replace(' ', 'T', substr($dt, 0, 16));
@@ -23,33 +20,23 @@ function fromLocalInput(string $s): string {
     return str_replace('T', ' ', $s) . ':00';
 }
 
-// ------------------------------------------------------
-// 1) Read GET parameters: start_dt, end_dt, preset, log_type
-// ------------------------------------------------------
 $now       = new DateTimeImmutable();
 $raw_start = $_GET['start_dt'] ?? '';
 $raw_end   = $_GET['end_dt']   ?? '';
 $preset    = $_GET['preset']   ?? '';
 $log_type  = $_GET['log_type'] ?? 'orders'; 
-// Valid values: "orders" or "ingredients"; default to "orders".
 
-// ------------------------------------------------------
-// 2) Determine $startObj / $endObj based on GET or default to today
-// ------------------------------------------------------
 if (!$raw_start || !$raw_end) {
-    // If either is missing, default to “today 00:00:00” → “today 23:59:59”
     $startObj = $now->setTime(0, 0, 0);
     $endObj   = $now->setTime(23, 59, 59);
     $preset   = 'today';
 } else {
-    // Parse "YYYY-MM-DDTHH:MM" into a DateTimeImmutable
     $startObj = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $raw_start) 
                   ?: $now->setTime(0, 0, 0);
     $endObj   = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $raw_end) 
                   ?: $now->setTime(23, 59, 59);
 }
 
-// If both raw_start & raw_end are set, check if they match one of “today”, “yesterday”, or “week”
 if ($raw_start && $raw_end) {
     $todayStr     = $now->format('Y-m-d');
     $yesterdayStr = $now->modify('-1 day')->format('Y-m-d');
@@ -72,11 +59,6 @@ if ($raw_start && $raw_end) {
 $start_sql = $startObj->format('Y-m-d H:i:s');
 $end_sql   = $endObj->format('Y-m-d H:i:s');
 
-// ------------------------------------------------------
-// 3) Fetch data based on log_type
-//    a) If "orders", run your existing sales‐summary + order‐logs queries
-//    b) If "ingredients", run a query against ingredient_logs
-// ------------------------------------------------------
 $sales          = [];
 $grand_qty      = 0;
 $grand_rev      = 0.0;
@@ -84,9 +66,6 @@ $orders         = [];
 $ingredientLogs = [];
 
 if ($log_type === 'orders') {
-    // ------------------------------------------------------
-    // 3a) Sales summary (per product) between $start_sql and $end_sql
-    // ------------------------------------------------------
     $stmt = $connection->prepare("
       SELECT
         CASE WHEN p.deleted = 1 THEN '*deleted*' ELSE p.name END AS product_name,
@@ -113,9 +92,6 @@ if ($log_type === 'orders') {
     }
     $stmt->close();
 
-    // ------------------------------------------------------
-    // 3b) Detailed paid orders log (chronological)
-    // ------------------------------------------------------
     $stmt = $connection->prepare("
       SELECT
         o.id,
@@ -138,9 +114,6 @@ if ($log_type === 'orders') {
 }
 
 elseif ($log_type === 'ingredients') {
-    // ------------------------------------------------------
-    // 3c) Ingredient logs: join ingredient_logs → ingredients → unit_options → users
-    // ------------------------------------------------------
     $stmt = $connection->prepare("
       SELECT
         il.id,
@@ -164,9 +137,6 @@ elseif ($log_type === 'ingredients') {
     $stmt->close();
 }
 
-// ------------------------------------------------------
-// 4) Output HTML
-// ------------------------------------------------------
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -198,8 +168,8 @@ elseif ($log_type === 'ingredients') {
     .filters .field-to {
       display: flex;
       flex-direction: column;
-      gap: 4px;                  /* small gap between label and input */
-      flex: 1 1 200px;           /* each takes at least 200px, can grow */
+      gap: 4px;                  
+      flex: 1 1 200px;           
     }
 
     /* The dropdowns (no labels) */
@@ -249,7 +219,7 @@ elseif ($log_type === 'ingredients') {
       padding: 8px;
       background: gray;
       opacity: 0.8;
-      text-align: left;
+      text-align: center;
     }
     .report-table tfoot td {
       font-weight: bold;
@@ -453,7 +423,7 @@ elseif ($log_type === 'ingredients') {
           <table class="report-table">
             <thead>
               <tr>
-                <th>Log ID</th>
+                <th>ID</th>
                 <th>Thời Gian Lấy</th>
                 <th>Nguyên Liệu</th>
                 <th>Thay Đổi (+/-)</th>

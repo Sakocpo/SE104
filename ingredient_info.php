@@ -106,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
                 <h3>Xác Nhận Xóa Nguyên Liệu</h3>
                 <p>Bạn Có Chắc Chắn Muốn Xóa Nguyên Liệu "<?= htmlspecialchars($ing['name']) ?>"?</p>
                 <form method="POST">
-                    <button type="submit" name="delete_ingredient" class="confirm-btn">Confirm</button>
-                    <button type="button" class="cancel-btn" onclick="window.location.href='ingredient_info.php?id=<?= $id ?>'">Cancel</button>
+                    <button type="submit" name="delete_ingredient" class="confirm-btn">Xác Nhận</button>
+                    <button type="button" class="cancel-btn" onclick="window.location.href='ingredient_info.php?id=<?= $id ?>'">Hủy</button>
                 </form>
             </div>
         <?php endif; ?>

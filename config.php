@@ -11,6 +11,8 @@ $connection = new mysqli($host, $user, $password, $database);
 
 $error = '';
 
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
 function alreadyExists(mysqli $conn, string $table, string $column, string $value): bool {
   $sql = "SELECT 1 FROM `{$table}` WHERE `{$column}` = ? LIMIT 1";
   $stmt = $conn->prepare($sql);

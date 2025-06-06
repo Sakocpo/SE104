@@ -13,6 +13,8 @@ function openOptionsPopup(product) {
   document.getElementById("popup-product-name").innerText = product.name;
   document.getElementById("quantity-input").value = 1;
 
+  document.getElementById("note-input").value = "";
+
   const catRow  = document.getElementById("option-categories");
   const itemRow = document.getElementById("option-items");
   catRow.innerHTML  = "Loading…";
@@ -120,6 +122,8 @@ function addToOrder() {
   const qty = parseInt(document.getElementById("quantity-input").value, 10);
   if (isNaN(qty) || qty <= 0) return;
 
+  const noteText = document.getElementById("note-input").value.trim();
+
   // 1) Map each chosen category→label to a numeric ID, using optionsData
   const selectedOptionIDs = Object.entries(currentOptions)
     .map(([cat, label]) => {
@@ -134,6 +138,7 @@ function addToOrder() {
   for (let item of order) {
     if (
       item.product.id === currentProduct.id &&
+      item.note === noteText && 
       Array.isArray(item.options) &&
       item.options.length === selectedOptionIDs.length &&
       item.options.every((v,i) => v === selectedOptionIDs[i])
@@ -148,7 +153,8 @@ function addToOrder() {
     order.push({
       product: currentProduct,
       options: selectedOptionIDs,  // e.g. [2,5]
-      quantity: qty
+      quantity: qty,
+      note: noteText 
     });
   }
 
@@ -201,8 +207,15 @@ function openReview() {
     const title = document.createElement("div");
     title.className = "ri-name";
     title.innerText = item.product.name;
+    if (item.note)
+    {
+      title.innerText = `${item.product.name} [${item.note}]`;
+    }
+    else
+    {
+      title.innerText = item.product.name;
+    }
     info.appendChild(title);
-
     // Option pills
     const optsDiv = document.createElement("div");
     optsDiv.className = "item-options";
@@ -343,7 +356,8 @@ function submitOrder(tableId) {
     const payloadItem = {
       product_id: item.product.id,
       quantity:   item.quantity,
-      options:    Array.isArray(item.options) ? item.options : []  // these are numeric IDs
+      options:    Array.isArray(item.options) ? item.options : [],  // these are numeric IDs
+      note:      item.note 
     };
     console.log("submitOrder: mapping item → payloadItem:", payloadItem);
     if (waiterSocket.readyState === WebSocket.OPEN) {
@@ -407,7 +421,8 @@ function submitOrder(tableId) {
             table:     json.table,
             product:   item.product.name,
             quantity:  item.quantity,
-            options:   optionLabels
+            options:   optionLabels,
+            note:      item.note
           };
 
           console.log("submitOrder: WS send serveMsg →", serveMsg);

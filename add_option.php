@@ -31,13 +31,28 @@ if (!$category) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
     $label = trim($_POST['label']);
 
-    if ($label !== '') {
-        $stmt = $connection->prepare("INSERT INTO options (label, type_id) VALUES (?, ?)");
-        $stmt->bind_param("si", $label, $category_id);
-        $stmt->execute();
-        $stmt->close();
-        header("Location: product_options_management.php?category=$category_id");
-        exit();
+
+    $stmt = $connection->prepare("SELECT COUNT(*) as cnt FROM options WHERE label = ? AND deleted = 0");
+    $stmt->bind_param("s", $label);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $count = $result->fetch_assoc()['cnt'];
+    $stmt->close();
+
+    if ($count > 0) {
+        $error = "Tùy chọn \"{$label}\" đã tồn tại, vui lòng chọn tên khác";
+    }
+
+    else
+    {
+        if ($label !== '') {
+            $stmt = $connection->prepare("INSERT INTO options (label, type_id) VALUES (?, ?)");
+            $stmt->bind_param("si", $label, $category_id);
+            $stmt->execute();
+            $stmt->close();
+            header("Location: product_options_management.php?category=$category_id");
+            exit();
+        }
     }
 }
 ?>
@@ -50,6 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
 </head>
 <body>
 <div class="form-container">
+    <?php if ($error): ?>
+        <div class="error-popup">
+        <?= htmlspecialchars($error) ?>
+        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
+        </div>
+    <?php endif; ?>
     <form method="POST">
         <h3 style="color: black;">Thêm Tùy Chọn</h3>
         <input type="text" name="label" placeholder="Tên Tùy Chọn" required>

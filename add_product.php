@@ -119,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 
     .options-header {
         background: #ccc;
+        color: black;
         padding: 12px;
         width: 300px;
         text-align: center;
@@ -131,8 +132,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 
     .opt-category summary {
         background: #e0e0e0;
+        color: brown;
         padding: 10px;
-        text-align: center;
+        text-align: center;           /* center the category name */
         cursor: pointer;
         position: relative;
     }
@@ -179,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     <?php if ($error): ?>
         <div class="error-popup">
             <?= htmlspecialchars($error) ?>
-            <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Close</button>
+            <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
         </div>
     <?php endif; ?>
     <div style="display:flex; gap:24px; align-items:flex-start; padding-top: 20px; justify-content: center; max-width: 1200px; margin: 0 auto;">

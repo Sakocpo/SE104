@@ -81,6 +81,12 @@ while ($row = $result->fetch_assoc()) {
       border-collapse: collapse;
       margin-bottom: 12px;
     }
+    th:nth-child(4),
+    td:nth-child(4) {
+      max-width: 200px;          /* adjust to desired width */
+      overflow-wrap: break-word; /* allow wrapping within the cell */
+      white-space: normal;       /* permit multiple lines */
+    }
     th, td {
       border: 1px solid #ddd;
       padding: 8px;
@@ -184,6 +190,7 @@ socket.onmessage = function(event) {
       <td>${data.product}</td>
       <td>${data.quantity}</td>
       <td>${optionHTML}</td>
+      <td>${data.note || ''}</td>
     `;
 
     if (tbody) {
@@ -228,7 +235,7 @@ function createOrderCard(orderId, data, newRow) {
       <input type="hidden" name="order_id" value="${orderId}">
       <table>
         <thead>
-          <tr><th>Sản Phẩm</th><th>Số Lượng</th><th>Tùy Chọn</th></tr>
+          <tr><th>Sản Phẩm</th><th>Số Lượng</th><th>Tùy Chọn</th><th>Ghi Chú</th></tr>
         </thead>
         <tbody id="order-items-${orderId}"></tbody>
       </table>
@@ -328,6 +335,7 @@ function handleServeSubmit(form) {
             .map(o=>`<span class="option-pill">${o}</span>`)
             .join('')
         }</td>
+        <td>${it.note || ''}</td>
       `;
       // 3) First item → create the card, subsequent → append into its tbody
       if (idx === 0) {

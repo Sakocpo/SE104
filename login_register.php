@@ -56,13 +56,13 @@ if(isset($_POST['login'])) { // check if login button clicked
 
             exit(); 
         } else {
-            $_SESSION['login_error'] = "Invalid password";
+            $_SESSION['login_error'] = "Mật Khẩu Sai";
             $_SESSION['active_form'] = 'login';
             header("Location: index.php");
             exit(); 
         }
     } else {
-        $_SESSION['login_error'] = "Account not found";
+        $_SESSION['login_error'] = "Tài Khoản Không Tồn Tại";
         $_SESSION['active_form'] = 'login';
         header("Location: index.php");
         exit(); 

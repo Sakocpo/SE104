@@ -167,6 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 
     .options-header {
     background: #ccc;
+    color: black;
     padding: 12px;
     width: 300px;
     text-align: center;
@@ -179,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 
     .opt-category summary {
     background: #e0e0e0;
+    color: brown;
     padding: 10px;
     text-align: center;           /* center the category name */
     cursor: pointer;

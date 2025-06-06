@@ -81,11 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
 
     <?php if (isset($_GET['confirm_delete'])): ?>
         <div class="confirm-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000;">
-            <h3>Confirm Delete Option</h3>
-            <p>Are you sure you want to delete option "<?= htmlspecialchars($option['label']) ?>"?</p>
+            <h3 style="margin-bottom: 10px;">Xác Nhận Xóa</h3>
+            <p>Bạn Có Chắc Chắn Là Muốn Xóa Tùy Chọn "<?= htmlspecialchars($option['label']) ?>"?</p>
             <form method="POST">
-                <button type="submit" name="delete_option" class="confirm-btn">Confirm</button>
-                <button type="button" class="cancel-btn" onclick="window.location.href='option_info.php?id=<?= $option_id ?>'">Cancel</button>
+                <button type="submit" name="delete_option" class="confirm-btn">Xác Nhận</button>
+                <button type="button" class="cancel-btn" onclick="window.location.href='option_info.php?id=<?= $option_id ?>'">Hủy</button>
             </form>
         </div>
     <?php endif; ?>
