@@ -2,6 +2,7 @@
 session_start();
 require_once 'config.php';
 
+// Ensure admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: index.php");
     exit();
@@ -13,13 +14,13 @@ if (!$product_id) {
     exit();
 }
 
-// Get product details
-$product_query = $connection->prepare("SELECT * FROM products WHERE id = ?");
-$product_query->bind_param("i", $product_id);
-$product_query->execute();
-$product_result = $product_query->get_result();
-$product = $product_result->fetch_assoc();
-
+// Fetch product
+$stmt = $connection->prepare("SELECT * FROM products WHERE id = ?");
+$stmt->bind_param("i", $product_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$product = $result->fetch_assoc();
+$stmt->close();
 if (!$product) {
     echo "Product not found.";
     exit();
@@ -27,89 +28,45 @@ if (!$product) {
 
 $current_category_id = $product['category'];
 
-
-$optCats = $connection
-  ->query("SELECT id,name FROM option_categories ORDER BY name")
-  ->fetch_all(MYSQLI_ASSOC);
-
-
-// ❷ For each category, fetch its options
+// Fetch option categories and their options
+$optCats = $connection->query("SELECT id,name FROM option_categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 $optionsByCat = [];
 foreach ($optCats as $cat) {
-  $stmt = $connection->prepare("
-    SELECT id,label 
-      FROM options 
-     WHERE type_id = ? AND deleted = 0
-     ORDER BY label
-  ");
-  $stmt->bind_param("i", $cat['id']);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $optionsByCat[$cat['id']] = $result->fetch_all(MYSQLI_ASSOC);
-  $result->close();
-  $stmt->close();
+    $stmt = $connection->prepare(
+        "SELECT id,label FROM options WHERE type_id = ? AND deleted = 0 ORDER BY label"
+    );
+    $stmt->bind_param("i", $cat['id']);
+    $stmt->execute();
+    $optionsByCat[$cat['id']] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
 }
 
-// ❸ Fetch the option_ids this product currently has
+// Fetch assigned options
 $assigned = [];
-$stmt = $connection->prepare("
-  SELECT option_id 
-    FROM product_options 
-   WHERE product_id = ?
-");
+$stmt = $connection->prepare("SELECT option_id FROM product_options WHERE product_id = ?");
 $stmt->bind_param("i", $product_id);
 $stmt->execute();
-$result = $stmt->get_result();
-while ($r = $result->fetch_assoc()) {
-  $assigned[] = (int)$r['option_id'];
+$res = $stmt->get_result();
+while ($r = $res->fetch_assoc()) {
+    $assigned[] = (int)$r['option_id'];
 }
-$result->close();
 $stmt->close();
 
-// Handle update
-// After form‐submit processing, make sure to handle the options:
-if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_product'])) {
-  // Remove old assignments
-  $del = $connection->prepare("DELETE FROM product_options WHERE product_id=?");
-  $del->bind_param("i",$product_id);
-  $del->execute();
-  $del->close();
+// Initialize error message
+$error = '';
 
-  // Insert the new ones
-  if (!empty($_POST['option_ids'])) {
-    $ins = $connection->prepare("
-      INSERT INTO product_options (product_id, option_id)
-      VALUES (?,?)
-    ");
-    // Split the comma-separated string into array
-    $option_ids = explode(',', $_POST['option_ids']);
-    foreach ($option_ids as $oid) {
-      $oid = intval($oid);
-      if ($oid > 0) { // Only insert valid option IDs
-        $ins->bind_param("ii",$product_id,$oid);
-        $ins->execute();
-      }
-    }
-    $ins->close();
-  }
-}
-
-$posted = trim($_POST['option_ids'] ?? '');
-$ids = $posted === '' ? [] : explode(',', $posted);
-
-
+// Handle clear image
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['clear_image'])) {
     $upd = $connection->prepare("UPDATE products SET image = '' WHERE id = ?");
     $upd->bind_param("i", $product_id);
     $upd->execute();
     $upd->close();
-    // reload so $product['image'] is empty
     header("Location: product_info.php?id={$product_id}");
     exit();
 }
 
+// Handle delete product
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
-    // Soft delete - just mark as deleted
     $del = $connection->prepare("UPDATE products SET deleted = 1 WHERE id = ?");
     $del->bind_param("i", $product_id);
     $del->execute();
@@ -118,36 +75,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_product'])) {
     exit();
 }
 
-
+// Handle update product
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
-    $name = $_POST['product_name'];
-    $price = $_POST['product_price'];
+    $name        = trim($_POST['product_name']);
+    $price       = floatval($_POST['product_price']);
     $description = $_POST['product_desc'] ?? '';
-    $image_path = $product['image']; // Keep existing image by default
+    $image_path  = $product['image'];
 
-    if (!empty($_FILES['product_image']['name'])) {
-        $upload_dir = 'uploads/';
-        $image_path = $upload_dir . basename($_FILES['product_image']['name']);
-        move_uploaded_file($_FILES['product_image']['tmp_name'], $image_path);
+    // Validate price
+    if (!is_numeric($_POST['product_price']) || $price < 0) {
+        $error = 'Giá không được âm.';
+    }
+    // Validate duplicate name
+    if (empty($error)) {
+        $chk = $connection->prepare(
+            "SELECT COUNT(*) FROM products WHERE name = ? AND deleted = 0 AND id <> ?"
+        );
+        $chk->bind_param("si", $name, $product_id);
+        $chk->execute();
+        $chk->bind_result($cnt);
+        $chk->fetch();
+        $chk->close();
+        if ($cnt > 0) {
+            $error = "Đã có món tên là \"{$name}\" trong menu.";
+        }
     }
 
-    $stmt = $connection->prepare("UPDATE products SET name = ?, price = ?, description = ?, image = ? WHERE id = ?");
-    $stmt->bind_param("sissi", $name, $price, $description, $image_path, $product_id);
-    $stmt->execute();
-    $stmt->close();
+    // If no error, proceed
+    if (empty($error)) {
+        // Handle image upload
+        if (!empty($_FILES['product_image']['name'])) {
+            $upload_dir = 'uploads/';
+            $image_path = $upload_dir . basename($_FILES['product_image']['name']);
+            move_uploaded_file($_FILES['product_image']['tmp_name'], $image_path);
+        }
 
-    header("Location: product_management.php?category=$current_category_id&updated=1");
-    exit();
+        // Remove old options
+        $del = $connection->prepare("DELETE FROM product_options WHERE product_id = ?");
+        $del->bind_param("i", $product_id);
+        $del->execute();
+        $del->close();
+
+        // Insert new options
+        if (!empty($_POST['option_ids'])) {
+            $ins = $connection->prepare(
+                "INSERT INTO product_options (product_id, option_id) VALUES (?, ?)"
+            );
+            $option_ids = explode(',', $_POST['option_ids']);
+            foreach ($option_ids as $oid) {
+                $oid = intval($oid);
+                if ($oid > 0) {
+                    $ins->bind_param("ii", $product_id, $oid);
+                    $ins->execute();
+                }
+            }
+            $ins->close();
+        }
+
+        // Update product
+        $stmt = $connection->prepare(
+            "UPDATE products SET name = ?, price = ?, description = ?, image = ? WHERE id = ?"
+        );
+        $stmt->bind_param("sissi", $name, $price, $description, $image_path, $product_id);
+        $stmt->execute();
+        $stmt->close();
+
+        header("Location: product_management.php?category=$current_category_id&updated=1");
+        exit();
+    }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Edit Product</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<style>
+  <meta charset="UTF-8">
+  <title>Edit Product</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
     body {
         background-image: url("uploads/admin-page.jpg");
         background-color: transparent;
@@ -157,23 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
         background-size: cover;
     }
         /* panel wrapper */
-    .options-panel {
-    border: 1px solid #ccc;
-    background: #f8f8f8;
-    border-radius: 4px;
-    overflow: hidden;
-    font-family: sans-serif;
-    }
-
-    .options-header {
-    background: #ccc;
-    color: black;
-    padding: 12px;
-    width: 300px;
-    text-align: center;
-    font-weight: bold;
-    }
-
+    
     .opt-category {
     border-top: 1px solid #ddd;
     }
@@ -224,119 +213,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
     background: #28a745;
     color: #fff;
     }
-
-</style>
+  </style>
+</head>
 <body>
-<div class="forms-container">
-    <?php if ($error): ?>
-        <div class="error-popup">
-        <?= htmlspecialchars($error) ?>
-        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Close</button>
-        </div>
-    <?php endif; ?>
-    <?php if (isset($_GET['confirm_delete'])): ?>
-        <div class="confirm-popup">
-            <h3>Xác Nhận Xóa</h3>
-            <p>Bạn có chắc chắn muốn xóa "<?= htmlspecialchars($product['name']) ?>"?</p>
-            <form method="POST">
-                <button type="submit" name="delete_product" class="confirm-btn">Xác Nhận</button>
-                <button type="button" class="cancel-btn" onclick="window.location.href='product_info.php?id=<?= $product_id ?>'">Hủy</button>
-            </form>
-        </div>
-    <?php endif; ?>
-    <div style="display:flex; gap:24px; align-items:flex-start; padding-top: 20px">
+  <?php include 'sidebar.php'; ?>
 
-      <!-- ◀ LEFT PANEL: image + clear ▶ -->
-      <div style="width:250px;">
-        <?php if ($product['image']): ?>
-          <img src="<?=htmlspecialchars($product['image'])?>" style="max-width:100%;border:1px solid #ccc;padding:4px;">
-          <button form="edit-product-form" name="clear_image" style="margin-top:8px;">
-            Xóa Ảnh
-          </button>
-        <?php endif; ?>
-      </div>
+  <?php if ($error): ?>
+    <div class="error-popup" id="serverError">
+      <?= htmlspecialchars($error) ?>
+    </div>
+  <?php endif; ?>
 
-      <!-- ⬜ MIDDLE PANEL: the form (flex:1) ▶ -->
-      <form
-        id="edit-product-form"
-        method="POST"
-        enctype="multipart/form-data"
-        style="flex:1; display:flex; flex-direction:column; gap:8px; width: 500px;"
-      >
-        <!-- your existing inputs -->
-        <label>Tên sản phẩm:</label>
-        <input type="text" name="product_name" value="<?=htmlspecialchars($product['name'])?>" required>
-
-        <label>Giá Thành:</label>
-        <input type="number" name="product_price" value="<?=htmlspecialchars($product['price'])?>" required>
-
-        <label>Ảnh:</label>
-        <input type="file" name="product_image" accept="image/*">
-
-        <label>Mô tả:</label>
-        <textarea name="product_desc"><?=htmlspecialchars($product['description'])?></textarea>
-
-        <!-- only the hidden goes _inside_ the form -->
-        <input type="hidden" name="option_ids" id="option-ids" value="<?=implode(',',$assigned)?>">
-
-        <!-- your Update / Delete / Cancel buttons -->
-          <button type="submit" name="update_product">Cập Nhật Sản Phẩm</button>
-          <a href="product_info.php?id=<?= $product_id ?>&confirm_delete=1">
-            <button type="button" style="background:red;color:white;">
-              Xóa Sản Phẩm
-            </button>
-          </a>
-          <a href="product_management.php?category=<?=$current_category_id?>">
-            <button type="button">Hủy</button>
-          </a>
+  <?php if (isset($_GET['confirm_delete'])): ?>
+    <div class="confirm-popup">
+      <h3>Xác Nhận Xóa</h3>
+      <p>Bạn có chắc chắn muốn xóa "<?= htmlspecialchars($product['name']) ?>"?</p>
+      <form method="POST">
+        <button type="submit" name="delete_product" class="confirm-btn">Xác Nhận</button>
+        <button type="button" class="cancel-btn" onclick="window.location.href='product_info.php?id=<?= $product_id ?>'">Hủy</button>
       </form>
+    </div>
+  <?php endif; ?>
 
-      <!-- ▶ RIGHT PANEL: options dropdowns (outside the form) ▶ -->
-      <div class="options-panel" style="width:300px;">
-        <div class="options-header">Các Tùy Chọn</div>
-        <?php foreach ($optCats as $cat): ?>
-          <details class="opt-category">
-            <summary><?=htmlspecialchars($cat['name'])?></summary>
-            <div class="option-list">
-              <?php foreach ($optionsByCat[$cat['id']] as $opt): ?>
-                <div
-                  class="option-item<?=in_array($opt['id'],$assigned)?' selected':''?>"
-                  data-option-id="<?=$opt['id']?>">
-                  <?=htmlspecialchars($opt['label'])?>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          </details>
-        <?php endforeach; ?>
-      </div>
+  <div class="forms-container" style="display:flex; gap:24px; align-items:flex-start; padding-top:20px;">
 
-</div>
-    <script src="script.js"></script>
-    <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const hidden = document.getElementById('option-ids');
-  // initialize the hidden with any pre-selected
-  const initial = Array.from(document.querySelectorAll('.option-item.selected'))
-                       .map(el => el.dataset.optionId);
-  hidden.value = initial.join(',');
+    <!-- LEFT PANEL -->
+    <div style="width:250px;">
+      <?php if ($product['image']): ?>
+        <img src="<?= htmlspecialchars($product['image']) ?>" style="max-width:100%;border:1px solid #ccc;padding:4px;">
+        <button form="edit-product-form" name="clear_image" style="margin-top:8px;">Xóa Ảnh</button>
+      <?php endif; ?>
+    </div>
 
-  // attach click handler to each option‐block
-  document.querySelectorAll('.option-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const id = el.dataset.optionId;
-      let list = hidden.value ? hidden.value.split(',') : [];
-      if (el.classList.toggle('selected')) {
-        // just selected: add
-        list.push(id);
-      } else {
-        // deselected: remove
-        list = list.filter(x => x !== id);
-      }
-      hidden.value = list.join(',');
+    <!-- MIDDLE PANEL -->
+    <form id="edit-product-form" method="POST" enctype="multipart/form-data" style="flex:1; display:flex; flex-direction:column; gap:8px;">
+      <label>Tên sản phẩm:</label>
+      <input type="text" name="product_name" value="<?= htmlspecialchars($product['name']) ?>" required>
+
+      <label>Giá Thành:</label>
+      <input type="number" name="product_price" min="0" step="0.01" value="<?= htmlspecialchars($product['price']) ?>" required>
+
+      <label>Ảnh:</label>
+      <input type="file" name="product_image" accept="image/*">
+
+      <label>Mô tả:</label>
+      <textarea name="product_desc"><?= htmlspecialchars($product['description']) ?></textarea>
+
+      <input type="hidden" name="option_ids" id="option-ids" value="<?= implode(',', $assigned) ?>">
+
+      <button type="submit" name="update_product">Cập Nhật Sản Phẩm</button>
+      <a href="product_info.php?id=<?= $product_id ?>&confirm_delete=1"><button type="button" style="background:red;color:white;">Xóa Sản Phẩm</button></a>
+      <a href="product_management.php?category=<?= $current_category_id ?>"><button type="button">Hủy</button></a>
+    </form>
+
+    <!-- RIGHT PANEL -->
+    <div class="options-panel" style="width:300px;">
+      <div class="options-header">Các Tùy Chọn</div>
+      <?php foreach ($optCats as $cat): ?>
+        <details class="opt-category">
+          <summary><?= htmlspecialchars($cat['name']) ?></summary>
+          <div class="option-list">
+            <?php foreach ($optionsByCat[$cat['id']] as $opt): ?>
+              <div class="option-item<?= in_array($opt['id'], $assigned) ? ' selected' : '' ?>" data-option-id="<?= $opt['id'] ?>">
+                <?= htmlspecialchars($opt['label']) ?>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </details>
+      <?php endforeach; ?>
+    </div>
+
+  </div>
+
+  <script>
+    // Auto-hide server error
+    window.addEventListener('DOMContentLoaded', () => {
+      const srv = document.getElementById('serverError');
+      if (srv) setTimeout(() => srv.remove(), 4000);
     });
-  });
-});
-</script>
 
+    // Options selection
+    document.addEventListener('DOMContentLoaded', () => {
+      const hidden = document.getElementById('option-ids');
+      const selected = new Set(hidden.value.split(',').filter(Boolean));
+      document.querySelectorAll('.option-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const id = item.dataset.optionId;
+          if (item.classList.toggle('selected')) selected.add(id);
+          else selected.delete(id);
+          hidden.value = Array.from(selected).join(',');
+        });
+      });
+      // Prevent negative price client-side
+      const priceInput = document.querySelector('input[name="product_price"]');
+      priceInput.addEventListener('input', () => {
+        if (parseFloat(priceInput.value) < 0) priceInput.value = 0;
+      });
+    });
+  </script>
 </body>
 </html>

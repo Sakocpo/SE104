@@ -68,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
     <?php if ($error): ?>
         <div class="error-popup">
         <?= htmlspecialchars($error) ?>
-        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
         </div>
     <?php endif; ?>
     <form method="POST">
@@ -81,5 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
         </a>
     </form>
 </div>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const err = document.getElementById('serverError');
+      if (err) setTimeout(() => err.remove(), 4000);
+    });
+  </script>
 </body>
 </html>

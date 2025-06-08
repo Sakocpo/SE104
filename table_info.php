@@ -2,6 +2,7 @@
 session_start();
 require_once 'config.php';
 
+// Only admin can access
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: index.php");
     exit();
@@ -13,13 +14,12 @@ if (!$table_id) {
     exit();
 }
 
-// Fetch the table row (including current_order_id)
-$table_query = $connection->prepare("SELECT * FROM tables WHERE id = ?");
-$table_query->bind_param("i", $table_id);
-$table_query->execute();
-$table = $table_query->get_result()->fetch_assoc();
-$table_query->close();
-
+// Fetch table (non-deleted)
+$stmt = $connection->prepare("SELECT * FROM tables WHERE id = ? AND deleted = 0");
+$stmt->bind_param("i", $table_id);
+$stmt->execute();
+$table = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 if (!$table) {
     echo "Table not found";
     exit();
@@ -28,50 +28,49 @@ if (!$table) {
 $current_category_id = $table['table_category'];
 $error = '';
 
-// ─── DELETE HANDLER WITH IN‐USE CHECK ───
+// Soft-delete handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_table'])) {
-    // If this table still has an order, block deletion
     if (!empty($table['current_order_id'])) {
-        $error = 'Bàn "' . $table['table_name'] . '" hiện đang có đơn và không thể xoá.';
+        $error = 'Bàn "' . htmlspecialchars($table['table_name']) . '" hiện đang có đơn và không thể xóa.';
     } else {
-        // Safe to delete
-        $del = $connection->prepare("DELETE FROM tables WHERE id = ?");
+        $del = $connection->prepare("UPDATE tables SET deleted = 1 WHERE id = ?");
         $del->bind_param("i", $table_id);
         $del->execute();
         $del->close();
-
         header("Location: table_management_admin.php?category={$current_category_id}&deleted=1");
         exit();
     }
 }
 
-// ─── UPDATE HANDLER ───
+// Update handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
-    $name = trim($_POST['table_name']);
+    $name        = trim($_POST['table_name']);
     $description = $_POST['table_desc'] ?? '';
-    $active = isset($_POST['active']) ? 1 : 0;
+    $active      = isset($_POST['active']) ? 1 : 0;
 
-    // Check for duplicate table name (excluding current table)
-    $check = $connection->prepare("SELECT id FROM tables WHERE table_name = ? AND id != ? AND deleted = 0");
-    $check->bind_param("si", $name, $table_id);
-    $check->execute();
-    $result = $check->get_result();
-    if ($result->num_rows > 0) {
-        $error = "Table name already exists.";
+    // Duplicate name check
+    $chk = $connection->prepare(
+        "SELECT COUNT(*) FROM tables WHERE table_name = ? AND id <> ? AND deleted = 0"
+    );
+    $chk->bind_param("si", $name, $table_id);
+    $chk->execute();
+    $chk->bind_result($count);
+    $chk->fetch();
+    $chk->close();
+    if ($count > 0) {
+        $error = 'Tên bàn đã tồn tại.';
     } else {
-        $upd = $connection->prepare("
-          UPDATE tables
-             SET table_name = ?, table_desc = ?, active = ?
-           WHERE id = ?
-        ");
+        $upd = $connection->prepare(
+            "UPDATE tables
+               SET table_name = ?, table_desc = ?, active = ?
+             WHERE id = ?"
+        );
         $upd->bind_param("ssii", $name, $description, $active, $table_id);
         $upd->execute();
         $upd->close();
-
         header("Location: table_management_admin.php?category={$current_category_id}&updated=1");
         exit();
     }
-    $check->close();
 }
 ?>
 <!DOCTYPE html>
@@ -87,12 +86,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
     .forms-container {
       max-width: 600px;
       margin: 40px auto;
-      /* background: rgba(255,255,255,0.9); */
       padding: 20px;
       border-radius: 8px;
     }
     form {
       width: 400px;
+    }
+    .error-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f8d7da;
+      color: #721c24;
+      padding: 12px 20px;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      z-index: 3000;
     }
   </style>
 </head>
@@ -100,50 +110,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
   <div class="forms-container">
 
     <?php if ($error): ?>
-        <div class="error-popup">
-        <?= htmlspecialchars($error) ?>
-        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Close</button>
-        </div>
+        <div class="error-popup"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
+
     <?php if (isset($_GET['confirm_delete'])): ?>
         <div class="confirm-popup">
             <h3>Xác Nhận Xóa</h3>
-            <p>Bạn có chắc chắn là muốn xóa bàn "<?= htmlspecialchars($table['table_name']) ?>"?</p>
+            <p>Bạn có chắc chắn muốn xóa bàn "<?= htmlspecialchars($table['table_name']) ?>"?</p>
             <form method="POST">
-                <button type="submit" name="delete_table" class="confirm-btn">Xóa</button>
+                <button type="submit" name="delete_table" class="confirm-btn">Xác Nhận</button>
                 <button type="button" class="cancel-btn" onclick="window.location.href='table_info.php?id=<?= $table_id ?>'">Hủy</button>
             </form>
         </div>
     <?php endif; ?>
 
     <form id="edit-table-form" method="POST">
-      <h3 style="margin-bottom: 10px;">Sửa Thông Tin Bàn</h3>
+      <h3>Sửa Thông Tin Bàn</h3>
 
       <label for="table_name">Tên Bàn:</label>
-      <input type="text" name="table_name"
-             value="<?= htmlspecialchars($table['table_name']) ?>"
-             required>
+      <input type="text" name="table_name" value="<?= htmlspecialchars($table['table_name']) ?>" required>
 
       <label for="table_desc">Mô Tả Bàn:</label>
       <textarea name="table_desc"><?= htmlspecialchars($table['table_desc']) ?></textarea>
 
       <label for="active">Sử Dụng?</label>
-      <input type="checkbox" name="active"
-             <?= $table['active'] ? 'checked' : '' ?>>
+      <input type="checkbox" name="active" <?= $table['active'] ? 'checked' : '' ?>>
 
-      <button type="submit" name="update_table">Cập Nhật</button>
-
-      <a href="table_info.php?id=<?= $table_id ?>&confirm_delete=1">
-        <button type="button" style="background:red;color:white;margin-top:10px;">
-          Xóa Bàn
-        </button>
-      </a>
-
-      <a href="table_management_admin.php?category=<?= $current_category_id ?>">
-        <button type="button">Hủy</button>
-      </a>
+      <div style="margin-top:12px;">
+        <button type="submit" name="update_table">Cập Nhật</button>
+        <a href="table_info.php?id=<?= $table_id ?>&confirm_delete=1"><button type="button" style="background:red;color:white;">Xóa Bàn</button></a>
+        <a href="table_management_admin.php?category=<?= $current_category_id ?>"><button type="button">Hủy</button></a>
+      </div>
     </form>
   </div>
-  <script src="script.js"></script>
+  <script>
+    // Auto-hide error after 4s
+    window.addEventListener('DOMContentLoaded', () => {
+      const err = document.querySelector('.error-popup');
+      if (err) setTimeout(() => err.remove(), 4000);
+    });
+  </script>
 </body>
 </html>

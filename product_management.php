@@ -10,7 +10,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 }
 
 $current_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
-$categories_result = $connection->query("SELECT * FROM product_categories");
+$categories_result = $connection->query("SELECT * FROM product_categories WHERE deleted = 0 ORDER BY name ASC");
 $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
 $products = [];

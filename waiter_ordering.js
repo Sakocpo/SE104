@@ -305,6 +305,7 @@ item.options.forEach(optionId => {
   });
 
   popup.style.display = "flex";
+  savePendingOrder();
 }
 
 function closeReview() {
@@ -449,6 +450,7 @@ function submitOrder(tableId) {
             message: "Submission succeeded, redirecting."
           }));
         }
+        clearPendingOrder();
         window.location.href = "table_management_waiter.php";
       } else {
         console.warn("submitOrder: submission failed —", json.error);

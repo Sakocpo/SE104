@@ -53,6 +53,14 @@ $res = $connection->query("SELECT id,label FROM options");
 while ($row = $res->fetch_assoc()) {
     $optLabels[intval($row['id'])] = $row['label'];
 }
+
+
+if (isset($_GET['confirm_delete']) && $order['status'] === 'pending') {
+  $error = 'Không thể xóa đơn khi trạng thái đang chờ.';
+  unset($_GET['confirm_delete']);
+}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -264,12 +272,15 @@ while ($row = $res->fetch_assoc()) {
     <?php endif; ?>
 
     <div class="action-buttons">
-      <form method="GET" action="order_view.php" style="display:inline; padding:0; margin:0;">
-        <input type="hidden" name="order_id" value="<?= intval($order['id']) ?>">
-        <input type="hidden" name="confirm_delete" value="1">
-        <button type="submit" class="delete-btn">Xóa Hóa Đơn</button>
-      </form>
-
+      <?php if ($order['status'] !== 'pending'): ?>
+        <form method="GET" action="order_view.php" style="display:inline; padding:0; margin:0;">
+          <input type="hidden" name="order_id" value="<?= intval($order['id']) ?>">
+          <input type="hidden" name="confirm_delete" value="1">
+          <button type="submit" class="delete-btn">Xóa Hóa Đơn</button>
+        </form>
+      <?php else: ?>
+        <button style="opacity: 0.5" class="delete-btn" disabled title="Không thể xóa đơn khi đang chờ">Xóa Hóa Đơn</button>
+      <?php endif; ?>
       <button onclick="window.print()">🖨️ In Hóa Đơn</button>
       <a href="order_logs.php" class="back-btn">← Quay Lại</a>
     </div>

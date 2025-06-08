@@ -277,6 +277,7 @@ if ($current_category_id !== null) {
     .confirm-popup form {
       margin-top: 12px;
       display: flex;
+      gap: 12px;
       justify-content: space-between;
     }
     .confirm-popup .confirm-btn {
@@ -460,13 +461,13 @@ if ($current_category_id !== null) {
          ========================= -->
     <div id="confirm-popup" class="confirm-popup" style="display:none;">
       <h3>Xác Nhận Lấy</h3>
-      <p id="confirm-message"></p>
+      <p style="font-size: 0.9em;" id="confirm-message"></p>
       <form method="POST" id="confirm-form">
         <input type="hidden" name="ingredient_id" id="confirm-ingredient-id">
         <input type="hidden" name="take_out" id="confirm-take-out">
         <input type="hidden" name="current_category" value="<?= $current_category_id ?>">
-        <button type="submit" class="confirm-btn">Xác Nhận</button>
-        <button type="button" class="cancel-btn" onclick="hideConfirmPopup()">Hủy</button>
+        <button style="margin-bottom: 5px;" type="submit" class="confirm-btn">Xác Nhận</button>
+        <button style="margin-bottom: 5px;" type="button" class="cancel-btn" onclick="hideConfirmPopup()">Hủy</button>
       </form>
     </div>
   </div>

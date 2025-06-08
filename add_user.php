@@ -67,11 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
 <body>
   <div class="forms-container">
     <?php if ($error): ?>
-      <div class="error-popup">
-        <?= htmlspecialchars($error) ?>
-        <button style="margin-top: 10px; margin-bottom: 5px; padding: 5px; " onclick="this.parentElement.style.display='none'">Đóng</button>
-      </div>
+      <div class="error-popup" id="serverError"><?=htmlspecialchars($error)?></div>
     <?php endif; ?>
+
 
     <form id="add-user-form" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="user_category" value="<?= htmlspecialchars($current_category_id) ?>">
@@ -105,5 +103,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   </div>
 
   <script src="script.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const err = document.getElementById('serverError');
+      if (err) setTimeout(() => err.remove(), 4000);
+    });
+  </script>
 </body>
 </html>

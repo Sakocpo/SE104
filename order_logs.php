@@ -43,7 +43,7 @@ $start_sql = $startObj->format('Y-m-d H:i:s');
 $end_sql = $endObj->format('Y-m-d H:i:s');
 
 // Fetch each order only once, no join to order_items
-$stmt = $connection->prepare("
+$stmt = $connection->prepare("  
   SELECT
     o.id,
     o.created_at,
@@ -163,12 +163,12 @@ $stmt->close();
         startDate = new Date(yest); startDate.setHours(0, 0, 0, 0);
         endDate = new Date(yest); endDate.setHours(23, 59, 0, 0);
       } else if (preset === 'week') {
-        const dayOfWeek = now.getDay();
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - dayOfWeek);
+        // Last 7 days
+        const past = new Date(now);
+        past.setDate(past.getDate() - 7);
+        startDate = new Date(past);
         startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
+        endDate = new Date(now);
         endDate.setHours(23, 59, 0, 0);
       } else {
         return;
@@ -219,7 +219,6 @@ $stmt->close();
                                 ? '✅'
                                 : (($order['status'] === 'pending') ? '⌛' : '❌');
                   $timeStr = date("H:i - d M Y", strtotime($order['created_at']));
-                  $isDeleted = $order['status'] === 'deleted';
                 ?>
                 <tr onclick="window.location='order_view.php?order_id=<?= $order['id'] ?>'">
                   <td><?= $orderNo++ ?></td>

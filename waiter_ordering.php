@@ -14,7 +14,7 @@ if (!$table_id) {
     exit();
 }
 
-$categories_result = $connection->query("SELECT * FROM product_categories");
+$categories_result = $connection->query("SELECT * FROM product_categories WHERE deleted = 0 ORDER BY name ASC");
 $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
 $current_category_id = isset($_GET['category']) ? intval($_GET['category']) : ($categories[0]['id'] ?? null);
@@ -64,13 +64,13 @@ if ($current_category_id) {
 <body>
 
   <div id="sidebar" class="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <ul>
-            <li><a href="waiter.php">Trang Phục Vụ</a></li>
-            <li><a href="table_management_waiter.php">Order Tại Bàn</a></li>
-        </ul>
-    </div>
-
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <ul>
+      <li><a href="waiter.php">Trang Phục Vụ</a></li>
+      <li><a href="table_management_waiter.php">Order Tại Bàn</a></li>
+    </ul>
+  </div>
+  
 <div id="notification" class="notification-popup"></div>
 <audio id="bell-sound" src="bell.mp3" preload="auto"></audio>
 
@@ -198,16 +198,42 @@ if ($current_category_id) {
 <script src="waiter_ordering.js"></script>
 <script src="script.js"></script>
 <script>
-  // —————————————————————————————————————————————————————————
-  // 1) Push our PHP $products array into a global
-  //    so getProductName() can find it later.
-  // —————————————————————————————————————————————————————————
+
+  const TABLE_ID = <?= $table_id ?>;
+  const STORAGE_KEY = `pending_order_table_${TABLE_ID}`;
+
+  function loadPendingOrder() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        order = JSON.parse(saved);
+      } catch (_) {
+        order = [];
+      }
+    }
+  }
+
+  function savePendingOrder() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+  }
+
+  function clearPendingOrder() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  loadPendingOrder();
+
+  window.addEventListener('beforeunload', savePendingOrder);
+
+  const _oldAddToOrder = addToOrder;
+  
+  addToOrder = function() {
+    _oldAddToOrder();
+    savePendingOrder();
+  };
+
   window.products = <?= json_encode($products, JSON_HEX_TAG) ?>;
 
-  /**
-   * Look up the human label for an option ID.
-   * Assumes your waiter_ordering.js already populated `optionsData`.
-   */
   function getOptionLabel(optionId) {
   const key = String(optionId);
   return window.allOptionLabels && window.allOptionLabels[key]
@@ -215,10 +241,6 @@ if ($current_category_id) {
     : "";
 }
 
-
-  /**
-   * Look up a product by ID in our injected `window.products`.
-   */
   function getProductName(productId) {
     const p = (window.products || []).find(p => p.id === productId);
     return p ? p.name : 'Unknown Product';
@@ -271,76 +293,15 @@ if ($current_category_id) {
       document.body.style.backgroundColor = "";
     }, 5000);
   }
-//   function submitOrder(tableId) {
-//   // build only the items with qty > 0
-//   const itemsPayload = order
-//     .filter(it => it.quantity > 0)
-//     .map(it => ({
-//       product_id: it.product.id,
-//       options: Object.entries(it.options)
-//         .map(([cat, label]) => {
-//           const opt = optionsData[cat].find(o => o.label === label);
-//           return opt ? opt.id : null;
-//         })
-//         .filter(x => x != null),
-//       quantity: it.quantity
-//     }));
-
-//   if (itemsPayload.length === 0) {
-//     alert("Please choose at least one product before sending to kitchen.");
-//     return;
-//   }
-
-//   fetch("submit_order.php", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ table_id: tableId, items: itemsPayload })
-//   })
-//   .then(r => r.json())
-//   .then(json => {
-//     if (!json.success) {
-//       alert("Error: " + (json.error || "Unknown error"));
-//       return;
-//     }
-
-//     const orderId   = json.order_id;
-//     const tableName = json.table;  // PHP now returns the real table_name
-
-//     // Make sure we're using the socket you opened at top of the page:
-//     if (socket.readyState === WebSocket.OPEN) {
-//       // 1️⃣ Per-item "serve" messages
-//       itemsPayload.forEach(item => {
-//         const msg = {
-//           type:      "serve",
-//           order_id:  orderId,
-//           table:     tableName,
-//           product:   getProductName(item.product_id),
-//           quantity:  item.quantity,
-//           options:   item.options.map(getOptionLabel)
-//         };
-//         console.log("⏩ WS send:", msg);
-//         socket.send(JSON.stringify(msg));
-//       });
-
-//       // 2️⃣ Final "order complete" message
-//       const doneMsg = {
-//         type:     "order",
-//         order_id: orderId,
-//         table:    tableName
-//       };
-//       console.log("⏩ WS send:", doneMsg);
-//       socket.send(JSON.stringify(doneMsg));
-//     }
-
-//     alert("Sent to kitchen!");
-//     window.location = "table_management_waiter.php";
-//   })
-//   .catch(err => {
-//     console.error("Submit order failed:", err);
-//     alert("Failed to submit order.");
-//   });
-// }
-
+  function buildNotificationMessage(data) {
+    if (data.type === 'serve' && data.table && data.product) {
+      return `${data.product} has been completed for ${data.table}`;
+    }
+    if (data.type === 'order' && data.table) {
+      return ` Bàn ${data.table} đã pha chế xong`;
+    }
+    return null;
+  }
 </script>
 
 

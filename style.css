@@ -45,17 +45,17 @@ display: block; /* show form */
 }
 
 .error-popup {
-  background: rgba(255, 0, 0, 1);
-  border: 1px solid red;
-  color: rgb(255, 198, 198);
-  /* opacity: 0.95; */
-  padding: 12px;
-  margin: 16px auto;
-  border-radius: 4px;
-  max-width: 600px;
-  text-align: center;
-  font-weight: bold;
-}
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f8d7da;
+      color: #721c24;
+      padding: 12px 20px;
+      border: 1px solid #f5c6cb;
+      border-radius: 6px;
+      z-index: 3000;
+    }
 
 h2 {
 font-size: 34px;
@@ -899,3 +899,35 @@ h4
   background: #6c757d;
   color: white;
 }
+
+.error-popup-new {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px 20px;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  z-index: 3500;
+  display: none;
+}
+
+
+.options-panel {
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: sans-serif;
+  }
+
+.options-header {
+  background: #ccc;
+  color: black;
+  padding: 12px;
+  width: 300px;
+  text-align: center;
+  font-weight: bold;
+  }
