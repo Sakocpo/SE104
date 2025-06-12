@@ -129,18 +129,11 @@ socket.onopen = () => {
 
 socket.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  console.log('[KITCHEN] Received message:', data);
   if (data.type === 'cancel') {
     const card = document.getElementById('order-card-' + data.order_id);
     if (card) card.remove();
     return; 
   }
-
-  // if (data.type === 'change_table' || data.type === 'merge_table') {
-  //   console.log('[KITCHEN] table changed/merged, reloading…');
-  //   window.location.reload();
-  //   return;
-  // }
 
   // change_table: just update the header's Table: ... line
   if (data.type === 'change_table') {

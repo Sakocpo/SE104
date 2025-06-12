@@ -297,41 +297,7 @@ if (!empty($table['current_order_id'])) {
   </div>
 
   <script src="script.js"></script>
-  <script>
-    // 1) Open the WebSocket to your kitchen server
-    const socket = new WebSocket("ws://localhost:8080");
-    socket.addEventListener('open', () => {
-      console.log('[WAITER WS] connected');
-    });
-    socket.addEventListener('error', err => {
-      console.error('[WAITER WS] error', err);
-    });
-
-    // // 2) Hook the cancel form
-    // const cancelForm = document.querySelector('form[action="cancel_table.php"]');
-    // if (cancelForm) {
-    //   cancelForm.addEventListener('submit', function(e) {
-    //     // 3) Grab the order + table info from PHP
-    //     const orderId   = <?= json_encode($table['current_order_id'] ?? null) ?>;
-    //     const tableId   = <?= json_encode($t) ?>;
-    //     const tableName = <?= json_encode($table['table_name']) ?>;
-
-    //     if (orderId) {
-    //       // 4) Fire the real-time cancel event
-    //       const msg = {
-    //         type:     'cancel',
-    //         order_id: orderId,
-    //         table_id: tableId,
-    //         table:    tableName
-    //       };
-    //       console.log('[WAITER WS] sending cancel:', msg);
-    //       socket.send(JSON.stringify(msg));
-    //     }
-
-    //     // 5) Let the form submit as normal (and PHP will clear the DB/redirect)
-    //   });
-    // }
-  </script>
+  <script src="notif_script.js"></script>
 
 
 </body>

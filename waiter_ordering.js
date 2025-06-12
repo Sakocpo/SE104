@@ -1,9 +1,7 @@
 let currentProduct, optionsData = {}, currentOptions = {}, currentCategory, order = [];
 const waiterSocket = new WebSocket("ws://localhost:8080");
 
-waiterSocket.onopen = () => {
-  console.log("✅ WebSocket connected from waiter_ordering.js");
-};
+waiterSocket.onopen = () => {};
 
 /**
  * Open the "choose options" pop-up for a product
@@ -333,18 +331,10 @@ function getProductName(productId) {
  */
 function submitOrder(tableId) {
   if (!order.length) {
-    console.log("submitOrder: no items to submit (order is empty).");
-    if (waiterSocket.readyState === WebSocket.OPEN) {
-      waiterSocket.send(JSON.stringify({
-        type:    "debug",
-        message: "submitOrder called with empty order."
-      }));
-    }
     return;
   }
 
   // 1) Log raw `order`
-  console.log("submitOrder: raw order =", order);
   if (waiterSocket.readyState === WebSocket.OPEN) {
     waiterSocket.send(JSON.stringify({
       type:    "debug",
@@ -360,7 +350,6 @@ function submitOrder(tableId) {
       options:    Array.isArray(item.options) ? item.options : [],  // these are numeric IDs
       note:      item.note 
     };
-    console.log("submitOrder: mapping item → payloadItem:", payloadItem);
     if (waiterSocket.readyState === WebSocket.OPEN) {
       waiterSocket.send(JSON.stringify({
         type:    "debug",
@@ -376,7 +365,6 @@ function submitOrder(tableId) {
   };
 
   // 3) Log final payload
-  console.log("submitOrder: final data payload =", data);
   if (waiterSocket.readyState === WebSocket.OPEN) {
     waiterSocket.send(JSON.stringify({
       type:    "debug",
@@ -391,7 +379,6 @@ function submitOrder(tableId) {
     body:    JSON.stringify(data)
   })
     .then(response => {
-      console.log("submitOrder: HTTP status =", response.status);
       if (waiterSocket.readyState === WebSocket.OPEN) {
         waiterSocket.send(JSON.stringify({
           type:    "debug",
@@ -401,7 +388,6 @@ function submitOrder(tableId) {
       return response.json();
     })
     .then(json => {
-      console.log("submitOrder: server JSON response =", json);
       if (waiterSocket.readyState === WebSocket.OPEN) {
         waiterSocket.send(JSON.stringify({
           type:    "debug",
@@ -426,7 +412,6 @@ function submitOrder(tableId) {
             note:      item.note
           };
 
-          console.log("submitOrder: WS send serveMsg →", serveMsg);
           if (waiterSocket.readyState === WebSocket.OPEN) {
             waiterSocket.send(JSON.stringify(serveMsg));
           }
@@ -438,22 +423,13 @@ function submitOrder(tableId) {
           order_id: json.order_id,
           table:    json.table
         };
-        console.log("submitOrder: WS send doneMsg →", doneMsg);
         if (waiterSocket.readyState === WebSocket.OPEN) {
           waiterSocket.send(JSON.stringify(doneMsg));
         }
 
-        console.log("submitOrder: submission succeeded, redirecting to waiter.php");
-        if (waiterSocket.readyState === WebSocket.OPEN) {
-          waiterSocket.send(JSON.stringify({
-            type:    "debug",
-            message: "Submission succeeded, redirecting."
-          }));
-        }
         clearPendingOrder();
         window.location.href = "table_management_waiter.php";
       } else {
-        console.warn("submitOrder: submission failed —", json.error);
         if (waiterSocket.readyState === WebSocket.OPEN) {
           waiterSocket.send(JSON.stringify({
             type:    "debug",
@@ -464,7 +440,6 @@ function submitOrder(tableId) {
       }
     })
     .catch(err => {
-      console.error("submitOrder: fetch error —", err);
       if (waiterSocket.readyState === WebSocket.OPEN) {
         waiterSocket.send(JSON.stringify({
           type:    "debug",

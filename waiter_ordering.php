@@ -72,7 +72,7 @@ if ($current_category_id) {
   </div>
   
 <div id="notification" class="notification-popup"></div>
-<audio id="bell-sound" src="bell.mp3" preload="auto"></audio>
+<audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
 
 <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
     
@@ -197,6 +197,7 @@ if ($current_category_id) {
 
 <script src="waiter_ordering.js"></script>
 <script src="script.js"></script>
+<script src="notif_script.js"></script>
 <script>
 
   const TABLE_ID = <?= $table_id ?>;
@@ -245,64 +246,7 @@ if ($current_category_id) {
     const p = (window.products || []).find(p => p.id === productId);
     return p ? p.name : 'Unknown Product';
   }
-
-  const socket             = new WebSocket("ws://localhost:8080");
-  const CURRENT_TABLE_NAME = <?= json_encode($table['table_name'], JSON_HEX_TAG) ?>;
-  const popup              = document.getElementById("notification");
-  const bell               = document.getElementById("bell-sound");
-
-  socket.onopen = () => {
-    console.log("✅ Waiter WS connected");
-  };
-
-  socket.onmessage = (event) => {
-    let data;
-    try {
-      data = JSON.parse(event.data);
-    } catch (e) {
-      console.error("❌ WS parse error:", e, event.data);
-      return;
-    }
-    console.log("📩 WS message:", data);
-
-    // only act on messages intended for this table
-    if (data.table !== CURRENT_TABLE_NAME) return;
-
-    if (data.type === "serve") {
-      showItemServed(data);
-    } else if (data.type === "order") {
-      showOrderCompleted(data);
-    }
-  };
-
-  function showItemServed({ product, quantity, options }) {
-    const opts = (options || []).map(getOptionLabel).join(", ");
-    popup.innerText = `${quantity}× ${product} served for Table ${CURRENT_TABLE_NAME}` + (opts ? ` [${opts}]` : "");
-    popup.style.display = "block";
-    bell.currentTime = 0; bell.play();
-    setTimeout(() => popup.style.display = "none", 3000);
-  }
-
-  function showOrderCompleted({ order_id }) {
-    popup.innerText = `Order #${order_id} for Table ${CURRENT_TABLE_NAME} is fully served!`;
-    popup.style.display = "block";
-    bell.currentTime = 0; bell.play();
-    document.body.style.backgroundColor = "#d4edda"; // optional highlight
-    setTimeout(() => {
-      popup.style.display = "none";
-      document.body.style.backgroundColor = "";
-    }, 5000);
-  }
-  function buildNotificationMessage(data) {
-    if (data.type === 'serve' && data.table && data.product) {
-      return `${data.product} has been completed for ${data.table}`;
-    }
-    if (data.type === 'order' && data.table) {
-      return ` Bàn ${data.table} đã pha chế xong`;
-    }
-    return null;
-  }
-</script>
+  </script>
 
 
 </body>

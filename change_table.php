@@ -195,7 +195,6 @@ $q->close();
   <script>
   // WebSocket for real-time notifications
   const socket = new WebSocket("ws://localhost:8080");
-  socket.addEventListener('open', () => console.log('[WS] connected for change_table'));
 
   // confirmation modal logic
   const confirmPopup = document.getElementById('confirmPopup');

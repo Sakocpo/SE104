@@ -244,6 +244,9 @@ $stmt->close();
 
   <audio id="complete-sound" src="cash-sound.mp3" preload="auto"></audio>
 
+<div id="notification" class="notification-popup"></div>
+<audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
+
 <div class="payment-wrapper">
   <!-- Top Mode Selector -->
   <div class="payment-header">
@@ -300,7 +303,7 @@ $stmt->close();
     <?php endforeach; ?>
   </div>
 </div>
-
+<script src="notif_script.js"></script>
 <script>
 
   const qrRows = <?= json_encode($qrRows, JSON_HEX_TAG) ?>;
@@ -423,11 +426,11 @@ $stmt->close();
         window.location = "table_management_waiter.php?category=<?= $table['table_category'] ?>";
       }, 1000);
     } else {
-      alert('Error: ' + j.error);
+      alert('Gặp Lỗi: ' + j.error);
     }
   })
   .catch(() => {
-    alert('Failed to complete payment');
+    alert('Gặp Lỗi');
   });
 };
 

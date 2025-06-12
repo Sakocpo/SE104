@@ -47,7 +47,7 @@ if (!isset($_SESSION['user'])) {
     </div>
 
     <div id="notification" class="notification-popup"></div>
-    <audio id="bell-sound" src="bell.mp3" preload="auto"></audio>
+    <audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
 
     <script src="script.js"></script>
 </body>

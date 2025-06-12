@@ -172,7 +172,6 @@ if ($catFilter) {
   <script src="script.js"></script>
   <script>
   const socket = new WebSocket("ws://localhost:8080");
-  socket.addEventListener('open', ()=>console.log('[WAITER WS] connected for merge'));
 
   const mergeForm = document.querySelector('form[method="POST"]');
   if (mergeForm) {
@@ -191,7 +190,6 @@ if ($catFilter) {
         order_id:  orderId,
         new_table: newName
       };
-      console.log('[WAITER WS] sending merge_table:', msg);
       socket.send(JSON.stringify(msg));
 
       mergeForm.submit();

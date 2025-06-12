@@ -51,14 +51,7 @@ if ($current_category_id !== null) {
   </style>
 </head>
 <body>
-    <div id="sidebar" class="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <ul>
-            <li><a href="waiter.php">Trang Phục Vụ</a></li>
-            <li><a href="table_management_waiter.php">Order Tại Bàn</a></li>
-        </ul>
-    </div>
-
+  <?php include 'sidebar.php'; ?>
   <div id="notification" class="notification-popup"></div>
   <audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
 
@@ -95,95 +88,7 @@ if ($current_category_id !== null) {
   </div>
 
   <script src="script.js"></script>
-  <script>
-  const socket = new WebSocket("ws://localhost:8080");
-  const bell = document.getElementById('bell-sound');
-  const notifyBox = document.getElementById('notification');
-  let hideNotifTimeout;
-
-  socket.onopen = () => {
-    console.log("✅ WebSocket connected to waiter page");
-  };
-
-  socket.onmessage = function(event) {
-    console.log("📩 Raw WebSocket message received:", event.data);
-
-    let data;
-    try {
-      data = JSON.parse(event.data);
-    } catch (e) {
-      console.error("❌ Failed to parse WebSocket JSON:", e);
-      return;
-    }
-
-    console.log("🔍 Parsed data:", data);
-
-    const msg = buildNotificationMessage(data);
-    if (!msg) return;
-
-    
-
-    // Play bell + show popup
-    bell.currentTime = 0;
-    bell.play();
-    notifyBox.textContent = msg;
-    notifyBox.classList.remove("show");
-    void notifyBox.offsetWidth;
-    notifyBox.classList.add("show");
-
-    // Hide after 3s
-    if (hideNotifTimeout) clearTimeout(hideNotifTimeout);
-    hideNotifTimeout = setTimeout(() => {
-      notifyBox.classList.remove("show");
-      hideNotifTimeout = null;
-    }, 3000);
-    // setTimeout(() => notifyBox.classList.remove("show"), 3000);
-
-    // If the full order is served, mark the table as green
-    if (data.type === "order" && data.table) {
-      document.querySelectorAll('.table-card').forEach(card => {
-        const name = card.querySelector('h4')?.textContent.trim();
-        if (name === data.table) {
-          card.classList.remove('occupied');
-          card.classList.add('served');
-          console.log("🟢 Marked", data.table, "as served");
-        }
-      });
-    }
-    
-
-  //   if (data.type === "order") {
-  //   const tableId = parseInt(data.table.replace("Table ", ""));
-  //   const card = document.querySelector(`.table-card[data-table-id="${tableId}"]`);
-  //   if (card) {
-  //     card.classList.remove("occupied");
-  //     card.classList.add("served");
-
-  //     const bell = document.getElementById("bell-sound");
-  //     const popup = document.getElementById("notification");
-
-  //     if (popup) {
-  //       popup.innerText = `Bàn ${tableId} đã pha chế xong`;
-  //       popup.style.display = "block";
-  //       setTimeout(() => popup.style.display = "none", 4000);
-  //     }
-
-  //     if (bell) bell.play();
-  //   }
-  // }
-
-  };
-
-  function buildNotificationMessage(data) {
-    if (data.type === 'serve' && data.table && data.product) {
-      return `${data.product} has been completed for ${data.table}`;
-    }
-    if (data.type === 'order' && data.table) {
-      return ` Bàn ${data.table} đã pha chế xong`;
-    }
-    return null;
-  }
-  </script>
+  <script src="notif_script.js"></script>
 
 
 </body>
