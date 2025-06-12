@@ -19,6 +19,7 @@ $role = $_SESSION['user']['role'];
             <li><a href="product_options_management.php">Quản Lý Options</a></li>
             <li><a href="report.php">Báo Cáo Cuối Ngày</a></li>
             <li><a href="order_logs.php">Danh Sách Đơn</a></li>
+            <li><a href="qr_management.php">Quản Lý Mã QR</a></li>
         <?php elseif ($role === 'waiter'): ?>
             <li><a href="waiter.php">Trang Phục Vụ</a></li>
             <li><a href="table_management_waiter.php">Order Tại Bàn</a></li>

@@ -33,11 +33,14 @@ foreach ($items as $it) {
     $total += $it['quantity'] * $it['price'];
 }
 
-$qr = $connection
-    ->query("SELECT image_path FROM payment_settings LIMIT 1")
-    ->fetch_assoc()['image_path']
-    ?? '';
+$qr_type = intval($_GET['qr_type'] ?? 1);
+if ($qr_type < 1 || $qr_type > 2) $qr_type = 1;
 
+$qrRows = [];
+$resQr  = $connection->query("SELECT type_id, image_path FROM qr_codes ORDER BY type_id");
+while ($r = $resQr->fetch_assoc()) {
+    $qrRows[intval($r['type_id'])] = $r['image_path'];
+}
 // Update order status to paid
 $stmt = $connection->prepare("
     UPDATE orders 
@@ -70,9 +73,8 @@ $stmt->close();
       max-width: 500px;
       border-radius: 16px;
       overflow: hidden;
-      opacity: 0.9;
+      background: rgba(255,255,255,0.8);
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      background: white;
     }
     .payment-header {
       display: flex;
@@ -101,11 +103,19 @@ $stmt->close();
       align-items: center;
       justify-content: center;
       padding: 20px;
-      opacity: 0.9;
+    }
+
+    .payment-qr {
+      flex-direction: column;          
+      align-items: center;             /* center horizontally */
+      justify-content: center;         /* center vertically */
     }
 
     .payment-qr img {
-      width: 100%;
+      width: 250px;
+      height: 250px;
+      margin: 0 auto;
+      align-items: center;
       max-height: 100%;
       object-fit: contain;
     }
@@ -198,6 +208,36 @@ $stmt->close();
     #qr-modal {
       display: none;
     }
+    .toggle-btns {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .toggle-btn {
+      background: rgba(103, 106, 108, 0.8);
+      flex: 1;
+      opacity: 1;
+      width: 200px;
+      border: 1px solid #ccc;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .toggle-btn.active {
+      background: #28a745;
+      color: #fff;
+      border-color: #28a745;
+    }
+
+    .inner-qr {
+      display: flex;              /* stack and center its children */
+      flex-direction: column;
+      align-items: center;        /* horizontal centering */
+      justify-content: center;    /* vertical centering */
+      height: 100%;               /* fill the parent’s height */
+      width: 100%;                /* fill the parent’s width */
+    }
   </style>
 </head>
 <body>
@@ -225,7 +265,22 @@ $stmt->close();
       </div>
     </div>
     <div id="qr-view" class="payment-qr" style="display: none;">
-      <img src="uploads/qr_2.png" alt="Mã QR" style="height: auto; display: block; margin: 0 auto;">
+      <div class="inner-qr">
+        <div class="toggle-btns">
+          <button class="toggle-btn <?= $qr_type===1?'active':'' ?>"
+                  data-type="1"
+                  onclick="switchQR(1)">QR Ngân Hàng</button>
+          <button class="toggle-btn <?= $qr_type===2?'active':'' ?>"
+                  data-type="2"
+                  onclick="switchQR(2)">QR MoMo</button>
+        </div>
+      <!-- your existing image -->
+      <img
+        id="qrImage"
+        src="<?= htmlspecialchars($qrRows[1] ?? 'placeholder.png') ?>"
+        alt="Mã QR"
+      >
+    </div>
     </div>
   </div>
 
@@ -247,6 +302,21 @@ $stmt->close();
 </div>
 
 <script>
+
+  const qrRows = <?= json_encode($qrRows, JSON_HEX_TAG) ?>;
+
+    function switchQR(type) {
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    const activeBtn = document.querySelector(`.toggle-btn[data-type="${type}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const img = document.getElementById('qrImage');
+    img.src = qrRows[type] || 'placeholder.png';
+  }
+
 (() => {
   const total = <?= $total ?>;
   let paid = total;
@@ -261,6 +331,8 @@ $stmt->close();
   const sidebar = document.getElementById('cash-sidebar');
   const disp = document.getElementById('calc-display');
   const keys = sidebar.querySelectorAll('button');
+
+
 
   // Mode toggle
   cashBtn.onclick = () => {

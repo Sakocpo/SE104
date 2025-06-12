@@ -196,13 +196,7 @@ if (!empty($table['current_order_id'])) {
         </div>
       </div>
   <?php endif; ?>
-  <div id="sidebar" class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <ul>
-      <li><a href="waiter.php">Waiter Home</a></li>
-      <li><a href="table_management_waiter.php">Table Management</a></li>
-    </ul>
-  </div>
+  <?php include 'sidebar.php'; ?>
 
   <div class="main-content-list">
     <!-- Meta Block -->

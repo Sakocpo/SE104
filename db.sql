@@ -933,7 +933,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `role` enum('waiter','admin','kitchen') NOT NULL,
   `user_category` varchar(255) NOT NULL,
-  `image` varchar(255) NOT NULL,
+  `image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

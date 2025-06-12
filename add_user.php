@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
       move_uploaded_file($_FILES['user_image']['tmp_name'], $image_path);
     }
 
-    $stmt = $connection->prepare("INSERT INTO users (username, password, role, image_path, user_category) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $connection->prepare("INSERT INTO users (username, password, role, image, user_category) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssi", $username, $hashed_password, $_POST['role'], $image_path, $current_category_id);
     $stmt->execute();
     $stmt->close();

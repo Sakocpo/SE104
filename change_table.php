@@ -61,9 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $u = $connection->prepare("UPDATE tables SET current_order_id = ? WHERE id = ?");
         $u->bind_param("ii", $order_id, $dest);
         $u->execute(); $u->close();
-        // D) update order items
+        // commit
         $connection->commit();
 
+        // notify via WebSocket
         $n = $connection->prepare("SELECT table_name FROM tables WHERE id = ?");
         $n->bind_param("i", $dest);
         $n->execute();
@@ -79,16 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           'new_table'    => $new_table_name
         ]);
 
-        file_put_contents(
-        __DIR__ . '/change_table_debug.txt',
-        date('c') . " WILL SEND: $msg\n",
-        FILE_APPEND
-      );
-
+        // send to local WebSocket server
         $arg = escapeshellarg($msg);
         shell_exec("echo $arg | nc localhost 8080");
-        
-        // shell_exec("echo '" . addslashes($msg) . "' | nc localhost 8080");
 
         header("Location: table_management_waiter.php?category={$catFilter}");
         exit;
@@ -98,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// show only empty tables
+// show all tables in category
 $sql = "SELECT * FROM tables WHERE table_category = ?";
 $q = $connection->prepare($sql);
 $q->bind_param("i", $catFilter);
@@ -113,6 +107,13 @@ $q->close();
   <title>Change Table</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    body {
+      background-image: url("uploads/waiter-page.jpg");
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+    }
     .table-grid { display:flex; flex-wrap:wrap; gap:16px; padding:20px; margin-top:80px; }
     .table-card {
       width:180px; height:180px;
@@ -127,10 +128,27 @@ $q->close();
       padding:12px 16px; border:none; border-radius:6px;
       text-decoration:none; font-weight:bold; z-index:1001;
     }
+    /* confirmation modal */
+    .confirm-popup {
+      position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      background:#fff; padding:20px; border-radius:8px;
+      box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:4000;
+      display:none;
+    }
+    .confirm-popup .confirm-btn { background:#28a745;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer; }
+    .cancel-confirm-btn { background:#ccc;color:#333;border:none;padding:6px 12px;border-radius:4px;cursor:pointer; }
   </style>
 </head>
 <body>
-  <div id="sidebar" class="sidebar">…</div>
+  <?php include 'sidebar.php'; ?>
+
+  <!-- confirmation modal -->
+  <div id="confirmPopup" class="confirm-popup">
+    <h3>Xác Nhận Chuyển Bàn</h3>
+    <p id="confirmText"></p>
+    <button id="confirmBtn" class="confirm-btn">Xác Nhận</button>
+    <button id="cancelBtn" class="cancel-confirm-btn">Hủy</button>
+  </div>
 
   <!-- Top bar -->
   <div class="top-category-bar"
@@ -160,12 +178,11 @@ $q->close();
     <?php foreach ($tbls as $t):
       if (!empty($t['current_order_id'])) continue;
     ?>
-      <form method="POST" style="display:inline;">
+      <form class="move-form" method="POST" style="display:inline;">
         <input type="hidden" name="src"      value="<?= $src ?>">
         <input type="hidden" name="dest"     value="<?= $t['id'] ?>">
         <input type="hidden" name="category" value="<?= $catFilter ?>">
-        <button class="table-card"
-                onclick="return confirm('Move to <?=htmlspecialchars($t['table_name'])?>?')">
+        <button type="submit" class="table-card" data-name="<?= htmlspecialchars($t['table_name']) ?>">
           <?= htmlspecialchars($t['table_name']) ?>
         </button>
       </form>
@@ -173,43 +190,49 @@ $q->close();
   </div>
 
   <a href="table_management_waiter.php?category=<?= $catFilter ?>"
-     class="cancel-btn">Cancel</a>
-  <script src="script.js"></script>
+     class="cancel-btn">Quay Lại</a>
+
   <script>
-  // 1) Open your WebSocket (reuse same port)
+  // WebSocket for real-time notifications
   const socket = new WebSocket("ws://localhost:8080");
-  socket.addEventListener('open', () => {
-    console.log('[WAITER WS] connected for change_table');
+  socket.addEventListener('open', () => console.log('[WS] connected for change_table'));
+
+  // confirmation modal logic
+  const confirmPopup = document.getElementById('confirmPopup');
+  const confirmText  = document.getElementById('confirmText');
+  const confirmBtn   = document.getElementById('confirmBtn');
+  const cancelBtn    = document.getElementById('cancelBtn');
+  let currentForm;
+
+  document.querySelectorAll('.move-form').forEach(form => {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      currentForm = form;
+      const name = form.querySelector('button').dataset.name;
+      confirmText.textContent = `Bạn có chắc chắn muốn chuyển đến ${name}?`;
+      confirmPopup.style.display = 'block';
+    });
   });
 
-  // 2) Hook the only form on this page
-  const moveForm = document.querySelector('form[method="POST"]');
-  if (moveForm) {
-    moveForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      // grab IDs from the hidden inputs
-      const orderId     = <?= json_encode($order_id) ?>;
-      const oldTableId  = <?= json_encode($src) ?>;
-      const newTableId  = moveForm.querySelector('input[name="dest"]').value;
-      const newTableName= moveForm.querySelector('button').textContent.trim();
-
-      // send the WS message *before* we actually submit
-      const msg = {
-        type:         'change_table',
-        order_id:     orderId,
-        old_table_id: oldTableId,
-        new_table_id: newTableId,
-        new_table:    newTableName
-      };
-      console.log('[WAITER WS] sending change_table:', msg);
+  confirmBtn.addEventListener('click', () => {
+    confirmPopup.style.display = 'none';
+    if (currentForm) {
+      // send WS notification
+      const orderId    = <?= json_encode($order_id) ?>;
+      const oldTableId = <?= json_encode($src) ?>;
+      const newTableId = currentForm.querySelector('input[name="dest"]').value;
+      const newTable   = currentForm.querySelector('button').dataset.name;
+      const msg = { type:'change_table', order_id:orderId, old_table_id:oldTableId, new_table_id:newTableId, new_table:newTable };
       socket.send(JSON.stringify(msg));
+      // submit form
+      currentForm.submit();
+    }
+  });
 
-      // now carry on with normal POST
-      moveForm.submit();
-    });
-  }
-</script>
-
+  cancelBtn.addEventListener('click', () => {
+    confirmPopup.style.display = 'none';
+    currentForm = null;
+  });
+  </script>
 </body>
 </html>
