@@ -15,7 +15,8 @@ try {
     return;
 }
 
-
+const msg = buildNotificationMessage(data);
+  if (!msg) return;
 
 // Play bell + show popup
 bell.currentTime = 0;

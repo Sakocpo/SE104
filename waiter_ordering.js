@@ -221,7 +221,7 @@ function openReview() {
 item.options.forEach(optionId => {
   const pill = document.createElement("span");
   pill.className = "option-label";
-  pill.innerHTML = `&bull; ${ getOptionLabel(optionId) }`;
+  pill.innerHTML = `• ${ getOptionLabel(optionId) }`;
   optsDiv.appendChild(pill);
 });
 
@@ -303,20 +303,24 @@ item.options.forEach(optionId => {
   });
 
   popup.style.display = "flex";
-  savePendingOrder();
 }
 
 function closeReview() {
   document.getElementById("order-review").style.display = "none";
 }
 
+// function getOptionLabel(optionId) {
+//   for (const category of Object.values(optionsData)) {
+//     const opt = category.find(o => o.id === optionId);
+//     if (opt) return opt.label;
+//   }
+//   return '';
+// }
+
 function getOptionLabel(optionId) {
-  for (const category of Object.values(optionsData)) {
-    const opt = category.find(o => o.id === optionId);
-    if (opt) return opt.label;
-  }
-  return '';
+  return window.allOptionLabels[optionId] || '';
 }
+
 function getProductName(productId) {
   const product = products.find(p => p.id === productId);
   return product ? product.name : 'Unknown';
@@ -427,7 +431,6 @@ function submitOrder(tableId) {
           waiterSocket.send(JSON.stringify(doneMsg));
         }
 
-        clearPendingOrder();
         window.location.href = "table_management_waiter.php";
       } else {
         if (waiterSocket.readyState === WebSocket.OPEN) {

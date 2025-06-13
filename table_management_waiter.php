@@ -90,11 +90,5 @@ if ($current_category_id !== null) {
   <script src="script.js"></script>
   <script src="notif_script.js"></script>
 
-
 </body>
 </html>
-
-
-
-<!-- remove the checkbox -->
-<!-- add in a textarea for waiter -->

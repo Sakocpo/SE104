@@ -156,7 +156,6 @@ if ($current_category_id) {
   <div class="review-content">
     <h3 style="color: black; ">Đơn Của Bàn <?= $table_name ?></h3>
 
-    <!-- give this the review-list class -->
     <div id="order-summary-list" class="review-list"></div>
 
     <button onclick="submitOrder(<?= $table_id ?>)" class="submit-order-btn">Gửi Đến Bếp</button>
@@ -164,8 +163,6 @@ if ($current_category_id) {
   </div>
 </div>
 
-
-  <!-- Cancel button -->
   <a href="table_management_waiter.php?category=<?=$table_cat?>"
     style="
       position: fixed;
@@ -183,7 +180,6 @@ if ($current_category_id) {
   Quay Lại
 </a>
 <?php
-  // Build a global map of every option ID → label
   $allOptionLabels = [];
   $res = $connection->query("SELECT id, label FROM options");
   while ($row = $res->fetch_assoc()) {
@@ -191,61 +187,43 @@ if ($current_category_id) {
   }
 ?>
 <script>
-  // Make it available to JavaScript
-  window.allOptionLabels = <?= json_encode($allOptionLabels, JSON_UNESCAPED_UNICODE) ?>;
+  const TABLE_ID = <?= $table_id ?>;
+  window.products       = <?= json_encode($products, JSON_HEX_TAG) ?>;
+  window.allOptionLabels= <?= json_encode($allOptionLabels, JSON_UNESCAPED_UNICODE) ?>;
 </script>
 
 <script src="waiter_ordering.js"></script>
 <script src="script.js"></script>
-<script src="notif_script.js"></script>
 <script>
+    const STORAGE_KEY = `pending_order_table_${TABLE_ID}`;
 
-  const TABLE_ID = <?= $table_id ?>;
-  const STORAGE_KEY = `pending_order_table_${TABLE_ID}`;
+    function isReloadNavigation() {
+      const nav = performance.getEntriesByType('navigation');
+      if (nav.length) return nav[0].type === 'reload';
+      if (performance.navigation)
+        return performance.navigation.type === performance.navigation.TYPE_RELOAD;
+      return false;
+    }
 
-  function loadPendingOrder() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        order = JSON.parse(saved);
-      } catch (_) {
+    function savePendingOrder() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+    }
+
+    function loadPendingOrder() {
+      if (isReloadNavigation()) {
         order = [];
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          try { order = JSON.parse(raw) }
+          catch { order = [] }
+        }
       }
     }
-  }
 
-  function savePendingOrder() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
-  }
-
-  function clearPendingOrder() {
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  loadPendingOrder();
-
-  window.addEventListener('beforeunload', savePendingOrder);
-
-  const _oldAddToOrder = addToOrder;
-  
-  addToOrder = function() {
-    _oldAddToOrder();
-    savePendingOrder();
-  };
-
-  window.products = <?= json_encode($products, JSON_HEX_TAG) ?>;
-
-  function getOptionLabel(optionId) {
-  const key = String(optionId);
-  return window.allOptionLabels && window.allOptionLabels[key]
-    ? window.allOptionLabels[key]
-    : "";
-}
-
-  function getProductName(productId) {
-    const p = (window.products || []).find(p => p.id === productId);
-    return p ? p.name : 'Unknown Product';
-  }
+    window.addEventListener('beforeunload', savePendingOrder);
+    loadPendingOrder();
   </script>
 
 

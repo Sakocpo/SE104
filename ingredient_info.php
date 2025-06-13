@@ -95,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
   .cancel-btn { background:#ccc; color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
 </style>
 </head><body>
-  <?php include 'sidebar.php'; ?>
   <?php if ($error): ?>
     <div class="error-popup" id="serverError"><?=htmlspecialchars($error)?></div>
   <?php endif; ?>
@@ -112,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
   <div class="forms-container" style="display:flex; gap:24px; align-items:flex-start; padding-top:20px; max-width:1200px; margin:0 auto;">
     <div style="width:250px;">
       <?php if ($ing['image']): ?>
-        <img src="<?=htmlspecialchars($ing['image'])?>" style="max-width:100%;border:1px solid #ccc;padding:4px;">
+        <img src="<?=htmlspecialchars($ing['image'])?>" style="width:100%;border:1px solid #ccc;padding:4px;max-height:300px;">
         <form method="POST" style="margin-top:8px;"><button type="submit" name="clear_image">Xóa Ảnh</button></form>
       <?php endif; ?>
     </div>
@@ -161,5 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
       i.value = v.toFixed(2);
     }
   </script>
+  <script src="script.js"></script>
 </body>
 </html>
