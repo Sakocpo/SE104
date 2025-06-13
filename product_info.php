@@ -28,8 +28,10 @@ if (!$product) {
 
 $current_category_id = $product['category'];
 
+$prodCats = $connection->query("SELECT id,name FROM product_categories WHERE deleted = 0 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+
 // Fetch option categories and their options
-$optCats = $connection->query("SELECT id,name FROM option_categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$optCats = $connection->query("SELECT id,name FROM option_categories WHERE deleted = 0 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 $optionsByCat = [];
 foreach ($optCats as $cat) {
     $stmt = $connection->prepare(
@@ -80,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
     $name        = trim($_POST['product_name']);
     $price       = floatval($_POST['product_price']);
     $description = $_POST['product_desc'] ?? '';
+    $new_category= intval($_POST['product_category']);
     $image_path  = $product['image'];
 
     // Validate price
@@ -134,9 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 
         // Update product
         $stmt = $connection->prepare(
-            "UPDATE products SET name = ?, price = ?, description = ?, image = ? WHERE id = ?"
+            "UPDATE products SET name = ?, category = ?, price = ?, description = ?, image = ? WHERE id = ?"
         );
-        $stmt->bind_param("sissi", $name, $price, $description, $image_path, $product_id);
+        $stmt->bind_param("siissi", $name, $new_category, $price, $description, $image_path, $product_id);
         $stmt->execute();
         $stmt->close();
 
@@ -250,6 +253,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
       <label>Tên sản phẩm:</label>
       <input type="text" name="product_name" value="<?= htmlspecialchars($product['name']) ?>" required>
 
+
+      <label>Danh Mục:</label>
+      <select name="product_category">
+        <?php foreach ($prodCats as $cat): ?>
+          <option value="<?= $cat['id'] ?>" <?= $cat['id']==$current_category_id?'selected':'' ?>><?= htmlspecialchars($cat['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+
       <label>Giá Thành:</label>
       <input type="number" name="product_price" min="0" step="0.01" value="<?= htmlspecialchars($product['price']) ?>" required>
 
@@ -284,7 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
     </div>
 
   </div>
-
+  <script src="script.js"></script>
   <script>
     // Auto-hide server error
     window.addEventListener('DOMContentLoaded', () => {

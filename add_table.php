@@ -14,10 +14,16 @@ if (!$current_category_id) {
     exit();
 }
 
+$categories = $connection
+    ->query("SELECT id,name FROM table_categories WHERE deleted = 0 ORDER BY name")
+    ->fetch_all(MYSQLI_ASSOC);
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
   $name = $_POST['table_name'];
   $description = $_POST['table_desc'] ?? '';
-  $active = isset($_POST['active']) ? 1 : 0; // Handle checkbox value
+  $active = isset($_POST['active']) ? 1 : 0; 
+  $category_id = intval($_POST['category_id']);
 
   // Check for duplicate name only among non-deleted tables
   $stmt = $connection->prepare("SELECT COUNT(*) as cnt FROM tables WHERE table_name = ? AND deleted = 0");
@@ -33,11 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
   else
   {
     $stmt = $connection->prepare("INSERT INTO tables (table_name, table_category, table_desc, active) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("sisi", $name, $current_category_id, $description, $active);
+    $stmt->bind_param("sisi", $name, $category_id, $description, $active);
     $stmt->execute();
     $stmt->close();
 
-    header("Location: table_management_admin.php?category=$current_category_id&added=1");
+    header("Location: table_management_admin.php?category=$category_id&added=1");
     exit();
   }
 }
@@ -68,6 +74,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
 
     <label for="table_name">Tên Bàn</label>
     <input type="text" name="table_name" style="width: 300px" required>
+
+    <label for="category_id">Danh Mục Bàn:</label>
+      <select name="category_id" required>
+        <?php foreach ($categories as $cat): ?>
+          <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
 
     <label for="table_desc">Mô Tả Bàn</label>
     <textarea name="table_desc"></textarea>

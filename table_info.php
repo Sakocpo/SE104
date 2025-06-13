@@ -14,6 +14,13 @@ if (!$table_id) {
     exit();
 }
 
+
+$categories = $connection
+    ->query("SELECT id, name FROM table_categories WHERE deleted = 0 ORDER BY name")
+    ->fetch_all(MYSQLI_ASSOC);
+
+
+
 // Fetch table (non-deleted)
 $stmt = $connection->prepare("SELECT * FROM tables WHERE id = ? AND deleted = 0");
 $stmt->bind_param("i", $table_id);
@@ -47,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
     $name        = trim($_POST['table_name']);
     $description = $_POST['table_desc'] ?? '';
     $active      = isset($_POST['active']) ? 1 : 0;
+    $new_category= intval($_POST['category_id']);
 
     // Duplicate name check
     $chk = $connection->prepare(
@@ -59,13 +67,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
     $chk->close();
     if ($count > 0) {
         $error = 'Tên bàn đã tồn tại.';
-    } else {
+    }
+    else if (!empty($table['current_order_id'])) {
+        $error = 'Bàn "' . htmlspecialchars($table['table_name']) . '" hiện đang có đơn và không thể cập nhật.';
+    }
+    else {
         $upd = $connection->prepare(
             "UPDATE tables
-               SET table_name = ?, table_desc = ?, active = ?
+               SET table_name = ?, table_category = ?, table_desc = ?, active = ?
              WHERE id = ?"
         );
-        $upd->bind_param("ssii", $name, $description, $active, $table_id);
+        $upd->bind_param("ssiii", $name, $new_category, $description, $active, $table_id);
         $upd->execute();
         $upd->close();
         header("Location: table_management_admin.php?category={$current_category_id}&updated=1");
@@ -129,6 +141,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
 
       <label for="table_name">Tên Bàn:</label>
       <input type="text" name="table_name" value="<?= htmlspecialchars($table['table_name']) ?>" required>
+
+      <label for="category_id">Danh Mục:</label>
+      <select name="category_id">
+        <?php foreach ($categories as $cat): ?>
+          <option value="<?= $cat['id'] ?>" <?= $cat['id']==$current_category_id ? 'selected' : '' ?>>
+            <?= htmlspecialchars($cat['name']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
 
       <label for="table_desc">Mô Tả Bàn:</label>
       <textarea name="table_desc"><?= htmlspecialchars($table['table_desc']) ?></textarea>

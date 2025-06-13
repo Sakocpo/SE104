@@ -15,7 +15,11 @@ if (!$current_category_id) {
 
 // Fetch option categories and their options
 $optCats = $connection
-    ->query("SELECT id,name FROM option_categories ORDER BY name")
+    ->query("SELECT id,name FROM option_categories WHERE deleted = 0 ORDER BY name")
+    ->fetch_all(MYSQLI_ASSOC);
+
+$prodCats = $connection
+    ->query("SELECT id,name FROM product_categories WHERE deleted = 0 ORDER BY name")
     ->fetch_all(MYSQLI_ASSOC);
 
 // For each category, fetch its options
@@ -39,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $price = floatval($_POST['product_price']);
     $description = $_POST['product_desc'] ?? '';
     $image_path = '';
+    $category_id = intval($_POST['category_id']);
 
     // Validate price non-negative
     if ($price < 0) {
@@ -69,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         $stmt = $connection->prepare(
             "INSERT INTO products (name, category, price, description, image) VALUES (?, ?, ?, ?, ?)"
         );
-        $stmt->bind_param("ssiss", $name, $current_category_id, $price, $description, $image_path);
+        $stmt->bind_param("ssiss", $name, $category_id, $price, $description, $image_path);
         $stmt->execute();
         $product_id = $stmt->insert_id;
         $stmt->close();
@@ -201,6 +206,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 
         <label for="product_name">Tên Món:</label>
         <input type="text" name="product_name" required>
+
+        <label>Danh Mục:</label>
+        <select name="category_id" required>
+          <?php foreach ($prodCats as $cat): ?>
+            <option value="<?= $cat['id'] ?>" <?= $cat['id']==$current_category_id?'selected':'' ?>>
+              <?= htmlspecialchars($cat['name']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
 
         <label for="product_price">Giá Thành:</label>
         <input type="number" name="product_price" min="0" step="0.01" required>
