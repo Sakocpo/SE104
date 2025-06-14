@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
                SET table_name = ?, table_category = ?, table_desc = ?, active = ?
              WHERE id = ?"
         );
-        $upd->bind_param("ssiii", $name, $new_category, $description, $active, $table_id);
+        $upd->bind_param("sisii", $name, $new_category, $description, $active, $table_id);
         $upd->execute();
         $upd->close();
         header("Location: table_management_admin.php?category={$current_category_id}&updated=1");
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
             <p>Bạn có chắc chắn muốn xóa bàn "<?= htmlspecialchars($table['table_name']) ?>"?</p>
             <form method="POST">
                 <button type="submit" name="delete_table" class="confirm-btn">Xác Nhận</button>
-                <button type="button" class="cancel-btn" onclick="window.location.href='table_info.php?id=<?= $table_id ?>'">Hủy</button>
+                <button type="button" class="cancel-btn" onclick="window.location.href='table_info_admin.php?id=<?= $table_id ?>'">Hủy</button>
             </form>
         </div>
     <?php endif; ?>
@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
 
       <div style="margin-top:12px;">
         <button type="submit" name="update_table">Cập Nhật</button>
-        <a href="table_info.php?id=<?= $table_id ?>&confirm_delete=1"><button type="button" style="background:red;color:white;">Xóa Bàn</button></a>
+        <a href="table_info_admin.php?id=<?= $table_id ?>&confirm_delete=1"><button type="button" style="background:red;color:white;">Xóa Bàn</button></a>
         <a href="table_management_admin.php?category=<?= $current_category_id ?>"><button type="button">Hủy</button></a>
       </div>
     </form>

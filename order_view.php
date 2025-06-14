@@ -127,6 +127,7 @@ if (isset($_GET['confirm_delete']) && $order['status'] === 'pending') {
     }
     .total-row td {
       font-weight: bold;
+      font-size: 1.8em;
       background: #FCEFCB;
     }
     .item-options {
@@ -249,7 +250,7 @@ if (isset($_GET['confirm_delete']) && $order['status'] === 'pending') {
           }
           ?>
           <tr class="total-row">
-            <td colspan="3"><strong>Tổng</strong></td>
+            <td colspan="3"><strong>Tổng Cộng</strong></td>
             <td><strong><?= number_format($grandTotal, 2) ?></strong></td>
           </tr>
         </tbody>

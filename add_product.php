@@ -186,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
   </style>
 </head>
 <body>
-  <?php include 'sidebar.php'; ?>
 
   
   <div class="forms-container">

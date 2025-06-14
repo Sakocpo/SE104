@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
     box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:1000;
   }
   .confirm-popup h3 { margin-top:0; }
-  .confirm-popup form { display:flex; gap:12px; justify-content:space-between; }
+  .confirm-popup form {gap:12px; justify-content:space-between; }
   .confirm-btn { background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
   .cancel-btn { background:#ccc; color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
 </style>

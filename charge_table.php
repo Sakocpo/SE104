@@ -434,8 +434,19 @@ $stmt->close();
   });
 };
 
-
   updateDisplays();
+  
+    document.addEventListener('click', e => {
+    const sidebar = document.getElementById('cash-sidebar');
+    const received = document.getElementById('received-amount');
+    if (
+      sidebar.classList.contains('visible') &&
+      !sidebar.contains(e.target) &&
+      e.target !== received
+    ) {
+      sidebar.classList.remove('visible');
+    }
+  });
 })();
 </script>
 </body>
