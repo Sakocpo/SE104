@@ -333,6 +333,7 @@ function getProductName(productId) {
  * Submit the current `order` to the server, then broadcast each line‐item in real time
  * over WebSocket with actual labels so the kitchen can render them.
  */
+
 function submitOrder(tableId) {
   if (!order.length) {
     return;
@@ -430,6 +431,12 @@ function submitOrder(tableId) {
         if (waiterSocket.readyState === WebSocket.OPEN) {
           waiterSocket.send(JSON.stringify(doneMsg));
         }
+
+        window.removeEventListener('beforeunload', savePendingOrder);
+
+        order = [];
+
+        localStorage.removeItem(STORAGE_KEY);
 
         window.location.href = "table_management_waiter.php";
       } else {

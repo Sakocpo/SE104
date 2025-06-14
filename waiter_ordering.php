@@ -164,6 +164,7 @@ if ($current_category_id) {
 </div>
 
   <a href="table_management_waiter.php?category=<?=$table_cat?>"
+    onclick="clearPendingOrder()"
     style="
       position: fixed;
       right: 20px;
@@ -224,6 +225,139 @@ if ($current_category_id) {
 
     window.addEventListener('beforeunload', savePendingOrder);
     loadPendingOrder();
+
+    function submitOrder(tableId) {
+  if (!order.length) {
+    return;
+  }
+
+  // 1) Log raw `order`
+  if (waiterSocket.readyState === WebSocket.OPEN) {
+    waiterSocket.send(JSON.stringify({
+      type:    "debug",
+      message: "Raw order: " + JSON.stringify(order)
+    }));
+  }
+
+  // 2) Build payload for PHP
+  const itemsPayload = order.map(item => {
+    const payloadItem = {
+      product_id: item.product.id,
+      quantity:   item.quantity,
+      options:    Array.isArray(item.options) ? item.options : [],  // these are numeric IDs
+      note:      item.note 
+    };
+    if (waiterSocket.readyState === WebSocket.OPEN) {
+      waiterSocket.send(JSON.stringify({
+        type:    "debug",
+        message: "Mapping item → payloadItem: " + JSON.stringify(payloadItem)
+      }));
+    }
+    return payloadItem;
+  });
+
+  const data = {
+    table_id: tableId,
+    items:    itemsPayload
+  };
+
+  // 3) Log final payload
+  if (waiterSocket.readyState === WebSocket.OPEN) {
+    waiterSocket.send(JSON.stringify({
+      type:    "debug",
+      message: "Final payload: " + JSON.stringify(data)
+    }));
+  }
+
+  // 4) Post to server
+  fetch("submit_order.php", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(data)
+  })
+    .then(response => {
+      if (waiterSocket.readyState === WebSocket.OPEN) {
+        waiterSocket.send(JSON.stringify({
+          type:    "debug",
+          message: "HTTP response status: " + response.status
+        }));
+      }
+      return response.json();
+    })
+    .then(json => {
+      if (waiterSocket.readyState === WebSocket.OPEN) {
+        waiterSocket.send(JSON.stringify({
+          type:    "debug",
+          message: "Server JSON response: " + JSON.stringify(json)
+        }));
+      }
+
+      if (json.success) {
+        // 5) Send one WS “serve” message per line, with actual labels
+        order.forEach(item => {
+          const optionLabels = (Array.isArray(item.options) ? item.options : [])
+            .map(optionId => getOptionLabel(optionId))
+            .filter(lbl => lbl);
+
+          const serveMsg = {
+            type:      "serve",
+            order_id:  json.order_id,
+            table:     json.table,
+            product:   item.product.name,
+            quantity:  item.quantity,
+            options:   optionLabels,
+            note:      item.note
+          };
+
+          if (waiterSocket.readyState === WebSocket.OPEN) {
+            waiterSocket.send(JSON.stringify(serveMsg));
+          }
+        });
+
+        // 6) Send final WS “order complete” message
+        const doneMsg = {
+          type:     "order",
+          order_id: json.order_id,
+          table:    json.table
+        };
+        if (waiterSocket.readyState === WebSocket.OPEN) {
+          waiterSocket.send(JSON.stringify(doneMsg));
+        }
+
+        window.removeEventListener('beforeunload', savePendingOrder);
+
+        order = [];
+
+        localStorage.removeItem(STORAGE_KEY);
+
+        window.location.href = "table_management_waiter.php";
+      } else {
+        if (waiterSocket.readyState === WebSocket.OPEN) {
+          waiterSocket.send(JSON.stringify({
+            type:    "debug",
+            message: "Submission failed: " + json.error
+          }));
+        }
+        alert("Failed to submit order: " + json.error);
+      }
+    })
+    .catch(err => {
+      if (waiterSocket.readyState === WebSocket.OPEN) {
+        waiterSocket.send(JSON.stringify({
+          type:    "debug",
+          message: "Fetch error: " + err.toString()
+        }));
+      }
+      alert("Failed to submit order");
+    });
+}
+  function clearPendingOrder() {
+  window.removeEventListener('beforeunload', savePendingOrder);
+  order = [];
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+
   </script>
 
 
