@@ -66,17 +66,19 @@ try {
 
     // Add order items
     $stmt = $connection->prepare("
-        INSERT INTO order_items (order_id, product_id, quantity, options)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO order_items (order_id, product_id, quantity, options, note)
+        VALUES (?, ?, ?, ?, ?)
     ");
 
     foreach ($items as $item) {
         $options_json = json_encode($item['options']);
-        $stmt->bind_param("iiis", 
+        $note = isset($item['note']) ? trim($item['note']) : '';
+        $stmt->bind_param("iiiss", 
             $order_id,
             $item['product_id'],
             $item['quantity'],
-            $options_json
+            $options_json,
+            $note
         );
         $stmt->execute();
     }

@@ -2,6 +2,10 @@
 session_start();
 require 'config.php';
 
+require 'd:/xampp/vendor/autoload.php';
+
+use WebSocket\Client;
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' ||
     !isset($_SESSION['user']) ||
     $_SESSION['user']['role'] !== 'waiter'
@@ -52,15 +56,23 @@ if (!empty($row['current_order_id'])) {
     $upd->close();
 
     // ─── 5) real-time CANCEL broadcast to kitchen ───
-    $msg = json_encode([
+    $payload = json_encode([
       'type'     => 'cancel',
       'order_id' => $order_id,
-      'table_id' => $table_id,
       'table'    => $table_name
     ]);
-    // adjust nc command / host:port if needed
-    shell_exec("echo '" . addslashes($msg) . "' | nc localhost 8080");
-    // ────────────────────────────────────────────────
+
+    try {
+        // connect and handshake
+        $ws = new Client("ws://127.0.0.1:8080");
+        // send the JSON frame
+        $ws->send($payload);
+        // close cleanly
+        $ws->close();
+    } catch (\Exception $e) {
+        // log but don’t block cancellation
+        error_log("WebSocket broadcast failed: " . $e->getMessage());
+    }
 }
 
 // 6) back to overview

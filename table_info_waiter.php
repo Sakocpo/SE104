@@ -55,7 +55,7 @@ if (!empty($table['current_order_id'])) {
       FROM order_items oi
       JOIN products p ON p.id = oi.product_id
       WHERE oi.order_id = ?
-      GROUP BY oi.product_id, oi.options
+      GROUP BY oi.product_id
     ");
     $q->bind_param("i", $oid);
     $q->execute();
@@ -250,7 +250,6 @@ if (!empty($table['current_order_id'])) {
           foreach ($items as $it):
             $sub = $it['quantity'] * $it['price'];
             $grandTotal += $sub;
-            // turn “1,3” → [1,3] → [“Hot”,”Sweet”]
             $labels = [];
             foreach (explode(',', $it['options']) as $optId) {
               $id = intval($optId);
