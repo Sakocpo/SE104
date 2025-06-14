@@ -1358,6 +1358,10 @@ ALTER TABLE `product_options`
   ADD CONSTRAINT `fk_prodopt_option` FOREIGN KEY (`option_id`) REFERENCES `options` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_prodopt_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
+
+
+ALTER TABLE order_items
+  ADD COLUMN note VARCHAR(200) NOT NULL DEFAULT '';
 --
 -- Constraints for table `tables`
 --
@@ -1365,6 +1369,8 @@ ALTER TABLE `tables`
   ADD CONSTRAINT `fk_tables_current_order` FOREIGN KEY (`current_order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `tables_ibfk_1` FOREIGN KEY (`table_category`) REFERENCES `table_categories` (`id`) ON DELETE CASCADE;
 COMMIT;
+
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
