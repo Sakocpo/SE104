@@ -15,3 +15,4 @@
 
 ### Note
 - Ko có push ảnh lên nên là sẽ ko có ảnh nào hết
+- Mới vừa update thêm cơ chế xóa real-time giữa waiter-kitchen nên khả năng cao giờ hủy đơn bên waiter sẽ bị lỗi nếu chưa tải lib (Muốn tải thì tải php composer, kéo đường vào xampp, xong vào terminal composer require textalk/websocket)

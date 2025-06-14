@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="table-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
         <?php foreach ($tables as $table): ?>
             <div class="table-card"
-                onclick="window.location.href='table_info.php?id=<?= $table['id'] ?>'"
+                onclick="window.location.href='table_info_admin.php?id=<?= $table['id'] ?>'"
                 style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
 
                 <!-- Table name centered -->
