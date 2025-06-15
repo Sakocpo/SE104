@@ -1,8 +1,10 @@
 <?php
 session_start();
 require 'config.php';
-if (!$_SESSION['user']||$_SESSION['user']['role']!=='admin') {
-  http_response_code(403); exit;
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
+    exit();
 }
 $data = json_decode(file_get_contents('php://input'),true);
 $name = trim($data['name'] ?? '');

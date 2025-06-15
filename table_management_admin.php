@@ -2,10 +2,9 @@
 session_start();
 require_once 'config.php';
 
-
-
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: index.php");
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
 
@@ -47,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản Lý Bàn</title>
+  <title>Table Management</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {

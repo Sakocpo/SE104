@@ -2,9 +2,9 @@
 session_start();
 require_once 'config.php';
 
-// Only admin can access
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: index.php");
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
 

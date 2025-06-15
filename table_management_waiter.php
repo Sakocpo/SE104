@@ -3,7 +3,8 @@ session_start();
 require 'config.php';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'waiter') {
-    header("Location: index.php");
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
 

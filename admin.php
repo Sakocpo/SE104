@@ -1,7 +1,8 @@
 <?php
 session_start();
-if (!isset($_SESSION['user'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
 ?>

@@ -3,10 +3,9 @@ session_start();
 require_once 'config.php';
 
 // Only admin users can view this page
-if (!isset($_SESSION['user'], $_SESSION['user']['role']) 
-    || $_SESSION['user']['role'] !== 'admin') 
-{
-    header("Location:index.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
 

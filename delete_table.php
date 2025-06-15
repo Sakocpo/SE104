@@ -1,9 +1,11 @@
 <?php
 session_start();
-require_once 'config.php';
-if(!isset($_SESSION['user'])||$_SESSION['user']['role']!=='admin'){
-  header("Location:index.php"); exit();
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
+    exit();
 }
+require_once 'config.php';
 if($_SERVER['REQUEST_METHOD']==='POST' && !empty($_POST['table_ids'])){
   $ids=$_POST['table_ids'];
   $cat_id=$_POST['category_id'];

@@ -2,12 +2,13 @@
 // delete_order.php
 
 session_start();
-require_once 'config.php';
-
-if (!isset($_SESSION['user'], $_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: index.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
+
+require_once 'config.php';
 
 $order_id = intval($_POST['order_id'] ?? 0);
 if (!$order_id) {

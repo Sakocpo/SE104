@@ -2,8 +2,9 @@
 session_start();
 require 'config.php';
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'waiter') {
-    header('Location:index.php');
-    exit;
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
+    exit();
 }
 
 // source table
@@ -15,7 +16,7 @@ $catFilter = intval($_GET['category'] ?? 0);
 
 // load categories for top bar
 $categories = $connection
-    ->query("SELECT * FROM table_categories")
+    ->query("SELECT * FROM table_categories WHERE deleted = 0 ORDER BY name")
     ->fetch_all(MYSQLI_ASSOC);
 
 // fetch source’s order
@@ -65,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $connection->commit();
 
         // notify via WebSocket
-        $n = $connection->prepare("SELECT table_name FROM tables WHERE id = ?");
+        $n = $connection->prepare("SELECT table_name FROM tables WHERE id = ? AND deleted = 0 ");
         $n->bind_param("i", $dest);
         $n->execute();
         $new = $n->get_result()->fetch_assoc();
@@ -93,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // show all tables in category
-$sql = "SELECT * FROM tables WHERE table_category = ?";
+$sql = "SELECT * FROM tables WHERE table_category = ? AND deleted = 0 ORDER BY table_name";
 $q = $connection->prepare($sql);
 $q->bind_param("i", $catFilter);
 $q->execute();

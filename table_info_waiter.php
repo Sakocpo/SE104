@@ -3,12 +3,11 @@ session_start();
 require 'config.php';
 
 // 1️⃣ Only waiters can view
-if (!isset($_SESSION['user'], $_SESSION['user']['role']) 
-    || $_SESSION['user']['role'] !== 'waiter') {
-    header('Location: index.php');
-    exit;
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'waiter') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
+    exit();
 }
-
 // 2️⃣ Load the table
 $t = intval($_GET['table_id'] ?? 0);
 $stmt = $connection->prepare("SELECT * FROM tables WHERE id = ?");

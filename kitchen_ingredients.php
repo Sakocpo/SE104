@@ -5,11 +5,11 @@ require 'config.php';
 $error = '';
 
 // Only kitchen users can view
-if (!isset($_SESSION['user'], $_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'kitchen') {
-    header('Location: index.php');
-    exit;
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'kitchen') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
+    exit();
 }
-
 // ------------------------------------------------------
 // 1) Build a PHP mapping: unit_id → unit_label
 $unitLabels = [];
@@ -34,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ingredient_id'], $_PO
         SELECT quantity, name, unit_id 
         FROM ingredients 
         WHERE id = ?
+        AND deleted = 0
     ");
     $stmt->bind_param("i", $ing_id);
     $stmt->execute();
@@ -129,6 +130,7 @@ if ($current_category_id !== null) {
         SELECT * 
         FROM ingredients 
         WHERE category = ?
+        AND deleted = 0
     ");
     $stmt->bind_param("i", $current_category_id);
     $stmt->execute();

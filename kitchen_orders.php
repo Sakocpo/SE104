@@ -3,9 +3,9 @@ session_start();
 require_once 'config.php';
 
 // ── 1) Only kitchen role allowed ──
-if (!isset($_SESSION['user'], $_SESSION['user']['role']) 
- || $_SESSION['user']['role'] !== 'kitchen') {
-    header("Location: index.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'kitchen') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
 

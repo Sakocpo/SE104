@@ -2,6 +2,15 @@
 session_start();
 require 'config.php';
 
+
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
+    exit();
+}
+
+
+
 $categoryEntities = [
     'products'    => ['table' => 'product_categories',    'label' => 'Product Categories',    'redirect' => 'product_management.php?'],
     'tables'      => ['table' => 'table_categories',      'label' => 'Table Categories',      'redirect' => 'table_management_admin.php?'],

@@ -1,12 +1,12 @@
 <?php
 session_start();
-
-require_once 'config.php';
-
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'waiter') {
-    header("Location: index.php");
+    http_response_code(403);
+    echo 'Error 403: Unauthorized access';
     exit();
 }
+
+require_once 'config.php';
 
 $table_id = isset($_GET['table_id']) ? intval($_GET['table_id']) : null;
 if (!$table_id) {
