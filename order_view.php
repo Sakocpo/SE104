@@ -67,6 +67,7 @@ if (isset($_GET['confirm_delete']) && $order['status'] === 'pending') {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order #<?= $order['id'] ?> View</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -225,7 +226,8 @@ if (isset($_GET['confirm_delete']) && $order['status'] === 'pending') {
               $sub = $g['quantity'] * $g['price'];
               $grandTotal += $sub;
               $labels = [];
-              foreach (explode(',', $g['options']) as $optId) {
+              $optIds = json_decode($g['options'], true) ?: [];
+              foreach ($optIds as $optId) {
                   $id = intval($optId);
                   if (isset($optLabels[$id])) {
                       $labels[] = $optLabels[$id];

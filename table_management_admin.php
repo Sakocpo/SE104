@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
 
-    <div class="table-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
+    <div class="grid">
         <?php foreach ($tables as $table): ?>
             <div class="table-card"
                 onclick="window.location.href='table_info_admin.php?id=<?= $table['id'] ?>'"

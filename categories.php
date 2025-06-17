@@ -78,6 +78,7 @@ while ($row = $res->fetch_assoc()) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?=htmlspecialchars($pageLabel)?></title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -159,7 +160,7 @@ while ($row = $res->fetch_assoc()) {
     .category-list { border-top: 1px solid #ccc; padding-top: 20px; }
     .category-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; margin-top: 10px;}
     .category-name, .rename-input { font-size: 1em; width: 200px; }
-    .rename-input { padding: 4px; }
+    .rename-input { padding: 4px; margin-bottom: 0px;}
     .category-actions { display: flex; gap: 8px; }
     button { margin-bottom: 0;}
     .rename-btn, .save-btn { background: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
@@ -178,7 +179,7 @@ while ($row = $res->fetch_assoc()) {
   <form method="POST">
     <input style="width: 100%;" type="text" name="category_name" placeholder="Tên danh mục" required>
     <button type="submit">Thêm</button>
-    <a href="<?=htmlspecialchars($cancelHref)?>"><button type="button">Hủy</button></a>
+    <button type="button" onclick="history.back()">Hủy</button>
   </form>
   <div class="category-list">
     <h4>Danh mục hiện tại</h4>

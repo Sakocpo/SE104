@@ -12,7 +12,7 @@ $role = $_SESSION['user']['role'];
     <ul>
         <?php if ($role === 'admin'): ?>
             <li><a href="admin.php">Trang Admin</a></li>
-            <li><a href="product_management.php">Quản Lý Hàng</a></li>
+            <li><a href="product_management.php">Quản Lý Thực Đơn</a></li>
             <li><a href="ingredients_management.php">Quản Lý Nguyên Liệu</a></li>
             <li><a href="user_management.php">Quản Lý Người Dùng</a></li>
             <li><a href="table_management_admin.php">Quản Lý Bàn</a></li>

@@ -154,6 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Product</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -233,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_product'])) {
       <p>Bạn có chắc chắn muốn xóa "<?= htmlspecialchars($product['name']) ?>"?</p>
       <form method="POST">
         <button type="submit" name="delete_product" class="confirm-btn">Xác Nhận</button>
-        <button type="button" class="cancel-btn" onclick="window.location.href='product_info.php?id=<?= $product_id ?>'">Hủy</button>
+        <button type="button" class="cancel-btn" onclick="history.back()">Hủy</button>
       </form>
     </div>
   <?php endif; ?>

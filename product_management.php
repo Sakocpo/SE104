@@ -48,6 +48,7 @@ if ($current_category_id !== null) {
     </style>
 </head>
 <body>
+<div class="container">
     <?php include 'sidebar.php'; ?>
     <!-- Horizontal category bar -->
     <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
@@ -77,7 +78,7 @@ if ($current_category_id !== null) {
 
     </div>
 
-    <div class="product-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
+    <div class="grid">
         <?php foreach ($products as $product): ?>
             <div class="product-card"
                 onclick="window.location.href='product_info.php?id=<?= $product['id'] ?>'">
@@ -101,7 +102,7 @@ if ($current_category_id !== null) {
             </div>
         <?php endif; ?>
     </div>
-    
+</div>
     <script src="script.js"></script>
 
 </body>

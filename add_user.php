@@ -20,8 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $username = $_POST['username'];
   $password = $_POST['password'];
   $confirm_password = $_POST['confirm_password'];
-  $image_path = null;
-
+  $role = $_POST['role'];
   // Check for duplicate username
   $check = $connection->prepare("SELECT id FROM users WHERE username = ?");
   $check->bind_param("s", $username);
@@ -34,19 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   } else {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Optional image upload
-    if (isset($_FILES['user_image']) && $_FILES['user_image']['error'] === UPLOAD_ERR_OK) {
-      $upload_dir = 'uploads/';
-      if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-      }
-
-      $image_path = $upload_dir . basename($_FILES['user_image']['name']);
-      move_uploaded_file($_FILES['user_image']['tmp_name'], $image_path);
-    }
-
-    $stmt = $connection->prepare("INSERT INTO users (username, password, role, image, user_category) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssi", $username, $hashed_password, $_POST['role'], $image_path, $current_category_id);
+    $stmt = $connection->prepare("INSERT INTO users (username, password, role, user_category) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("sssi", $username, $hashed_password, $role, $current_category_id);
     $stmt->execute();
     $stmt->close();
 
@@ -92,9 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
         <option value="waiter">Waiter</option>
         <option value="kitchen">Kitchen</option>
       </select>
-
-      <label for="user_image">Ảnh</label>
-      <input type="file" name="user_image" accept="image/*">
 
       <button type="submit" name="add_user">Thêm Người Dùng</button>
       <a href="user_management.php?category=<?= $current_category_id ?>">

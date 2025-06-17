@@ -58,7 +58,7 @@ if ($current_category_id !== null) {
 
     </div>
 
-    <div class="product-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
+    <div class="grid">
         <?php foreach ($ingredients as $ingredient): ?>
             <div class="product-card"
                 onclick="window.location.href='ingredient_info.php?id=<?= $ingredient['id'] ?>'">

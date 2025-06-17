@@ -182,6 +182,14 @@ foreach ($orders as $oid => $o) {
         document.getElementById('order-card-'+data.order_id)?.remove();
         return;
       }
+      if (data.type === 'order') {
+        const card = document.getElementById('order-card-' + data.order_id);
+        const placed = card?.querySelector('.placed-at');
+        if (placed) {
+          placed.textContent = 'Đặt Lúc: ' + new Date().toLocaleString();
+        }
+        return;
+      }
       if (data.type==='change_table') {
         const card   = document.getElementById('order-card-'+data.order_id);
         const hdrDiv = card?.querySelector('.order-header>div');

@@ -66,6 +66,7 @@ if (!empty($table['current_order_id'])) {
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Table <?= htmlspecialchars($table['table_name']) ?></title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -173,7 +174,8 @@ if (!empty($table['current_order_id'])) {
   </style>
 </head>
 <body>
-
+<div id="notification" class="notification-popup"></div>
+<audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
 <!-- ── ADDED: If “confirm_cancel” is set, show the confirmation overlay ── -->
 <?php if ($showConfirmCancel): ?>
       <div class="confirm-popup">

@@ -81,10 +81,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
 }
 ?>
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Chỉnh Sửa Nguyên Liệu</title>
-<link rel="stylesheet" href="style.css">
-<style>
-  .confirm-popup {
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh Sửa Nguyên Liệu</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+      .confirm-popup {
     position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
     background:#fff; padding:20px; border-radius:8px;
     box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:1000;

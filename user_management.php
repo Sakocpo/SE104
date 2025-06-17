@@ -57,6 +57,7 @@ if (isset($_GET['delete'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -84,7 +85,7 @@ if (isset($_GET['delete'])) {
         </div>
     </div>
 
-    <div class="user-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
+    <div class="grid">
         <?php foreach ($users as $user): ?>
             <div class="product-card"
                 onclick="window.location.href='user_info.php?id=<?= $user['id'] ?>'">

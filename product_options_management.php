@@ -34,6 +34,7 @@ if ($current_category_id !== null) {
 <html>
 <head>
     <title>Product Options Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -66,7 +67,7 @@ if ($current_category_id !== null) {
 
     </div>
 
-        <div class="option-grid" style="display: flex; flex-wrap: wrap; margin-top: 80px; gap: 16px; padding: 20px;">
+        <div class="grid">
             <?php foreach ($options as $option): ?>
 
                 <div class="option-card"

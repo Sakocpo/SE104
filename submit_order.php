@@ -41,6 +41,14 @@ try {
     if (!empty($table['current_order_id'])) {
         // Use existing order
         $order_id = $table['current_order_id'];
+        $updTs = $connection->prepare("
+         UPDATE orders
+            SET created_at = NOW()
+          WHERE id = ?
+       ");
+       $updTs->bind_param("i", $order_id);
+       $updTs->execute();
+       $updTs->close();
     } else {
         // Create new order
         $stmt = $connection->prepare("

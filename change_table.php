@@ -105,6 +105,7 @@ $q->close();
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Change Table</title>
   <link rel="stylesheet" href="style.css">
   <style>

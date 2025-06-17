@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit User</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -132,7 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
 
         <button type="submit" name="update_user">Cập Nhật</button>
         <button type="button" onclick="window.location.href='user_info.php?id=<?= $user_id ?>&confirm_delete=1'" style="background:red;color:white; ">Xóa Người Dùng</button>
-        <a href="user_management.php?category=<?= $current_category_id ?>"><button type="button">Hủy</button></a>
+        <button type="button" onclick="history.back()">Hủy</button>
+
     </form>
 </div>
 <script src="script.js"></script>
