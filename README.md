@@ -25,6 +25,6 @@
 
 
 ## Công nghệ sử dụng
-- Xampp + MySQL.
-- Composer.
-- Node.js.
+- Xampp + MySQL – Môi trường máy chủ và hệ quản trị cơ sở dữ liệu để lưu trữ thông tin.
+- Composer – Trình quản lý thư viện PHP để tự động tải và cập nhật các dependency.
+- Node.js - Xử lý API, back-end, hỗ trợ giao tiếp real-time.
