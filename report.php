@@ -54,7 +54,6 @@ if ($raw_start && $raw_end) {
     }
 }
 
-// Convert to SQL‐friendly timestamps
 $start_sql = $startObj->format('Y-m-d H:i:s');
 $end_sql   = $endObj->format('Y-m-d H:i:s');
 
@@ -156,14 +155,13 @@ elseif ($log_type === 'ingredients') {
     .filters {
       margin: 20px auto;
       display: flex;
-      flex-wrap: nowrap;         /* force a single horizontal row */
-      align-items: flex-end;     /* align the bottoms of all children */
+      flex-wrap: nowrap;         
+      align-items: flex-end;     
       gap: 12px;
       max-width: 100%;
-      overflow-x: auto;          /* allow horizontal scroll if viewport is narrow */
+      overflow-x: auto;          
     }
 
-    /* Each date field (label above input) */
     .filters .field-from,
     .filters .field-to {
       display: flex;
@@ -172,32 +170,27 @@ elseif ($log_type === 'ingredients') {
       flex: 1 1 200px;           
     }
 
-    /* The dropdowns (no labels) */
     .filters .field-preset,
     .filters .field-logtype {
-      flex: 0 0 150px;           /* fixed width of 150px each */
+      flex: 0 0 150px;           
     }
 
-    /* Remove any default margin/spacing from selects */
     .filters select {
       width: 100%;
       padding: 12px;
       font-size: 1em;
     }
 
-    /* The “Lọc” button container (placed underneath) */
     .filter-button-container {
       margin-top: 12px;
-      text-align: right;         /* align button to the right, if desired */
+      text-align: right;         
     }
 
-    /* The “Lọc” button itself */
     .filter-button-container button {
       padding: 6px 12px;
       font-size: 1em;
     }
 
-    /* Optional: horizontal scrollbar styling */
     .filters::-webkit-scrollbar {
       height: 6px;
     }
@@ -256,7 +249,6 @@ elseif ($log_type === 'ingredients') {
   </style>
 
   <script>
-    // Format a JS Date as "YYYY-MM-DDTHH:MM"
     function fmt(d) {
       const pad = n => n.toString().padStart(2, '0');
       const yyyy = d.getFullYear();
@@ -267,7 +259,6 @@ elseif ($log_type === 'ingredients') {
       return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
     }
 
-    // Apply the selected preset (today/yesterday/week), update datetime inputs, re‐submit
     function applyPreset() {
       const sel = document.getElementById('preset');
       const p   = sel.value;
@@ -290,21 +281,19 @@ elseif ($log_type === 'ingredients') {
         sd.setHours(0,  0,  0);
       }
       else {
-        return; // no change
+        return; 
       }
 
       document.getElementById('start_dt').value = fmt(sd);
       document.getElementById('end_dt').value   = fmt(ed);
       document.getElementById('preset_input').value = p;
 
-      // Preserve chosen log_type
       const logTypeSel = document.getElementById('log_type');
       document.getElementById('log_type_input').value = logTypeSel.value;
 
       document.getElementById('filterForm').submit();
     }
 
-    // When log_type dropdown changes, copy to hidden input and resubmit
     function onLogTypeChange() {
       const lt = document.getElementById('log_type').value;
       document.getElementById('log_type_input').value = lt;
@@ -318,13 +307,8 @@ elseif ($log_type === 'ingredients') {
   <div class="main-content" style="padding:20px;">
     <h2>Báo Cáo Doanh Thu </h2>
 
-    <!-- ==========================================
-         5) FILTER FORM: Date range, Preset, Log Type
-         ========================================== -->
     <form id="filterForm" method="GET">
-  <!-- This row contains only the four fields -->
   <div class="filters">
-    <!-- “From” date: label above input -->
     <div class="field-from">
       <label for="start_dt">Từ Ngày</label>
       <input 
@@ -336,7 +320,6 @@ elseif ($log_type === 'ingredients') {
       >
     </div>
 
-    <!-- “To” date: label above input -->
     <div class="field-to">
       <label for="end_dt">Đến Ngày</label>
       <input 
@@ -378,7 +361,6 @@ elseif ($log_type === 'ingredients') {
         <?php if (empty($sales)): ?>
           <div class="no-data">Không Có Doanh Thu Trong Khoảng Thời Gian Này.</div>
         <?php else: ?>
-          <!-- Sales Summary Table -->
           <table class="report-table">
             <thead>
               <tr>
@@ -410,10 +392,6 @@ elseif ($log_type === 'ingredients') {
         <?php endif; ?>
       </div>
 
-
-    <!-- ==================================================
-         7) INGREDIENTS VIEW (when log_type === "ingredients")
-         ================================================== -->
     <?php elseif ($log_type === 'ingredients'): ?>
       <div class="report-section">
 

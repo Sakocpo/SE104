@@ -2,13 +2,11 @@
 session_start();
 require 'config.php';
 
-// 1️⃣ Only waiters can view
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'waiter') {
     http_response_code(403);
     echo 'Error 403: Unauthorized access';
     exit();
 }
-// 2️⃣ Load the table
 $t = intval($_GET['table_id'] ?? 0);
 $stmt = $connection->prepare("SELECT * FROM tables WHERE id = ?");
 $stmt->bind_param("i", $t);
@@ -21,7 +19,6 @@ if (!$table) {
 
 $showConfirmCancel = isset($_GET['confirm_cancel']) && $_GET['confirm_cancel'] == '1';
 
-// 3️⃣ Build a map of option_id → label
 $optLabels = [];
 $res = $connection->query("SELECT id,label FROM options");
 while ($row = $res->fetch_assoc()) {
@@ -30,20 +27,17 @@ while ($row = $res->fetch_assoc()) {
 
 $table_cat = $table['table_category'];
 
-// 4️⃣ Fetch the order meta & items (if any)
 $orderMeta = null;
 $items     = [];
 if (!empty($table['current_order_id'])) {
     $oid = intval($table['current_order_id']);
 
-    // order timestamp
     $q = $connection->prepare("SELECT created_at FROM orders WHERE id = ?");
     $q->bind_param("i", $oid);
     $q->execute();
     $orderMeta = $q->get_result()->fetch_assoc();
     $q->close();
 
-    // order items + when they were marked served
     $q = $connection->prepare("
       SELECT 
         oi.product_id,
@@ -101,7 +95,7 @@ if (!empty($table['current_order_id'])) {
       color: #fff; 
       cursor: pointer;
     }
-    /* --- Order list table --- */
+
     .order-list-container {
       max-width: 800px; 
       margin:24px auto;
@@ -144,7 +138,6 @@ if (!empty($table['current_order_id'])) {
       background: #f5f5f5;
       font-size: 0.9em;
     }
-    /* --- Action buttons --- */
     .action-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -176,18 +169,15 @@ if (!empty($table['current_order_id'])) {
 <body>
 <div id="notification" class="notification-popup"></div>
 <audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
-<!-- ── ADDED: If “confirm_cancel” is set, show the confirmation overlay ── -->
 <?php if ($showConfirmCancel): ?>
       <div class="confirm-popup">
         <h3 style="margin-bottom: 10px;">Xác Nhận Hủy Đơn</h3>
         <p>Bạn có chắc chắn muốn hủy đơn cho bàn “<?= htmlspecialchars($table['table_name']) ?>”?</p>
         <div class="confirm-buttons">
-          <!-- When “Yes” is clicked, POST to cancel_table.php -->
           <form method="POST" action="cancel_table.php" style="margin:0;">
             <input type="hidden" name="table_id" value="<?= $t ?>">
             <button type="submit" class="confirm-btn">Xác Nhận</button>
           </form>
-          <!-- When “No” is clicked, simply reload without confirm_cancel -->
           <button 
             type="button" 
             class="cancel-btn" 
@@ -200,7 +190,6 @@ if (!empty($table['current_order_id'])) {
   <?php include 'sidebar.php'; ?>
 
   <div class="main-content-list">
-    <!-- Meta Block -->
     <div class="order-meta">
       <div><strong>Bàn:</strong> <?= htmlspecialchars($table['table_name']) ?></div>
       <div><strong>Đặt Bởi:</strong> <?= htmlspecialchars($_SESSION['user']['username']) ?></div>
@@ -213,11 +202,9 @@ if (!empty($table['current_order_id'])) {
       </div>
       <div class="order-meta-buttons">
         <a href="change_table.php?src=<?= $t ?>"><button>Chuyển Bàn</button></a>
-        <!-- <a href="merge_table.php?src=<?= $t ?>"><button>Merge Table</button></a> -->
       </div>
     </div>
 
-    <!-- If no order yet, prompt to take first order -->
     <?php if (!$orderMeta): ?>
       <div style="text-align:center; margin:40px;">
         <a href="waiter_ordering.php?table_id=<?= $t ?>">
@@ -234,7 +221,6 @@ if (!empty($table['current_order_id'])) {
       <?php exit; ?>
     <?php endif; ?>
 
-    <!-- Order Items Table -->
     <div class="order-list-container">
       <table class="order-list-table">
         <thead>
@@ -276,7 +262,6 @@ if (!empty($table['current_order_id'])) {
           </tr>
           <?php endforeach; ?>
 
-          <!-- Total row -->
           <tr class="total-row">
             <td colspan="3"><strong style="font-size: 2em; font-weight: 9000;">Tổng Cộng</strong></td>
             <td><strong style="font-size: 2em;"><?= number_format($grandTotal,2) ?></strong></td>
@@ -285,7 +270,6 @@ if (!empty($table['current_order_id'])) {
       </table>
     </div>
 
-    <!-- Bottom Action Buttons -->
     <div class="action-buttons">
       <a href="table_info_waiter.php?table_id=<?= $t ?>&confirm_cancel=1">
         <button style="background: red;"class="cancel">Hủy Đơn</button>

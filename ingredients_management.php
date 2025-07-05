@@ -29,9 +29,7 @@ if ($current_category_id !== null) {
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
-    <!-- Horizontal category bar -->
     <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
-    <!-- Category list container -->
 
     <div style="display: flex; gap: 12px; overflow-x: auto;">
             <?php foreach ($categories as $cat): ?>
@@ -50,8 +48,6 @@ if ($current_category_id !== null) {
             <?php endforeach; ?>
         </div>
 
-
-        <!-- Add button container -->
         <div>
             <a href="categories.php?entity=ingredients" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
         </div>
@@ -74,7 +70,6 @@ if ($current_category_id !== null) {
 
 
     <div class="add-button">
-            <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
             <?php if($current_category_id): ?>
             <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
                 <a href="add_ingredient.php?category=<?= $current_category_id ?>">

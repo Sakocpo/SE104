@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
   $active = isset($_POST['active']) ? 1 : 0; 
   $category_id = intval($_POST['category_id']);
 
-  // Check for duplicate name only among non-deleted tables
   $stmt = $connection->prepare("SELECT COUNT(*) as cnt FROM tables WHERE table_name = ? AND deleted = 0");
   $stmt->bind_param("s", $name);
   $stmt->execute();
@@ -61,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_table'])) {
 </head>
 <body>
   <div class="forms-container">
-  <!-- Show the error, if any -->
   <?php if ($error): ?>
     <div class="error-popup">
     <?= htmlspecialchars($error) ?>

@@ -1,9 +1,9 @@
 <?php
 
-$host = 'localhost'; // Database host
-$user = 'root'; // Database username
+$host = 'localhost';
+$user = 'root';
 
-$password = ''; //due to local, no password
+$password = '';
 
 $database = "users_db";
 

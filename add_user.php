@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
   $password = $_POST['password'];
   $confirm_password = $_POST['confirm_password'];
   $role = $_POST['role'];
-  // Check for duplicate username
   $check = $connection->prepare("SELECT id FROM users WHERE username = ?");
   $check->bind_param("s", $username);
   $check->execute();

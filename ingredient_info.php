@@ -151,12 +151,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ingredient']))
     </form>
   </div>
   <script>
-    // Auto-hide error after 4s
     window.addEventListener('DOMContentLoaded', () => {
       const err = document.getElementById('serverError');
       if (err) setTimeout(() => err.remove(), 4000);
     });
-    // Quantity adjust
     function adjustQty(delta) {
       const i = document.getElementById('qty');
       let v = parseFloat(i.value) || 0;

@@ -30,7 +30,6 @@ $cancelHref  = $config['redirect'];
 
 $error = '';
 
-// Handle new category creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['category_name'])) {
     $name = trim($_POST['category_name']);
     if ($name === '') {
@@ -56,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['category_name'])) {
     }
 }
 
-// Handle soft delete via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_category_id'])) {
     $did = intval($_POST['delete_category_id']);
     $stmt = $connection->prepare("UPDATE `$tableName` SET deleted = 1 WHERE id = ?");
@@ -67,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_category_id'])
     exit;
 }
 
-// Fetch active categories
 $cats = [];
 $res = $connection->query("SELECT * FROM `$tableName` WHERE deleted = 0 ORDER BY id");
 while ($row = $res->fetch_assoc()) {
@@ -220,13 +217,11 @@ function showConfirm(id, name) {
   document.getElementById('confirmOverlay').style.display = 'flex';
 }
 
-// Auto-hide server error
 window.addEventListener('DOMContentLoaded', () => {
   const srv = document.getElementById('serverError');
   if (srv) setTimeout(() => srv.remove(), 5000);
 });
 
-// Attach delete handlers
 document.querySelectorAll('.delete-btn').forEach(btn => {
   btn.onclick = () => {
     const row = btn.closest('.category-item');
@@ -236,7 +231,6 @@ document.querySelectorAll('.delete-btn').forEach(btn => {
   };
 });
 
-// Inline error handler for rename
 function showError(msg) {
   let ex = document.querySelector('.error-popup');
   if (ex) ex.remove();

@@ -32,7 +32,6 @@ $stmt->execute();
 $recent = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Group recent items by order_id
 $grouped = [];
 foreach ($recent as $item) {
     $oid = $item['order_id'];
@@ -40,7 +39,6 @@ foreach ($recent as $item) {
     $grouped[$oid]['table'] = $item['table_name'];
 }
 
-// Now determine if the entire order is complete
 $results = [];
 foreach ($grouped as $oid => $group) {
     $res = $connection->prepare("SELECT COUNT(*) AS total, SUM(served > 0) AS done FROM order_items WHERE order_id = ?");

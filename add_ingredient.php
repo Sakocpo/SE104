@@ -10,7 +10,6 @@ if (!$current_cat) {
   echo "No category selected."; exit;
 }
 
-// fetch categories + units
 $cats  = $connection->query("SELECT * FROM ingredient_categories")->fetch_all(MYSQLI_ASSOC);
 $units = $connection->query("SELECT * FROM unit_options")->fetch_all(MYSQLI_ASSOC);
 
@@ -23,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   $qty      = floatval($_POST['quantity'] ?? 0);
   $imgpath  = '';
 
-  // duplicate check
   $stmt = $connection->prepare("SELECT COUNT(*) as cnt FROM ingredients WHERE name = ? AND deleted = 0");
   $stmt->bind_param("s", $name);
   $stmt->execute();
@@ -31,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   $count = $res['cnt'];
   $stmt->close();
 
-  // validations
   if (!$name || !$category || !$unit) {
     $error = 'Vui lòng điền đầy đủ thông tin.';
   } elseif ($qty < 0) {
@@ -39,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   } elseif ($count > 0) {
     $error = "Nguyên liệu \"{$name}\" đã tồn tại, vui lòng chọn tên khác.";
   } else {
-    // image upload
     if (!empty($_FILES['image']['name'])) {
       $imgpath = 'uploads/'.basename($_FILES['image']['name']);
       move_uploaded_file($_FILES['image']['tmp_name'],$imgpath);
@@ -122,7 +118,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     </form>
   </div>
 
-  <!-- UNIT ADD MODAL -->
   <div id="unit-modal">
     <div class="modal-box">
       <h4 style="text-align:center; padding-bottom:10px;">Thêm Đơn Vị Mới</h4>
@@ -135,19 +130,16 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
   </div>
 
   <script>
-    // auto-hide server error
     window.addEventListener('DOMContentLoaded', () => {
       const srv = document.getElementById('serverError');
       if (srv) setTimeout(() => srv.remove(), 5000);
     });
-    // quantity controls
     function q(d) {
       const i = document.getElementById('qty');
       let v = parseFloat(i.value) || 0;
       v = Math.max(0, v + d);
       i.value = v.toFixed(2);
     }
-    // unit modal logic unchanged
     const addBtn = document.getElementById('add-unit'), modal = document.getElementById('unit-modal');
     const confirmEl = document.getElementById('confirm-unit'), cancelEl = document.getElementById('cancel-unit');
     const inputEl = document.getElementById('new-unit-name'), selectEl = document.getElementById('unit-select');

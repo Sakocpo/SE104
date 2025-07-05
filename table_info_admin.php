@@ -166,7 +166,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_table'])) {
     </form>
   </div>
   <script>
-    // Auto-hide error after 4s
     window.addEventListener('DOMContentLoaded', () => {
       const err = document.querySelector('.error-popup');
       if (err) setTimeout(() => err.remove(), 4000);

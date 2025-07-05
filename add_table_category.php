@@ -8,7 +8,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Handle category addition
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_category']) && !empty($_POST['category_name'])) {
         $name = trim($_POST['category_name']);
@@ -22,11 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Handle deletion
     if (isset($_POST['delete_category'])) {
         $category_id = $_POST['category_id'];
 
-        // OPTIONAL: confirm there are no products assigned first
         $stmt = $connection->prepare("DELETE FROM table_categories WHERE id = ?");
         $stmt->bind_param("i", $category_id);
         $stmt->execute();

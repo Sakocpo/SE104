@@ -20,7 +20,6 @@ if (!$table_id) {
     exit;
 }
 
-// 1) fetch that table's current_order_id AND table_name
 $stmt = $connection->prepare("
   SELECT current_order_id, table_name
     FROM tables
@@ -35,7 +34,6 @@ if (!empty($row['current_order_id'])) {
     $order_id   = intval($row['current_order_id']);
     $table_name = $row['table_name'];
 
-    // 3) Mark the order as deleted
     $upd = $connection->prepare("
       UPDATE orders 
          SET status = 'deleted'
@@ -45,7 +43,6 @@ if (!empty($row['current_order_id'])) {
     $upd->execute();
     $upd->close();
 
-    // 4) clear the table's pointer
     $upd = $connection->prepare("
       UPDATE tables 
          SET current_order_id = NULL 
@@ -55,7 +52,6 @@ if (!empty($row['current_order_id'])) {
     $upd->execute();
     $upd->close();
 
-    // ─── 5) real-time CANCEL broadcast to kitchen ───
     $payload = json_encode([
       'type'     => 'cancel',
       'order_id' => $order_id,
@@ -63,18 +59,13 @@ if (!empty($row['current_order_id'])) {
     ]);
 
     try {
-        // connect and handshake
         $ws = new Client("ws://127.0.0.1:8080");
-        // send the JSON frame
         $ws->send($payload);
-        // close cleanly
         $ws->close();
     } catch (\Exception $e) {
-        // log but don’t block cancellation
         error_log("WebSocket broadcast failed: " . $e->getMessage());
     }
 }
 
-// 6) back to overview
 header('Location: table_management_waiter.php');
 exit;

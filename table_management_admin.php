@@ -30,9 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $description = isset($_POST['table_desc']) ? $_POST['table_desc'] : '';
       $active_bool = $_POST['active'];
       $stmt = $connection->prepare("INSERT INTO tables (table_name, table_category, table_desc, active) VALUES (?, ?, ?, ?)");
-      // Adjusted bind_param:
-      // "s" for product_name, "s" for category_id (if it's a string; change to "i" if it's int),
-      // "i" for price, "s" for options, and "s" for description.
       $stmt->bind_param("sisi", $table_number, $table_category, $description, $active_bool);
       $stmt->execute();
       $stmt->close();
@@ -62,10 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <?php include 'sidebar.php'; ?>
-    <!-- Horizontal category bar -->
     <div class="top-category-bar" style="position: fixed; top: 0; left: 50px; right: 0; background: #f0f0f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #ccc;">
 
-        <!-- Category list container -->
         <div style="display: flex; gap: 12px; overflow-x: auto;">
             <?php foreach ($categories as $cat): ?>
                 <a href="table_management_admin.php?category=<?= $cat['id'] ?>"
@@ -83,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endforeach; ?>
         </div>
 
-        <!-- Add button container -->
         <div>
             <a href="categories.php?entity=tables" title="Add new category" style="font-size: 24px; text-decoration: none; font-weight: bold; color: #333;">➕</a>
         </div>
@@ -95,11 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="table-card"
                 onclick="window.location.href='table_info_admin.php?id=<?= $table['id'] ?>'"
                 style="width: 180px; height: 180px; border: 1px solid #ccc; border-radius: 12px; overflow: hidden; cursor: pointer; background: #fff; position: relative; display: flex; align-items: center; justify-content: center;">
-
-                <!-- Table name centered -->
                 <h4 style="margin: 0; font-size: 18px; text-align: center; color: brown;"><?= htmlspecialchars($table['table_name']) ?></h4>
-
-                <!-- Active status indicator -->
                 <div style="
                     position: absolute;
                     bottom: 10px;
@@ -121,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endforeach; ?>
     </div>
     <div class="add-button">
-        <!-- <button onclick="document.getElementById('add-product-form').style.display='block'">Add Product</button> -->
         <?php if($current_category_id): ?>
         <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
             <a href="add_table.php?category=<?= $current_category_id ?>">

@@ -16,8 +16,6 @@ if (!$t) {
   exit(json_encode(['success'=>false,'error'=>'No table']));
 }
 
-// 1️⃣ mark order as paid
-// fetch order_id
 $row = $connection->prepare("SELECT current_order_id FROM tables WHERE id=?");
 $row->bind_param("i",$t);
 $row->execute();
@@ -26,7 +24,6 @@ $row->close();
 
 $connection->begin_transaction();
 try {
-  // orders.status = 'paid', record paid amount
   $u = $connection->prepare(
     "UPDATE orders SET status='paid', paid_amount=? WHERE id=?"
   );
@@ -34,7 +31,6 @@ try {
   $u->execute();
   $u->close();
 
-  // free table
   $u = $connection->prepare(
     "UPDATE tables SET status='free', current_order_id=NULL WHERE id=?"
   );

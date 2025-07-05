@@ -16,7 +16,6 @@ $raw_start = $_GET['start_dt'] ?? '';
 $raw_end = $_GET['end_dt'] ?? '';
 $preset = $_GET['preset'] ?? '';
 
-// Store filter state in session if it's being set
 if ($raw_start && $raw_end) {
     $_SESSION['order_logs_filter'] = [
         'start_dt' => $raw_start,
@@ -24,7 +23,6 @@ if ($raw_start && $raw_end) {
         'preset' => $preset
     ];
 } else if (isset($_SESSION['order_logs_filter'])) {
-    // Use stored filter if no new filter is set
     $raw_start = $_SESSION['order_logs_filter']['start_dt'];
     $raw_end = $_SESSION['order_logs_filter']['end_dt'];
     $preset = $_SESSION['order_logs_filter']['preset'];
@@ -42,7 +40,6 @@ if (!$raw_start || !$raw_end) {
 $start_sql = $startObj->format('Y-m-d H:i:s');
 $end_sql = $endObj->format('Y-m-d H:i:s');
 
-// Fetch each order only once, no join to order_items
 $stmt = $connection->prepare("  
   SELECT
     o.id,
@@ -188,7 +185,6 @@ $stmt->close();
     <div class="main-content">
     <h2 style="text-align:center;">Danh Sách Đơn</h2>
     <div class="page-layout">
-      <!-- LEFT: Order List -->
       <div class="order-list-container">
         <?php if (empty($orders)): ?>
           <div class="scroll-box">
@@ -236,7 +232,6 @@ $stmt->close();
         <?php endif; ?>
       </div>
 
-      <!-- RIGHT: Date Filter -->
       <div class="filter-sidebar">
         <form id="filterForm" method="GET" class="filters">
           <label style="color: black;" for="start_dt">Từ Ngày</label>

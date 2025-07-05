@@ -2,21 +2,18 @@
 session_start();
 require_once 'config.php';
 
-// Ensure admin is logged in
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     http_response_code(403);
     echo 'Error 403: Unauthorized access';
     exit();
 }
 
-// Get category from URL parameter
 $category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
 if (!$category_id) {
     echo "No category selected.";
     exit();
 }
 
-// Get category name for display
 $stmt = $connection->prepare("SELECT name FROM option_categories WHERE id = ?");
 $stmt->bind_param("i", $category_id);
 $stmt->execute();
@@ -28,7 +25,6 @@ if (!$category) {
     exit();
 }
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['label'])) {
     $label = trim($_POST['label']);
 

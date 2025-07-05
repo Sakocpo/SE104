@@ -1,12 +1,11 @@
 <?php
 session_start();
-require 'config.php';
-
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'waiter') {
     http_response_code(403);
     echo 'Error 403: Unauthorized access';
     exit();
 }
+require_once 'config.php';
 
 $current_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
 $categories = $connection->query("SELECT * FROM table_categories")
@@ -14,7 +13,6 @@ $categories = $connection->query("SELECT * FROM table_categories")
 
 $tables = [];
 if ($current_category_id !== null) {
-    // Fetch each table plus how many un‐served items it has
     $sql = "
       SELECT
         t.*,
@@ -57,7 +55,6 @@ if ($current_category_id !== null) {
   <div id="notification" class="notification-popup"></div>
   <audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
 
-  <!-- Top horizontal category bar -->
   <div class="top-category-bar">
     <div class="category-scroll">
       <?php foreach ($categories as $cat): ?>
@@ -76,7 +73,6 @@ if ($current_category_id !== null) {
       $isOccupied   = $hasOrder && $unserved > 0;
       $isFullyServed = $hasOrder && $unserved === 0;
 
-      // pick URL
       $href = $hasOrder
             ? "table_info_waiter.php?table_id={$tbl['id']}"
             : "waiter_ordering.php?table_id={$tbl['id']}";

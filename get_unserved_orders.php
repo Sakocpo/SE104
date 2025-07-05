@@ -8,7 +8,6 @@ if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'kitchen'
   exit;
 }
 
-// Build option map
 $optLabels = [];
 $res = $connection->query("SELECT id,label FROM options");
 while ($row = $res->fetch_assoc()) {
@@ -49,7 +48,6 @@ while ($r = $result->fetch_assoc()) {
     ];
   }
 
-  // Options → labels
   $labels = [];
   $optsRaw = json_decode($r['options'], true);
   if (json_last_error() === JSON_ERROR_NONE && is_array($optsRaw)) {

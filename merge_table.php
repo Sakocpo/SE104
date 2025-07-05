@@ -6,19 +6,16 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role']!=='waiter') {
     exit;
 }
 
-// 1️⃣ Source table
+
 $src = intval($_GET['src'] ?? $_POST['src'] ?? 0);
 if (!$src) exit('No source table.');
 
-// 2️⃣ Category filter
 $catFilter = intval($_GET['category'] ?? 0);
 
-// 3️⃣ Load categories for the top bar
 $categories = $connection
     ->query("SELECT * FROM table_categories")
     ->fetch_all(MYSQLI_ASSOC);
 
-// 4️⃣ Ensure source actually has an order
 $stmt = $connection->prepare("SELECT current_order_id FROM tables WHERE id = ?");
 $stmt->bind_param("i",$src);
 $stmt->execute();
@@ -29,12 +26,10 @@ if (empty($tbl['current_order_id'])) {
 }
 $srcOrder = intval($tbl['current_order_id']);
 
-// 5️⃣ Handle the merge POST
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     $dest = intval($_POST['dest'] ?? 0);
     if (!$dest) exit('No destination chosen.');
 
-    // make sure dest is occupied
     $chk = $connection->prepare("SELECT current_order_id FROM tables WHERE id = ?");
     $chk->bind_param("i",$dest);
     $chk->execute();
@@ -47,21 +42,18 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
     $connection->begin_transaction();
     try {
-        // A) reassign items
         $u = $connection->prepare(
             "UPDATE order_items SET order_id = ? WHERE order_id = ?"
         );
         $u->bind_param("ii", $dstOrder, $srcOrder);
         $u->execute(); $u->close();
 
-        // B) clear source table
         $u = $connection->prepare(
             "UPDATE tables SET current_order_id = NULL WHERE id = ?"
         );
         $u->bind_param("i",$src);
         $u->execute(); $u->close();
 
-        // C) remove the now‑empty order row
         $d = $connection->prepare("DELETE FROM orders WHERE id = ?");
         $d->bind_param("i",$srcOrder);
         $d->execute(); $d->close();
@@ -77,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
         $msg = json_encode([
           'type'           => 'merge_table',
-          'from_order_id'  => $srcOrder,    // ← source order ID
-          'into_order_id'  => $dstOrder,    // ← destination order ID
+          'from_order_id'  => $srcOrder,
+          'into_order_id'  => $dstOrder,
           'new_table'      => $newTableName
         ]);
         shell_exec("echo " . escapeshellarg($msg) . " | nc localhost 8080");
@@ -91,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     }
 }
 
-// 6️⃣ Only fetch tables *if* a category is selected
 if ($catFilter) {
     $q = $connection->prepare(
       "SELECT * FROM tables WHERE table_category = ?"
@@ -101,7 +92,7 @@ if ($catFilter) {
     $tbls = $q->get_result()->fetch_all(MYSQLI_ASSOC);
     $q->close();
 } else {
-    $tbls = []; // no category chosen -> no tables shown
+    $tbls = [];
 }
 ?>
 <!DOCTYPE html>
@@ -136,7 +127,6 @@ if ($catFilter) {
 <body>
   <div id="sidebar" class="sidebar">…</div>
 
-  <!-- Top horizontal category bar -->
   <div class="top-category-bar">
     <div class="category-scroll">
       <?php foreach ($categories as $cat): ?>
@@ -151,7 +141,6 @@ if ($catFilter) {
     <?php if ($catFilter): ?>
     <div class="table-grid">
       <?php foreach ($tbls as $t):
-        // only occupied and not the source
         if (empty($t['current_order_id']) || $t['id']==$src) continue;
       ?>
         <form method="POST" style="display:inline;">

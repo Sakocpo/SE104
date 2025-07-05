@@ -24,11 +24,9 @@ if (empty($items)) {
     exit();
 }
 
-// Start transaction
 $connection->begin_transaction();
 
 try {
-    // Check if table already has an order
     $stmt = $connection->prepare("SELECT current_order_id FROM tables WHERE id = ?");
     $stmt->bind_param("i", $table_id);
     $stmt->execute();
@@ -39,7 +37,6 @@ try {
     $order_id = null;
     
     if (!empty($table['current_order_id'])) {
-        // Use existing order
         $order_id = $table['current_order_id'];
         $updTs = $connection->prepare("
          UPDATE orders
@@ -50,7 +47,6 @@ try {
        $updTs->execute();
        $updTs->close();
     } else {
-        // Create new order
         $stmt = $connection->prepare("
             INSERT INTO orders (table_id, status, created_at, created_by)
             VALUES (?, 'pending', NOW(), ?)
@@ -60,7 +56,6 @@ try {
         $order_id = $connection->insert_id;
         $stmt->close();
 
-        // Update table's current_order_id
         $stmt = $connection->prepare("
             UPDATE tables 
             SET current_order_id = ?,
@@ -72,7 +67,6 @@ try {
         $stmt->close();
     }
 
-    // Add order items
     $stmt = $connection->prepare("
         INSERT INTO order_items (order_id, product_id, quantity, options, note)
         VALUES (?, ?, ?, ?, ?)
@@ -92,7 +86,7 @@ try {
     }
     $stmt->close();
 
-    // Get table name for response
+
     $stmt = $connection->prepare("SELECT table_name FROM tables WHERE id = ?");
     $stmt->bind_param("i", $table_id);
     $stmt->execute();

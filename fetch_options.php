@@ -10,13 +10,11 @@ if (!$product_id) {
 
 $result = [];
 
-// Get all option categories
 $types_query = mysqli_query($connection, "SELECT * FROM option_categories");
 while ($type = mysqli_fetch_assoc($types_query)) {
     $type_id = $type['id'];
     $type_name = $type['name'];
     
-    // Only fetch options that are assigned to this product
     $options = [];
     $opts_query = mysqli_query($connection, "
         SELECT o.id, o.label 
@@ -31,7 +29,6 @@ while ($type = mysqli_fetch_assoc($types_query)) {
         $options[] = $opt;
     }
 
-    // Only add the category if it has options
     if (!empty($options)) {
         $result[$type_name] = $options;
     }

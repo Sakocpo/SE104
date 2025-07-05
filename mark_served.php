@@ -18,11 +18,9 @@ if (!$order_id) {
 }
 
 try {
-    // Start transaction
     $connection->begin_transaction();
 
     if (empty($items)) {
-        // If no specific items provided, mark all items as served
         $stmt = $connection->prepare("
             UPDATE order_items 
             SET served = 1 
@@ -32,7 +30,6 @@ try {
         $stmt->execute();
         $stmt->close();
     } else {
-        // Mark only specific items as served
         foreach ($items as $item) {
             $stmt = $connection->prepare("
                 UPDATE order_items 
@@ -47,7 +44,6 @@ try {
         }
     }
 
-    // Check if all items are now served
     $stmt = $connection->prepare("
         SELECT COUNT(*) as total, SUM(CASE WHEN served = 1 THEN 1 ELSE 0 END) as served
         FROM order_items 
@@ -58,9 +54,7 @@ try {
     $result = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    // Update order and table status if ALL items are served
     if ($result['total'] > 0 && $result['total'] === $result['served']) {
-        // Update order status
         $stmt = $connection->prepare("
             UPDATE orders 
             SET status = 'served' 
@@ -70,7 +64,6 @@ try {
         $stmt->execute();
         $stmt->close();
 
-        // Update table status
         $stmt = $connection->prepare("
             UPDATE tables 
             SET status = 'served' 

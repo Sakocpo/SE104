@@ -14,7 +14,6 @@ if (!$current_category_id) {
     exit();
 }
 
-// Fetch option categories and their options
 $optCats = $connection
     ->query("SELECT id,name FROM option_categories WHERE deleted = 0 ORDER BY name")
     ->fetch_all(MYSQLI_ASSOC);
@@ -23,7 +22,6 @@ $prodCats = $connection
     ->query("SELECT id,name FROM product_categories WHERE deleted = 0 ORDER BY name")
     ->fetch_all(MYSQLI_ASSOC);
 
-// For each category, fetch its options
 $optionsByCat = [];
 foreach ($optCats as $cat) {
     $stmt = $connection->prepare("SELECT id,label FROM options WHERE type_id = ? AND deleted = 0 ORDER BY label");
@@ -35,10 +33,8 @@ foreach ($optCats as $cat) {
     $stmt->close();
 }
 
-// Initialize error message
 $error = '';
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $name = trim($_POST['product_name']);
     $price = floatval($_POST['product_price']);
@@ -46,11 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
     $image_path = '';
     $category_id = intval($_POST['category_id']);
 
-    // Validate price non-negative
     if ($price < 0) {
         $error = 'Giá không được âm.';
     }
-    // Check for duplicate name if no prior error
     elseif (empty($error)) {
         $stmt = $connection->prepare("SELECT COUNT(*) as cnt FROM products WHERE name = ? AND deleted = 0");
         $stmt->bind_param("s", $name);
@@ -63,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         }
     }
 
-    // Proceed if no errors
     if (empty($error)) {
         if (!empty($_FILES['product_image']['name'])) {
             $upload_dir = 'uploads/';
@@ -71,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
             move_uploaded_file($_FILES['product_image']['tmp_name'], $image_path);
         }
 
-        // Insert product
         $stmt = $connection->prepare(
             "INSERT INTO products (name, category, price, description, image) VALUES (?, ?, ?, ?, ?)"
         );
@@ -80,7 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         $product_id = $stmt->insert_id;
         $stmt->close();
 
-        // Insert selected options
         if (!empty($_POST['option_ids'])) {
             $ins = $connection->prepare(
                 "INSERT INTO product_options (product_id, option_id) VALUES (?, ?)"
@@ -118,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         background-position: center;
         background-size: cover;
     }
-    /* panel wrapper */
     .options-panel {
         border: 1px solid #ccc;
         background: #f8f8f8;
@@ -144,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         background: #e0e0e0;
         color: brown;
         padding: 10px;
-        text-align: center;           /* center the category name */
+        text-align: center;
         cursor: pointer;
         position: relative;
     }
@@ -252,7 +242,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
   </div>
 
   <script>
-  // Auto-hide server error after 5s
   window.addEventListener('DOMContentLoaded', () => {
     const srv = document.getElementById('serverError');
     if (srv) setTimeout(() => srv.remove(), 5000);
@@ -273,7 +262,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
       });
     });
 
-    // Prevent negative price client-side
     const priceInput = document.querySelector('input[name="product_price"]');
     priceInput.addEventListener('input', () => {
       if (parseFloat(priceInput.value) < 0) priceInput.value = 0;

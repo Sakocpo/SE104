@@ -42,7 +42,6 @@ $resQr  = $connection->query("SELECT type_id, image_path FROM qr_codes ORDER BY 
 while ($r = $resQr->fetch_assoc()) {
     $qrRows[intval($r['type_id'])] = $r['image_path'];
 }
-// Update order status to paid
 $stmt = $connection->prepare("
     UPDATE orders 
     SET status = 'paid', 
@@ -109,8 +108,8 @@ $stmt->close();
 
     .payment-qr {
       flex-direction: column;          
-      align-items: center;             /* center horizontally */
-      justify-content: center;         /* center vertically */
+      align-items: center;
+      justify-content: center;
     }
 
     .payment-qr img {
@@ -166,7 +165,6 @@ $stmt->close();
       color: white;
     }
 
-    /* calculator sidebar */
     .sidebar-calc {
       position: fixed;
       top: 0;
@@ -233,12 +231,12 @@ $stmt->close();
     }
 
     .inner-qr {
-      display: flex;              /* stack and center its children */
+      display: flex;
       flex-direction: column;
-      align-items: center;        /* horizontal centering */
-      justify-content: center;    /* vertical centering */
-      height: 100%;               /* fill the parent’s height */
-      width: 100%;                /* fill the parent’s width */
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
     }
   </style>
 </head>
@@ -250,13 +248,11 @@ $stmt->close();
 <audio id="bell-sound" src="uploads/bell.mp3" preload="auto"></audio>
 
 <div class="payment-wrapper">
-  <!-- Top Mode Selector -->
   <div class="payment-header">
     <div id="cash-btn" class="payment-mode active">💵 Tiền Mặt</div>
     <div id="qr-btn" class="payment-mode">📱 Mã QR</div>
   </div>
 
-  <!-- Bottom 3/4 -->
   <div class="payment-body">
     <div id="cash-view" class="payment-cash">
       <div>Tổng: <strong><?= number_format($total) ?> đ</strong></div>
@@ -279,7 +275,6 @@ $stmt->close();
                   data-type="2"
                   onclick="switchQR(2)">QR MoMo</button>
         </div>
-      <!-- your existing image -->
       <img
         id="qrImage"
         src="<?= htmlspecialchars($qrRows[1] ?? 'placeholder.png') ?>"
@@ -289,14 +284,12 @@ $stmt->close();
     </div>
   </div>
 
-  <!-- Buttons -->
   <div class="payment-actions">
     <button id="cancel-btn">Quay Lại</button>
     <button id="complete-btn">Hoàn Tất</button>
   </div>
 </div>
 
-<!-- Sidebar Calculator -->
 <div id="cash-sidebar" class="sidebar-calc">
   <div class="calc-display" id="calc-display"><?= number_format($total, 2) ?></div>
   <div class="calc-keys">
@@ -339,7 +332,6 @@ $stmt->close();
 
 
 
-  // Mode toggle
   cashBtn.onclick = () => {
     cashBtn.classList.add('active');
     qrBtn.classList.remove('active');
@@ -363,7 +355,6 @@ $stmt->close();
     firstKey = true;
   };
 
-  // Calculator key logic
   keys.forEach(btn => {
     const k = btn.dataset.key;
     btn.onclick = () => {

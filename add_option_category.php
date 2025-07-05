@@ -8,7 +8,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Handle new category submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['category_name'])) {
     $name = trim($_POST['category_name']);
     if ($name !== '') {
@@ -21,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['category_name'])) {
     }
 }
 
-// Fetch all categories to display below
 $categories = [];
 $res = $connection->query("SELECT * FROM option_categories ORDER BY id ASC");
 while ($row = $res->fetch_assoc()) {
