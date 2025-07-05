@@ -21,7 +21,7 @@
 * **Giảng viên**: Đỗ Văn Tiến
 
 # ĐỒ ÁN CUỐI KÌ
-* **Đề tài:** Phần mềm quản lý quán cà phê.
+* **Đề tài:** Website quản lý quán cà phê.
 
 
 ## Công nghệ sử dụng
