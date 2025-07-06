@@ -64,6 +64,7 @@
 npm install
 npm start
 node server.js
+composer require textalk/websocket
 ```
 
 > WebSocket server dùng để xử lý các chức năng thời gian thực (real-time) như trạng thái món ăn, thông báo giữa bếp và phục vụ.
